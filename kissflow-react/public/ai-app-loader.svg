@@ -1,0 +1,220 @@
+<svg width="231" height="260" viewBox="0 0 231 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Shimmer sweep gradient – userSpaceOnUse so it covers the full canvas -->
+    <linearGradient id="shimmer" x1="0" y1="0" x2="231" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#F5F5FD"/>
+      <stop offset="45%"  stop-color="#EAEAF9"/>
+      <stop offset="55%"  stop-color="#EAEAF9"/>
+      <stop offset="100%" stop-color="#F5F5FD"/>
+      <animateTransform attributeName="gradientTransform" type="translate"
+        values="-462,0; 462,0" dur="2s" repeatCount="indefinite"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(0,37)">
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- Container border                        -->
+  <!-- ─────────────────────────────────────── -->
+  <rect x="0.338" y="0.338" width="229.401" height="185.265" rx="11.662"
+        stroke="#CFCFF3" stroke-width="0.677"/>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- TOP NAVBAR  (always visible)            -->
+  <!-- ─────────────────────────────────────── -->
+
+  <!-- Navbar background -->
+  <rect x="11" y="11" width="209" height="15" rx="3" fill="#F5F5FD"/>
+
+  <!-- Logo square -->
+  <rect x="16" y="14" width="9" height="9" rx="2" fill="#CFCFF3"/>
+
+  <!-- Nav-item base pill (muted) -->
+  <rect x="32"  y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
+  <rect x="64"  y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
+  <rect x="96"  y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
+
+  <!-- Nav-item active highlight: Dashboard (state 1) -->
+  <rect x="32" y="15" width="26" height="7" rx="2" fill="#6E6EDB">
+    <animate attributeName="opacity"
+      values="0.85;0.85;0;0;0;0;0.85"
+      keyTimes="0;0.133;0.333;0.467;0.667;0.8;1"
+      dur="5s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- Nav-item active highlight: Table (state 2) -->
+  <rect x="64" y="15" width="26" height="7" rx="2" fill="#6E6EDB">
+    <animate attributeName="opacity"
+      values="0;0;0.85;0.85;0;0;0"
+      keyTimes="0;0.133;0.333;0.467;0.667;0.8;1"
+      dur="5s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- Nav-item active highlight: Form (state 3) -->
+  <rect x="96" y="15" width="26" height="7" rx="2" fill="#6E6EDB">
+    <animate attributeName="opacity"
+      values="0;0;0;0;0.85;0.85;0"
+      keyTimes="0;0.133;0.333;0.467;0.667;0.8;1"
+      dur="5s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- Nav / content separator -->
+  <line x1="11" y1="27.5" x2="220" y2="27.5" stroke="#CFCFF3" stroke-width="0.5"/>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- PAGE TITLE  (morphs width per state)   -->
+  <!-- ─────────────────────────────────────── -->
+  <!--
+    States:  Dashboard → Table   → Form
+    Width:   68        → 52      → 46
+  -->
+  <rect x="22" y="41" height="7" rx="2" fill="#CFCFF3">
+    <animate attributeName="width"
+      values="68;68;52;52;46;46;68"
+      keyTimes="0;0.133;0.333;0.467;0.667;0.8;1"
+      dur="5s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- CONTENT BLOCKS                          -->
+  <!--                                         -->
+  <!-- State layout (y origin = 44):           -->
+  <!--  DASHBOARD  │  TABLE     │  FORM        -->
+  <!--  2 stat cards│  hdr row   │  label       -->
+  <!--  wide chart  │  3 rows×3c │  input       -->
+  <!--  2 mini bars │            │  label+input -->
+  <!-- ─────────────────────────────────────── -->
+  <!--
+    keyTimes: 0=Dash  0.133=hold  0.333=Table  0.467=hold  0.667=Form  0.8=hold  1.0=Dash
+  -->
+
+  <!-- ── Block 1: Stat-card L / Hdr-col-1 / Label-1 ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="22;22;22;22;22;22;22"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0s"     repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="54;54;54;54;54;54;54"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0s"     repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="87;87;57;57;65;65;87"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0s"     repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="28;28;14;14;8;8;28"         keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0s"     repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 2: Stat-card R / Hdr-col-2 / Input-1 ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="117;117;85;85;22;22;117"    keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.055s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="54;54;54;54;67;67;54"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.055s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="89;89;57;57;184;184;89"     keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.055s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="28;28;14;14;18;18;28"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.055s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 3: Chart / Hdr-col-3 / Label-2 ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="22;22;148;148;22;22;22"     keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.11s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="90;90;54;54;93;93;90"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.11s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="184;184;57;57;65;65;184"    keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.11s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="44;44;14;14;8;8;44"         keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.11s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 4: Mini-bar L / Row-1 col-1 / Input-2 ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="22;22;22;22;22;22;22"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.165s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="142;142;74;74;106;106;142"    keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.165s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="84;84;57;57;184;184;84"     keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.165s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="11;11;14;14;18;18;11"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.165s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 5: Mini-bar R / Row-1 col-2 / Label-3 ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="114;114;85;85;22;22;114"    keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.21s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="142;142;74;74;132;132;142"  keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.21s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="92;92;57;57;65;65;92"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.21s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="11;11;14;14;8;8;11"         keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.21s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 6: (hidden) / Row-1 col-3 / (hidden) ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="208;208;148;148;208;208;208" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.255s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="74;74;74;74;74;74;74"        keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.255s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.255s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.255s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 7: (hidden) / Row-2 col-1 / (hidden) ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="208;208;22;22;208;208;208"   keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.3s"   repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="94;94;94;94;94;94;94"        keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.3s"   repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.3s"   repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.3s"   repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 8: (hidden) / Row-2 col-2 / (hidden) ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="208;208;85;85;208;208;208"   keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.345s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="94;94;94;94;94;94;94"        keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.345s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.345s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.345s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 9: (hidden) / Row-2 col-3 / (hidden) ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="208;208;148;148;208;208;208" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.39s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="94;94;94;94;94;94;94"        keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.39s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.39s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.39s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 10: (hidden) / Row-3 col-1 / (hidden) ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="208;208;22;22;208;208;208"   keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.435s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="114;114;114;114;114;114;114" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.435s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.435s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.435s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 11: (hidden) / Row-3 col-2 / (hidden) ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="208;208;85;85;208;208;208"   keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.48s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="114;114;114;114;114;114;114" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.48s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.48s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.48s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ── Block 12: (hidden) / Row-3 col-3 / (hidden) ── -->
+  <rect rx="2.707" fill="url(#shimmer)">
+    <animate attributeName="x"      values="208;208;148;148;208;208;208" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.525s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="y"      values="114;114;114;114;114;114;114" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.525s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.525s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.525s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+
+  <!-- ─────────────────────────────────────── -->
+  <!-- SPARKLE BUTTON  (identical to original) -->
+  <!-- ─────────────────────────────────────── -->
+  <rect x="189.815" y="145.678" width="29.098" height="29.098" rx="14.549" fill="white"/>
+  <rect x="189.815" y="145.678" width="29.098" height="29.098" rx="14.549"
+        stroke="#E2E2F8" stroke-width="0.677"/>
+
+  <!-- Star 1: large -->
+  <path d="M202.342 154.554L203.152 156.886C203.509 157.913 204.317 158.721 205.345 159.078L207.676 159.888L205.345 160.698C204.317 161.055 203.509 161.863 203.152 162.891L202.342 165.222L201.532 162.891C201.175 161.863 200.367 161.055 199.34 160.698L197.008 159.888L199.34 159.078C200.367 158.721 201.175 157.913 201.532 156.886L202.342 154.554Z"
+        fill="#6E6EDB">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Star 2: small bottom-right -->
+  <path d="M208.619 161.771L208.728 162.084C209.085 163.112 209.892 163.92 210.92 164.277L211.234 164.385L210.92 164.494C209.892 164.851 209.085 165.659 208.728 166.687L208.619 167L208.51 166.687C208.153 165.659 207.345 164.851 206.317 164.494L206.004 164.385L206.317 164.277C207.345 163.92 208.153 163.112 208.51 162.084L208.619 161.771Z"
+        fill="#6E6EDB">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" begin="0.33s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Star 3: tiny top-right -->
+  <path d="M207.573 153.928C207.794 154.565 208.295 155.066 208.932 155.287C208.295 155.509 207.794 156.01 207.573 156.647C207.351 156.01 206.85 155.509 206.213 155.287C206.85 155.066 207.351 154.565 207.573 153.928Z"
+        fill="#6E6EDB">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" begin="0.67s" repeatCount="indefinite"/>
+  </path>
+
+
+  </g>
+
+</svg>

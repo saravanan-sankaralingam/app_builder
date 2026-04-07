@@ -1,0 +1,340 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  member
+  viewer
+}
+
+enum AppType {
+  app
+  portal
+}
+
+enum AppStatus {
+  draft
+  live
+  archived
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String    @map("password_hash")
+  name            String
+  avatarUrl       String?   @map("avatar_url")
+  phone           String?
+  department      String?
+  jobTitle        String?   @map("job_title")
+  location        String?
+  role            UserRole  @default(member)
+  isActive        Boolean   @default(true) @map("is_active")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  lastLoginAt     DateTime? @map("last_login_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Refresh tokens for this user
+  refreshTokens   RefreshToken[]
+
+  // Apps created/updated by this user
+  createdApps     App[] @relation("CreatedApps")
+  updatedApps     App[] @relation("UpdatedApps")
+
+  @@map("users")
+}
+
+model App {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  icon        String    @default("Folder")
+  iconBg      String    @default("#3b82f6") @map("icon_bg")
+
+  // Type & Status
+  type        AppType   @default(app)
+  status      AppStatus @default(draft)
+  isPublic    Boolean   @default(false) @map("is_public")
+  version     Int       @default(1)
+
+  // Audit fields
+  createdBy   User      @relation("CreatedApps", fields: [createdById], references: [id])
+  createdById String    @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  updatedBy   User      @relation("UpdatedApps", fields: [updatedById], references: [id])
+  updatedById String    @map("updated_by_id")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Data layers (forms, boards, processes)
+  dataLayers  DataLayer[]
+
+  // Interface layer
+  navigations Navigation[]
+  pages       Page[]
+  components  Component[]
+
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([status])
+  @@index([slug])
+  @@map("apps")
+}
+
+// ============================================================================
+// DATA LAYER MODELS
+// ============================================================================
+
+// Data Layer Types
+enum DataLayerType {
+  dataform  // No workflow - simple data collection
+  board     // Unstructured workflow - items can move to any step
+  process   // Structured workflow - items follow predefined transitions
+  list      // Lookup/reference data - simple key-value pairs for dropdowns
+}
+
+// Represents a data layer (form/board/process) within an app
+model DataLayer {
+  id          String        @id @default(uuid())
+  appId       String        @map("app_id")
+  app         App           @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  name        String
+  slug        String
+  description String?
+  type        DataLayerType @default(dataform)
+  config      Json?         // For list items and other configuration
+
+  // Schema definition (fields)
+  fields      Field[]
+
+  // Workflow steps (for board/process types)
+  steps       WorkflowStep[]
+
+  // Data items
+  items       DataItem[]
+
+  // Views
+  views       View[]
+
+  // Reports
+  reports     Report[]
+
+  // Audit
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@unique([appId, slug])
+  @@index([appId])
+  @@map("data_layers")
+}
+
+// Field definition within a data layer
+model Field {
+  id            String    @id @default(uuid())
+  dataLayerId   String    @map("data_layer_id")
+  dataLayer     DataLayer @relation(fields: [dataLayerId], references: [id], onDelete: Cascade)
+
+  name          String
+  slug          String
+  type          String    // text, number, date, select, multiselect, checkbox, lookup, etc.
+  required      Boolean   @default(false)
+  defaultValue  Json?     @map("default_value")
+  options       Json?     // For select/multiselect fields: [{label, value}]
+  config        Json?     // Additional field configuration (lookup config, formula, etc.)
+  order         Int       @default(0)
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([dataLayerId, slug])
+  @@index([dataLayerId])
+  @@map("fields")
+}
+
+// Workflow step for board/process
+model WorkflowStep {
+  id              String    @id @default(uuid())
+  dataLayerId     String    @map("data_layer_id")
+  dataLayer       DataLayer @relation(fields: [dataLayerId], references: [id], onDelete: Cascade)
+
+  name            String
+  slug            String
+  color           String?   // Tailwind color for UI display
+  order           Int       @default(0)
+
+  // For process type: define allowed transitions (step IDs)
+  // For board type: this is ignored, all transitions allowed
+  allowedNextSteps  String[]  @default([]) @map("allowed_next_steps")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([dataLayerId, slug])
+  @@index([dataLayerId])
+  @@map("workflow_steps")
+}
+
+// Actual data items stored in a data layer
+model DataItem {
+  id            String    @id @default(uuid())
+  dataLayerId   String    @map("data_layer_id")
+  dataLayer     DataLayer @relation(fields: [dataLayerId], references: [id], onDelete: Cascade)
+
+  // Dynamic field values stored as JSON: { fieldSlug: value, ... }
+  data          Json      @default("{}")
+
+  // Current workflow step ID (for board/process types)
+  currentStepId String?   @map("current_step_id")
+
+  // Audit
+  createdById   String    @map("created_by_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedById   String    @map("updated_by_id")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([dataLayerId])
+  @@index([currentStepId])
+  @@index([createdById])
+  @@map("data_items")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ============================================================================
+// INTERFACE LAYER MODELS
+// ============================================================================
+
+// Navigation menu structure within an app
+model Navigation {
+  id          String   @id @default(uuid())
+  appId       String   @map("app_id")
+  app         App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  name        String
+  slug        String
+  description String?
+  config      Json?    // Navigation structure/menu items
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([appId, slug])
+  @@index([appId])
+  @@map("navigations")
+}
+
+// Page within an app
+model Page {
+  id          String   @id @default(uuid())
+  appId       String   @map("app_id")
+  app         App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  name        String
+  slug        String
+  description String?
+  config      Json?    // Page layout/content configuration
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([appId, slug])
+  @@index([appId])
+  @@map("pages")
+}
+
+// View within a data layer (table, gallery, sheet, etc.)
+model View {
+  id            String    @id @default(uuid())
+  dataLayerId   String    @map("data_layer_id")
+  dataLayer     DataLayer @relation(fields: [dataLayerId], references: [id], onDelete: Cascade)
+
+  name          String
+  slug          String
+  type          String    // datatable, gallery, sheet
+  description   String?
+  config        Json?     // View-specific configuration (columns, filters, sorting, etc.)
+  isDefault     Boolean   @default(false) @map("is_default")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([dataLayerId, slug])
+  @@index([dataLayerId])
+  @@map("views")
+}
+
+// Component types
+enum ComponentType {
+  page      // Page-based component
+  form      // Form-based component
+}
+
+// Component creation method
+enum ComponentMethod {
+  scratch   // Created from scratch (manual)
+  ai        // Created with AI assistance
+}
+
+// Reusable component within an app
+model Component {
+  id          String          @id @default(uuid())
+  appId       String          @map("app_id")
+  app         App             @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  name        String
+  slug        String
+  description String?
+  type        ComponentType   @default(page)
+  method      ComponentMethod @default(scratch)  // Creation method: scratch or ai
+  prompt      String?         // AI prompt used to generate the component (only for AI method)
+  config      Json?           // Component configuration (layout, widgets, etc.)
+  parameters  Json?           // Input parameters definition: [{ id, name, paramId, type, defaultValue }]
+
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@unique([appId, slug])
+  @@index([appId])
+  @@map("components")
+}
+
+// Report within a data layer (table, chart, pivot, card)
+model Report {
+  id            String    @id @default(uuid())
+  dataLayerId   String    @map("data_layer_id")
+  dataLayer     DataLayer @relation(fields: [dataLayerId], references: [id], onDelete: Cascade)
+
+  name          String
+  slug          String
+  type          String    // table, chart, pivot, card
+  description   String?
+  config        Json?     // Report-specific configuration (chart type, aggregations, etc.)
+  isDefault     Boolean   @default(false) @map("is_default")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([dataLayerId, slug])
+  @@index([dataLayerId])
+  @@map("reports")
+}
