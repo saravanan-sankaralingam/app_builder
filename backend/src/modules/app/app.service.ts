@@ -4,6 +4,33 @@ import { env } from '../../config/env';
 
 const prisma = new PrismaClient();
 
+// Get or create system bot user for automated operations
+async function getSystemBotUserId(): Promise<string> {
+  // If SYSTEM_BOT_USER_ID is set, use it
+  if (env.SYSTEM_BOT_USER_ID) {
+    return env.SYSTEM_BOT_USER_ID;
+  }
+
+  // Otherwise, find or create a system bot user
+  const systemEmail = 'system@kissflow.local';
+  let systemUser = await prisma.user.findUnique({
+    where: { email: systemEmail },
+  });
+
+  if (!systemUser) {
+    systemUser = await prisma.user.create({
+      data: {
+        email: systemEmail,
+        name: 'System Bot',
+        passwordHash: 'system-bot-no-login',
+        role: 'admin',
+      },
+    });
+  }
+
+  return systemUser.id;
+}
+
 // Helper to generate URL-friendly slug
 function generateSlug(name: string): string {
   return name
@@ -130,7 +157,7 @@ export async function getAppBySlug(slug: string): Promise<AppWithCreator | null>
 
 // Create new app
 export async function createApp(input: CreateAppInput): Promise<AppWithCreator> {
-  const botUserId = env.SYSTEM_BOT_USER_ID;
+  const botUserId = await getSystemBotUserId();
 
   const baseSlug = generateSlug(input.name);
   const slug = await getUniqueSlug(baseSlug);
