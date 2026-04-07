@@ -7,7 +7,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('15m'),
   REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
   PORT: z.string().default('3000'),
-  SYSTEM_BOT_USER_ID: z.string().uuid(),
+  SYSTEM_BOT_USER_ID: z.string().uuid().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
