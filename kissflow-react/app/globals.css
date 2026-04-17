@@ -757,11 +757,54 @@
   animation: spin-slow 20s linear infinite;
 }
 
-/* Accessibility: Reduce motion for blob animation */
+/* Accessibility: Reduce motion for animations */
 @media (prefers-reduced-motion: reduce) {
   .animate-blob-morph,
   .animate-spin-slow {
     animation: none;
+  }
+
+  /* Use subtle opacity change instead of pulse */
+  .animate-pulse {
+    animation: gentle-fade 2s ease-in-out infinite;
+  }
+}
+
+/* Gentle fade animation for reduced motion preference */
+@keyframes gentle-fade {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ============================================
+   COPILOT LOADING DOTS
+   Smooth bounce animation with elastic feel
+   ============================================ */
+
+@keyframes smooth-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-3px) scale(1.05);
+    opacity: 1;
+  }
+}
+
+.animate-smooth-bounce {
+  animation: smooth-bounce 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Accessibility: Reduce motion for smooth bounce */
+@media (prefers-reduced-motion: reduce) {
+  .animate-smooth-bounce {
+    animation: gentle-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes gentle-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
   }
 }
 

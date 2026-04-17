@@ -72,7 +72,7 @@ const moduleIconColors: Record<string, string> = {
   variables: '#F97316', // orange
   resources: '#EAB308', // yellow
   'app-settings': '#06B6D4',  // cyan
-  'theme-settings': '#A855F7', // violet
+  'theme-settings': '#A855F7', // purple
   'notification-settings': '#EF4444', // red
 }
 
@@ -170,9 +170,10 @@ interface BuilderSidebarProps {
   onResourcesClick?: () => void
   onComponentsClick?: () => void
   onConnectionsClick?: () => void
+  onPermissionsClick?: () => void
 }
 
-export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, onDataFormClick, onBoardClick, onProcessClick, onListClick, onNavigationClick, onPageClick, onVariablesClick, onResourcesClick, onComponentsClick, onConnectionsClick }: BuilderSidebarProps) {
+export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, onDataFormClick, onBoardClick, onProcessClick, onListClick, onNavigationClick, onPageClick, onVariablesClick, onResourcesClick, onComponentsClick, onConnectionsClick, onPermissionsClick }: BuilderSidebarProps) {
   const [active, setActive] = useState(activeItem)
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
   const [openPopover, setOpenPopover] = useState<string | null>(null)
@@ -309,8 +310,12 @@ export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, o
   }, [selectedDataItem, appId])
 
   const handleClick = (id: string) => {
-    if (id === 'create' || id === 'permissions') {
-      return // Create is handled by popover, Permissions does nothing for now
+    if (id === 'create') {
+      return // Create is handled by popover
+    }
+    if (id === 'permissions') {
+      onPermissionsClick?.()
+      return
     }
     setActive(id)
     onItemClick?.(id)

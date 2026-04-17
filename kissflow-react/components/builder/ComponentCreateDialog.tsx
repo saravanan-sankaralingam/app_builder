@@ -142,7 +142,7 @@ export function ComponentCreateDialog({
       )}>
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-violet-500">
+            <div className="flex items-center justify-center w-7 h-7 rounded-md bg-purple-500">
               <Component className="h-4 w-4 text-white" />
             </div>
             <DialogTitle className="text-base font-semibold">

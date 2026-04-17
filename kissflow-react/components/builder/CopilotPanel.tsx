@@ -6,6 +6,7 @@ import * as LucideIcons from 'lucide-react'
 import { IconCircleCheckFilled } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { CopilotLoadingMessage, getLoadingConfig } from './copilot'
 
 interface CopilotPanelProps {
   appName: string
@@ -557,6 +558,12 @@ interface ChatMessage {
     roleName: string
     currentPermission: PermissionLevel
   }
+  // Loading state fields
+  isLoading?: boolean
+  loadingStages?: string[]
+  loadingDuration?: number
+  loadingAnimation?: 'pulse' | 'spin' | 'morph' | 'none'
+  loadingComplete?: boolean
 }
 
 interface SuggestionAction {
@@ -649,8 +656,6 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
   const [pendingRoleName, setPendingRoleName] = useState('')
   const [drillThroughCategory, setDrillThroughCategory] = useState<string | null>(null)
   const [completedAction, setCompletedAction] = useState<string | null>(null)
-  const [showSuggestRolesFlow, setShowSuggestRolesFlow] = useState(false)
-  const [isScanningRoles, setIsScanningRoles] = useState(false)
   const [suggestedRoles, setSuggestedRoles] = useState<SuggestedRole[]>([])
   const [selectedPermissionOption, setSelectedPermissionOption] = useState<string | null>(null)
   const [selectedRoleToModify, setSelectedRoleToModify] = useState<string | null>(null)
@@ -699,6 +704,39 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     scrollToBottom()
   }, [messages])
 
+  // Helper function to add assistant message with loading animation
+  const addAssistantMessageWithLoading = (messageContent: Partial<ChatMessage>, duration: number = 4000) => {
+    // Create loading message
+    const loadingMsg: ChatMessage = {
+      id: `loading-${Date.now()}`,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      isLoading: true,
+      loadingStages: ['Loading...'],
+      loadingDuration: duration,
+      loadingAnimation: 'pulse'
+    }
+
+    setMessages(prev => [...prev, loadingMsg])
+
+    // After duration, update message with actual content
+    setTimeout(() => {
+      setMessages(prev => prev.map(msg =>
+        msg.id === loadingMsg.id
+          ? {
+              ...msg,
+              ...messageContent,
+              isLoading: false,
+              loadingComplete: true
+            }
+          : msg
+      ))
+    }, duration)
+
+    return loadingMsg.id
+  }
+
   const handleSend = async (messageText?: string) => {
     const text = messageText || input.trim()
     if (!text || isLoading) return
@@ -719,16 +757,10 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       setPendingRoleName(text)
       setConversationState('awaiting_permission_type')
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Great! How would you like to set up permissions for the '${text}' role?`,
-          timestamp: new Date(),
-          showPermissionOptions: true,
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `Great! How would you like to set up permissions for the '${text}' role?`,
+        showPermissionOptions: true,
+      })
       return
     }
 
@@ -736,20 +768,14 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       // User provided custom permission description, create role
       setConversationState('idle')
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: '',
-          timestamp: new Date(),
-          showRoleSuccess: {
-            roleName: pendingRoleName,
-            permissionType: 'Custom Permissions',
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-        setPendingRoleName('')
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: '',
+        showRoleSuccess: {
+          roleName: pendingRoleName,
+          permissionType: 'Custom Permissions',
+        },
+      })
+      setPendingRoleName('')
       return
     }
 
@@ -758,20 +784,14 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       setConversationState('idle')
       const oldName = roleBeingRenamed || ''
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: '',
-          timestamp: new Date(),
-          showRoleRenameSuccess: {
-            oldName: oldName,
-            newName: text,
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-        setRoleBeingRenamed(null)
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: '',
+        showRoleRenameSuccess: {
+          oldName: oldName,
+          newName: text,
+        },
+      })
+      setRoleBeingRenamed(null)
       return
     }
 
@@ -780,20 +800,14 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       setConversationState('idle')
       const roleName = roleForPermissionChange || ''
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: '',
-          timestamp: new Date(),
-          showPermissionChangeSuccess: {
-            roleName: roleName,
-            changeDescription: text,
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-        setRoleForPermissionChange(null)
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: '',
+        showPermissionChangeSuccess: {
+          roleName: roleName,
+          changeDescription: text,
+        },
+      })
+      setRoleForPermissionChange(null)
       return
     }
 
@@ -802,20 +816,14 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       setConversationState('idle')
       const originalRole = roleBeingDuplicated || ''
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: '',
-          timestamp: new Date(),
-          showDuplicateRoleSuccess: {
-            newRoleName: text,
-            duplicatedFrom: originalRole,
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-        setRoleBeingDuplicated(null)
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: '',
+        showDuplicateRoleSuccess: {
+          newRoleName: text,
+          duplicatedFrom: originalRole,
+        },
+      })
+      setRoleBeingDuplicated(null)
       return
     }
 
@@ -849,66 +857,42 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
         if (permissionType === 'duplicate' && duplicateFrom) {
           // Full info with duplicate - create role immediately
           setConversationState('idle')
-          setTimeout(() => {
-            const assistantMessage: ChatMessage = {
-              id: (Date.now() + 1).toString(),
-              role: 'assistant',
-              content: '',
-              timestamp: new Date(),
-              showRoleSuccess: {
-                roleName: roleName,
-                permissionType: 'Duplicated Permissions',
-                duplicatedFrom: duplicateFrom,
-              },
-            }
-            setMessages(prev => [...prev, assistantMessage])
-          }, 500)
+          addAssistantMessageWithLoading({
+            content: '',
+            showRoleSuccess: {
+              roleName: roleName,
+              permissionType: 'Duplicated Permissions',
+              duplicatedFrom: duplicateFrom,
+            },
+          })
           return
         } else if (permissionType === 'duplicate' && !duplicateFrom) {
           // Has name, wants to duplicate but didn't specify from which role
           setPendingRoleName(roleName)
           setConversationState('awaiting_duplicate_role')
-          setTimeout(() => {
-            const assistantMessage: ChatMessage = {
-              id: (Date.now() + 1).toString(),
-              role: 'assistant',
-              content: `I'll create the '${roleName}' role. Which role would you like to duplicate permissions from?`,
-              timestamp: new Date(),
-              showExistingRoles: true,
-            }
-            setMessages(prev => [...prev, assistantMessage])
-          }, 500)
+          addAssistantMessageWithLoading({
+            content: `I'll create the '${roleName}' role. Which role would you like to duplicate permissions from?`,
+            showExistingRoles: true,
+          })
           return
         } else if (permissionType === 'custom') {
           // Has name, wants custom permissions
           setPendingRoleName(roleName)
           setConversationState('awaiting_custom_permission')
-          setTimeout(() => {
-            const assistantMessage: ChatMessage = {
-              id: (Date.now() + 1).toString(),
-              role: 'assistant',
-              content: `I'll create the '${roleName}' role with custom permissions. Please describe the permissions you would like to set:`,
-              timestamp: new Date(),
-            }
-            setMessages(prev => [...prev, assistantMessage])
-          }, 500)
+          addAssistantMessageWithLoading({
+            content: `I'll create the '${roleName}' role with custom permissions. Please describe the permissions you would like to set:`,
+          })
           return
         } else {
           // Has name and simple permission type (all or none)
           setConversationState('idle')
-          setTimeout(() => {
-            const assistantMessage: ChatMessage = {
-              id: (Date.now() + 1).toString(),
-              role: 'assistant',
-              content: '',
-              timestamp: new Date(),
-              showRoleSuccess: {
-                roleName: roleName,
-                permissionType: permissionType === 'all' ? 'All Permissions' : 'No Permissions',
-              },
-            }
-            setMessages(prev => [...prev, assistantMessage])
-          }, 500)
+          addAssistantMessageWithLoading({
+            content: '',
+            showRoleSuccess: {
+              roleName: roleName,
+              permissionType: permissionType === 'all' ? 'All Permissions' : 'No Permissions',
+            },
+          })
           return
         }
       }
@@ -917,31 +901,19 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       if (roleName && !permissionType) {
         setPendingRoleName(roleName)
         setConversationState('awaiting_permission_type')
-        setTimeout(() => {
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: `Great! How would you like to set up permissions for the '${roleName}' role?`,
-            timestamp: new Date(),
-            showPermissionOptions: true,
-          }
-          setMessages(prev => [...prev, assistantMessage])
-        }, 500)
+        addAssistantMessageWithLoading({
+          content: `Great! How would you like to set up permissions for the '${roleName}' role?`,
+          showPermissionOptions: true,
+        })
         return
       }
 
       // Case 3: User wants to add role but didn't provide name
       if (!roleName) {
         setConversationState('awaiting_role_name')
-        setTimeout(() => {
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: 'What would you like to name this role?',
-            timestamp: new Date(),
-          }
-          setMessages(prev => [...prev, assistantMessage])
-        }, 500)
+        addAssistantMessageWithLoading({
+          content: 'What would you like to name this role?',
+        })
         return
       }
     }
@@ -1016,31 +988,46 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
 
     // Handle "Suggest roles" - show loading then AI suggestions
     if (subAction.id === 'suggest-roles') {
-      setShowSuggestRolesFlow(true)
-      setIsScanningRoles(true)
-      setSuggestedRoles([])
+      const config = getLoadingConfig('suggest-roles')
 
-      // Simulate AI scanning (2 seconds)
+      // Create loading message
+      const loadingMsg: ChatMessage = {
+        id: `loading-${Date.now()}`,
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+        isLoading: true,
+        loadingStages: config.stages,
+        loadingDuration: config.duration,
+        loadingAnimation: config.animation
+      }
+
+      setMessages(prev => [...prev, loadingMsg])
+
+      // Simulate AI processing (5 seconds)
       setTimeout(() => {
-        setIsScanningRoles(false)
         const roles = MOCK_SUGGESTED_ROLES.map(role => ({ ...role, selected: false }))
-        setSuggestedRoles(roles)
-      }, 2000)
+
+        // Update message to show results
+        setMessages(prev => prev.map(msg =>
+          msg.id === loadingMsg.id
+            ? {
+                ...msg,
+                loadingComplete: true,
+                showSuggestedRoles: roles
+              }
+            : msg
+        ))
+      }, config.duration)
       return
     }
 
     // Handle "Add Role" specially
     if (subAction.id === 'add-role') {
       setConversationState('awaiting_role_name')
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'What would you like to name this role?',
-          timestamp: new Date(),
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: 'What would you like to name this role?',
+      })
       return
     }
 
@@ -1048,16 +1035,10 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     if (subAction.id === 'modify-role-permission') {
       setSelectedRoleToModify(null)
       setSelectedModificationOption(null)
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'Which role would you like to modify?',
-          timestamp: new Date(),
-          showRoleChips: true,
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: 'Which role would you like to modify?',
+        showRoleChips: true,
+      })
       return
     }
 
@@ -1065,16 +1046,10 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     if (subAction.id === 'duplicate-role') {
       setSelectedRoleToDuplicate(null)
       setRoleBeingDuplicated(null)
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'Which role would you like to duplicate?',
-          timestamp: new Date(),
-          showRoleChipsForDuplicate: true,
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: 'Which role would you like to duplicate?',
+        showRoleChipsForDuplicate: true,
+      })
       return
     }
 
@@ -1083,31 +1058,17 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       setSelectedRoleFromList(null)
       setSelectedRoleContextAction(null)
       setRoleInContext(null)
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'Here are all the roles in your app. Click on a role to see available actions:',
-          timestamp: new Date(),
-          showAllRolesList: true,
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: 'Here are all the roles in your app. Click on a role to see available actions:',
+        showAllRolesList: true,
+      })
       return
     }
 
     // Default response for other sub-actions
-    setIsLoading(true)
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `I'll help you ${subAction.title.toLowerCase()}. This feature is coming soon!`,
-        timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, assistantMessage])
-      setIsLoading(false)
-    }, 1000)
+    addAssistantMessageWithLoading({
+      content: `I'll help you ${subAction.title.toLowerCase()}. This feature is coming soon!`,
+    })
   }
 
   const handleToggleSuggestedRole = (roleId: string) => {
@@ -1150,8 +1111,7 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       },
     }
 
-    // Reset suggest roles flow
-    setShowSuggestRolesFlow(false)
+    // Reset suggested roles
     setSuggestedRoles([])
 
     // Add all messages to the thread
@@ -1159,21 +1119,15 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
   }
 
   const handleCancelSuggestRoles = () => {
-    // Hide the suggest roles flow UI
-    setShowSuggestRolesFlow(false)
+    // Reset suggested roles
     setSuggestedRoles([])
-    setIsScanningRoles(false)
     // Keep completedAction set - don't reset it
     // This keeps "Suggest roles" shown as selected/disabled
 
     // Add assistant message asking what to do next
-    const assistantMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'assistant',
+    addAssistantMessageWithLoading({
       content: 'What would you like to do next?',
-      timestamp: new Date(),
-    }
-    setMessages(prev => [...prev, assistantMessage])
+    })
   }
 
   const handlePermissionOptionClick = (option: PermissionOption) => {
@@ -1194,49 +1148,31 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       case 'none':
         // Direct success - create role immediately
         setConversationState('idle')
-        setTimeout(() => {
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: '',
-            timestamp: new Date(),
-            showRoleSuccess: {
-              roleName: pendingRoleName,
-              permissionType: option.id === 'all' ? 'All Permissions' : 'No Permissions',
-            },
-          }
-          setMessages(prev => [...prev, assistantMessage])
-          setPendingRoleName('')
-        }, 500)
+        addAssistantMessageWithLoading({
+          content: '',
+          showRoleSuccess: {
+            roleName: pendingRoleName,
+            permissionType: option.id === 'all' ? 'All Permissions' : 'No Permissions',
+          },
+        })
+        setPendingRoleName('')
         break
 
       case 'duplicate':
         // Show existing roles to select from
         setConversationState('awaiting_duplicate_role')
-        setTimeout(() => {
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: 'Which role would you like to duplicate permissions from?',
-            timestamp: new Date(),
-            showExistingRoles: true,
-          }
-          setMessages(prev => [...prev, assistantMessage])
-        }, 500)
+        addAssistantMessageWithLoading({
+          content: 'Which role would you like to duplicate permissions from?',
+          showExistingRoles: true,
+        })
         break
 
       case 'custom':
         // Ask for custom permission description
         setConversationState('awaiting_custom_permission')
-        setTimeout(() => {
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: 'Please describe the custom permissions you would like to set for this role:',
-            timestamp: new Date(),
-          }
-          setMessages(prev => [...prev, assistantMessage])
-        }, 500)
+        addAssistantMessageWithLoading({
+          content: 'Please describe the custom permissions you would like to set for this role:',
+        })
         break
     }
   }
@@ -1253,21 +1189,15 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
 
     // Reset state and show success
     setConversationState('idle')
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: '',
-        timestamp: new Date(),
-        showRoleSuccess: {
-          roleName: pendingRoleName,
-          permissionType: 'Duplicated Permissions',
-          duplicatedFrom: role.name,
-        },
-      }
-      setMessages(prev => [...prev, assistantMessage])
-      setPendingRoleName('')
-    }, 500)
+    addAssistantMessageWithLoading({
+      content: '',
+      showRoleSuccess: {
+        roleName: pendingRoleName,
+        permissionType: 'Duplicated Permissions',
+        duplicatedFrom: role.name,
+      },
+    })
+    setPendingRoleName('')
   }
 
   const handleRoleToModifyClick = (role: { id: string; name: string }) => {
@@ -1312,15 +1242,9 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     setMessages(prev => [...prev, userMessage])
 
     // Ask for new role name
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `What would you like to name the new role?`,
-        timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, assistantMessage])
-    }, 500)
+    addAssistantMessageWithLoading({
+      content: `What would you like to name the new role?`,
+    })
   }
 
   const handleRoleFromListClick = (role: { id: string; name: string; description: string }) => {
@@ -1338,16 +1262,10 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     setMessages(prev => [...prev, userMessage])
 
     // Show context actions for this role
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `What would you like to do with the '${role.name}' role?`,
-        timestamp: new Date(),
-        showRoleContextActions: { roleName: role.name },
-      }
-      setMessages(prev => [...prev, assistantMessage])
-    }, 500)
+    addAssistantMessageWithLoading({
+      content: `What would you like to do with the '${role.name}' role?`,
+      showRoleContextActions: { roleName: role.name },
+    })
   }
 
   const handleRoleContextActionClick = (action: { id: string; title: string }) => {
@@ -1371,16 +1289,10 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       setSelectedRoleToModify(EXISTING_ROLES.find(r => r.name === roleName)?.id || null)
       setSelectedModificationOption(null)
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `What would you like to do with the '${roleName}' role?`,
-          timestamp: new Date(),
-          showModificationOptions: true,
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `What would you like to do with the '${roleName}' role?`,
+        showModificationOptions: true,
+      })
     } else if (action.id === 'show-permissions') {
       // Show permissions table for the role
       const roleId = EXISTING_ROLES.find(r => r.name === roleName)?.id || ''
@@ -1393,30 +1305,18 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
         permissionLevel: (rolePerms[entity.id] || 'no-permission') as PermissionLevel,
       }))
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Permissions for '${roleName}':`,
-          timestamp: new Date(),
-          showPermissionsTable: { roleName, permissions },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `Permissions for '${roleName}':`,
+        showPermissionsTable: { roleName, permissions },
+      })
     } else if (action.id === 'duplicate-from-view') {
       // Start duplicate role flow
       setRoleBeingDuplicated(roleName)
       setConversationState('awaiting_duplicated_role_name')
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `What would you like to name the new role?`,
-          timestamp: new Date(),
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `What would you like to name the new role?`,
+      })
     }
   }
 
@@ -1461,14 +1361,10 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
           responseContent = 'This feature is coming soon!'
       }
 
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
+      addAssistantMessageWithLoading({
         content: responseContent,
-        timestamp: new Date(),
         showPermissionChangeChips: showChips,
-      }
-      setMessages(prev => [...prev, assistantMessage])
+      })
     }, 500)
   }
 
@@ -1490,35 +1386,23 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     if (chipOption.id === 'custom') {
       // Ask for custom permission description
       setConversationState('awaiting_permission_change')
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'Please describe the permission changes you would like to make:',
-          timestamp: new Date(),
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: 'Please describe the permission changes you would like to make:',
+      })
     } else {
       // Direct success for full access or remove access
       const changeDescription = chipOption.id === 'full-access'
         ? 'Granted full access to all features'
         : 'Removed all access permissions'
 
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: '',
-          timestamp: new Date(),
-          showPermissionChangeSuccess: {
-            roleName: roleName,
-            changeDescription: changeDescription,
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-        setRoleForPermissionChange(null)
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: '',
+        showPermissionChangeSuccess: {
+          roleName: roleName,
+          changeDescription: changeDescription,
+        },
+      })
+      setRoleForPermissionChange(null)
     }
   }
 
@@ -1553,22 +1437,16 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     setMessages(prev => [...prev, userMessage])
 
     // Show data entity options
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `What would you like to do with '${entityName}' for the '${roleName}' role?`,
-        timestamp: new Date(),
-        showDataEntityOptions: {
-          entityId,
-          entityName,
-          entityType,
-          roleName,
-          currentPermission,
-        },
-      }
-      setMessages(prev => [...prev, assistantMessage])
-    }, 500)
+    addAssistantMessageWithLoading({
+      content: `What would you like to do with '${entityName}' for the '${roleName}' role?`,
+      showDataEntityOptions: {
+        entityId,
+        entityName,
+        entityType,
+        roleName,
+        currentPermission,
+      },
+    })
   }
 
   const handleDataEntityOptionClick = (option: { id: string; title: string; description: string }) => {
@@ -1587,70 +1465,46 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     if (option.id === 'modify-permission' && entityForPermissionChange) {
       // Show permission level chips
       const currentPermLabel = formatPermissionLevel(entityForPermissionChange.currentPermission)
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Current permission for '${entityForPermissionChange.entityName}' is '${currentPermLabel}'. Select a new permission level:`,
-          timestamp: new Date(),
-          showPermissionLevelChips: {
-            entityId: entityForPermissionChange.entityId,
-            entityName: entityForPermissionChange.entityName,
-            roleName: entityForPermissionChange.roleName,
-            currentPermission: entityForPermissionChange.currentPermission,
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `Current permission for '${entityForPermissionChange.entityName}' is '${currentPermLabel}'. Select a new permission level:`,
+        showPermissionLevelChips: {
+          entityId: entityForPermissionChange.entityId,
+          entityName: entityForPermissionChange.entityName,
+          roleName: entityForPermissionChange.roleName,
+          currentPermission: entityForPermissionChange.currentPermission,
+        },
+      })
     } else if (option.id === 'views-permission' && entityForPermissionChange) {
       // Show views table
       const views = MOCK_ENTITY_VIEWS[entityForPermissionChange.entityId] || []
       setSelectedViewOrReport(null) // Reset view/report selection
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Views for '${entityForPermissionChange.entityName}':`,
-          timestamp: new Date(),
-          showViewsTable: {
-            entityId: entityForPermissionChange.entityId,
-            entityName: entityForPermissionChange.entityName,
-            roleName: entityForPermissionChange.roleName,
-            views,
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `Views for '${entityForPermissionChange.entityName}':`,
+        showViewsTable: {
+          entityId: entityForPermissionChange.entityId,
+          entityName: entityForPermissionChange.entityName,
+          roleName: entityForPermissionChange.roleName,
+          views,
+        },
+      })
     } else if (option.id === 'reports-permission' && entityForPermissionChange) {
       // Show reports table
       const reports = MOCK_ENTITY_REPORTS[entityForPermissionChange.entityId] || []
       setSelectedViewOrReport(null) // Reset view/report selection
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Reports for '${entityForPermissionChange.entityName}':`,
-          timestamp: new Date(),
-          showReportsTable: {
-            entityId: entityForPermissionChange.entityId,
-            entityName: entityForPermissionChange.entityName,
-            roleName: entityForPermissionChange.roleName,
-            reports,
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `Reports for '${entityForPermissionChange.entityName}':`,
+        showReportsTable: {
+          entityId: entityForPermissionChange.entityId,
+          entityName: entityForPermissionChange.entityName,
+          roleName: entityForPermissionChange.roleName,
+          reports,
+        },
+      })
     } else {
       // Show coming soon response for other options
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `This feature is coming soon! You'll be able to ${option.description.toLowerCase()}.`,
-          timestamp: new Date(),
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `This feature is coming soon! You'll be able to ${option.description.toLowerCase()}.`,
+      })
     }
   }
 
@@ -1670,17 +1524,11 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     setMessages(prev => [...prev, userMessage])
 
     // Show success message
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Permission for '${entityForPermissionChange.entityName}' has been updated to '${level.title}' for the '${entityForPermissionChange.roleName}' role.`,
-        timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, assistantMessage])
-      // Reset entity context
-      setEntityForPermissionChange(null)
-    }, 500)
+    addAssistantMessageWithLoading({
+      content: `Permission for '${entityForPermissionChange.entityName}' has been updated to '${level.title}' for the '${entityForPermissionChange.roleName}' role.`,
+    })
+    // Reset entity context
+    setEntityForPermissionChange(null)
   }
 
   const handleViewClick = (
@@ -1712,23 +1560,17 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     setMessages(prev => [...prev, userMessage])
 
     // Show view options
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `What would you like to do with the '${view.name}' view?`,
-        timestamp: new Date(),
-        showViewReportOptions: {
-          itemId: view.id,
-          itemName: view.name,
-          itemType: 'view',
-          entityName,
-          roleName,
-          currentPermission: view.permission,
-        },
-      }
-      setMessages(prev => [...prev, assistantMessage])
-    }, 500)
+    addAssistantMessageWithLoading({
+      content: `What would you like to do with the '${view.name}' view?`,
+      showViewReportOptions: {
+        itemId: view.id,
+        itemName: view.name,
+        itemType: 'view',
+        entityName,
+        roleName,
+        currentPermission: view.permission,
+      },
+    })
   }
 
   const handleReportClick = (
@@ -1760,23 +1602,17 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     setMessages(prev => [...prev, userMessage])
 
     // Show report options
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `What would you like to do with the '${report.name}' report?`,
-        timestamp: new Date(),
-        showViewReportOptions: {
-          itemId: report.id,
-          itemName: report.name,
-          itemType: 'report',
-          entityName,
-          roleName,
-          currentPermission: report.permission,
-        },
-      }
-      setMessages(prev => [...prev, assistantMessage])
-    }, 500)
+    addAssistantMessageWithLoading({
+      content: `What would you like to do with the '${report.name}' report?`,
+      showViewReportOptions: {
+        itemId: report.id,
+        itemName: report.name,
+        itemType: 'report',
+        entityName,
+        roleName,
+        currentPermission: report.permission,
+      },
+    })
   }
 
   const handleViewReportOptionClick = (option: { id: string; title: string; description: string }) => {
@@ -1798,33 +1634,21 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       // Show permission level chips for view/report
       const currentPermLabel = formatPermissionLevel(viewReportForPermissionChange.currentPermission)
       const itemTypeLabel = viewReportForPermissionChange.itemType === 'view' ? 'view' : 'report'
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Current permission for '${viewReportForPermissionChange.itemName}' ${itemTypeLabel} is '${currentPermLabel}'. Select a new permission level:`,
-          timestamp: new Date(),
-          showPermissionLevelChips: {
-            entityId: viewReportForPermissionChange.itemId,
-            entityName: viewReportForPermissionChange.itemName,
-            roleName: viewReportForPermissionChange.roleName,
-            currentPermission: viewReportForPermissionChange.currentPermission,
-          },
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `Current permission for '${viewReportForPermissionChange.itemName}' ${itemTypeLabel} is '${currentPermLabel}'. Select a new permission level:`,
+        showPermissionLevelChips: {
+          entityId: viewReportForPermissionChange.itemId,
+          entityName: viewReportForPermissionChange.itemName,
+          roleName: viewReportForPermissionChange.roleName,
+          currentPermission: viewReportForPermissionChange.currentPermission,
+        },
+      })
     } else {
       // Show coming soon response for modify option
       const itemTypeLabel = viewReportForPermissionChange.itemType === 'view' ? 'view' : 'report'
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Modify ${itemTypeLabel} feature is coming soon!`,
-          timestamp: new Date(),
-        }
-        setMessages(prev => [...prev, assistantMessage])
-      }, 500)
+      addAssistantMessageWithLoading({
+        content: `Modify ${itemTypeLabel} feature is coming soon!`,
+      })
     }
   }
 
@@ -1952,8 +1776,95 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
             ) : (
               // Assistant message
               <div className="space-y-3">
-                {/* App Creation Success Card */}
-                {message.showAppCard ? (
+                {/* Loading state with new loading components */}
+                {message.isLoading ? (
+                  <CopilotLoadingMessage
+                    stages={message.loadingStages || ['Processing...']}
+                    duration={message.loadingDuration || 5000}
+                    animationType={message.loadingAnimation || 'pulse'}
+                    showResult={message.loadingComplete}
+                    resultContent={
+                      message.loadingComplete && (
+                        <div className="space-y-2">
+                          {/* Message content */}
+                          {message.content && (
+                            <div className="text-[12px] text-gray-900 whitespace-pre-line leading-relaxed p-1">
+                              {message.content}
+                            </div>
+                          )}
+
+                          {/* Render all show* properties when loading is complete */}
+                          {message.showSuggestedRoles && message.showSuggestedRoles.length > 0 && (
+                            <div className="space-y-3">
+                              <p className="text-[12px] text-gray-900 p-1 leading-relaxed">
+                                I scanned your app. Based on the data, access patterns, workflows and interface structure, here are roles worth adding:
+                              </p>
+
+                              {/* Roles list with checkboxes */}
+                              <div className="space-y-2">
+                                {message.showSuggestedRoles.map((role) => (
+                                  <button
+                                    key={role.id}
+                                    onClick={() => handleToggleSuggestedRole(role.id)}
+                                    className={cn(
+                                      "w-full text-left rounded-lg px-3 py-2.5 border transition-all",
+                                      role.selected
+                                        ? "bg-purple-50 border-purple-200"
+                                        : "bg-white border-gray-200 hover:border-gray-300"
+                                    )}
+                                  >
+                                    <div className="flex items-start gap-2.5">
+                                      <div className={cn(
+                                        "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 mt-0.5",
+                                        role.selected
+                                          ? "bg-purple-600 border-purple-600"
+                                          : "bg-white border-gray-300"
+                                      )}>
+                                        {role.selected && <Check className="w-3 h-3 text-white" />}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-[12px] font-semibold text-gray-900">{role.name}</div>
+                                        <div className="text-[11px] text-gray-600 leading-relaxed mt-0.5">
+                                          {role.description}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+
+                              {/* Action buttons */}
+                              <div className="flex gap-2 mt-3">
+                                <button
+                                  onClick={handleAddSelectedRoles}
+                                  disabled={!message.showSuggestedRoles.some(r => r.selected)}
+                                  className={cn(
+                                    "flex-1 px-3 py-2 rounded-lg text-[12px] font-medium transition-all",
+                                    message.showSuggestedRoles.some(r => r.selected)
+                                      ? "bg-purple-600 hover:bg-purple-700 text-white"
+                                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                  )}
+                                >
+                                  Add Selected Roles
+                                </button>
+                                <button
+                                  onClick={handleCancelSuggestRoles}
+                                  className="px-3 py-2 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-100 transition-all"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
+                  />
+                ) : (
+                  // Regular assistant message (when not loading)
+                  <>
+                    {/* App Creation Success Card */}
+                    {message.showAppCard ? (
                   <div className="space-y-2">
                     {/* AI Avatar */}
                     <div className="w-6 h-6 rounded-full bg-purple-50 border border-purple-200 flex items-center justify-center">
@@ -2730,8 +2641,8 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                               {currentDrillThrough.title === 'Role' ? 'Roles & Permission' : currentDrillThrough.title}
                             </h4>
                           </div>
-                          {/* Back button - hidden during active suggest roles flow */}
-                          {!showSuggestRolesFlow && !completedAction && (
+                          {/* Back button */}
+                          {!completedAction && (
                             <button
                               onClick={handleBackToQuickStart}
                               className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
@@ -2819,6 +2730,8 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                     )}
                   </div>
                 )}
+              </>
+            )}
               </div>
             )}
           </div>
@@ -2835,99 +2748,6 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-          </div>
-        )}
-
-        {/* Suggest Roles Flow */}
-        {showSuggestRolesFlow && (
-          <div className="space-y-2">
-            {/* AI Avatar */}
-            <div className="w-6 h-6 rounded-full border border-purple-200 bg-purple-50 flex items-center justify-center">
-              <Bot className="w-3 h-3 text-purple-600 fill-purple-600" />
-            </div>
-
-            {isScanningRoles ? (
-              // Scanning loading state
-              <div className="space-y-2">
-                <p className="text-[12px] text-gray-900 p-1">Scanning your app to suggest roles...</p>
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              </div>
-            ) : (
-              // Suggested roles list
-              <div className="space-y-3">
-                <p className="text-[12px] text-gray-900 p-1 leading-relaxed">
-                  I scanned your app. Based on the data, access patterns, workflows and interface structure, here are roles worth adding:
-                </p>
-
-                {/* Roles list with checkboxes */}
-                <div className="space-y-2">
-                  {suggestedRoles.map((role) => (
-                    <button
-                      key={role.id}
-                      onClick={() => handleToggleSuggestedRole(role.id)}
-                      className={cn(
-                        "w-full text-left border rounded-lg px-3 py-2.5 transition-all cursor-pointer",
-                        role.selected
-                          ? "border-purple-300 bg-purple-50"
-                          : "border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300"
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Checkbox */}
-                        <div className={cn(
-                          "w-4 h-4 mt-0.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors",
-                          role.selected
-                            ? "bg-purple-500 border-purple-500"
-                            : "border-gray-300 bg-white"
-                        )}>
-                          {role.selected && (
-                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                          )}
-                        </div>
-                        {/* Role info */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-[12px] font-medium text-gray-900">
-                            {role.name}
-                          </h4>
-                          <p className="text-[11px] text-gray-700 mt-0.5">
-                            {role.description}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex gap-2">
-                  {/* Cancel button */}
-                  <button
-                    onClick={handleCancelSuggestRoles}
-                    className="flex-1 py-2 px-4 rounded-lg text-[12px] font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
-                  >
-                    Cancel
-                  </button>
-
-                  {/* Submit button */}
-                  <button
-                    onClick={handleAddSelectedRoles}
-                    disabled={!suggestedRoles.some(r => r.selected)}
-                    className={cn(
-                      "flex-1 py-2 px-4 rounded-lg text-[12px] font-medium transition-colors",
-                      suggestedRoles.some(r => r.selected)
-                        ? "bg-purple-500 text-white hover:bg-purple-600 cursor-pointer"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    )}
-                  >
-                    Add Selected Roles
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
 

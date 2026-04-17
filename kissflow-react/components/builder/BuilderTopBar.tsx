@@ -439,7 +439,7 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded-md transition-colors",
                 !isRunMode
-                  ? "bg-violet-600 text-white"
+                  ? "bg-purple-600 text-white"
                   : "text-gray-900 hover:bg-gray-200"
               )}
             >
@@ -450,7 +450,7 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded-md transition-colors",
                 isRunMode
-                  ? "bg-violet-600 text-white"
+                  ? "bg-purple-600 text-white"
                   : "text-gray-900 hover:bg-gray-200"
               )}
             >
@@ -480,13 +480,13 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
             <Button
               variant="ghost"
               size="sm"
-              className="h-[28px] w-8 p-0 cursor-pointer bg-white/80 text-violet-700 hover:bg-white hover:text-violet-800 border border-violet-300"
+              className="h-[28px] w-8 p-0 cursor-pointer bg-white/80 text-purple-700 hover:bg-white hover:text-purple-800 border border-purple-300"
             >
               <Play className="size-3" />
             </Button>
             <Button
               size="sm"
-              className="h-[28px] w-8 p-0 bg-violet-600 hover:bg-violet-700 cursor-pointer"
+              className="h-[28px] w-8 p-0 bg-purple-600 hover:bg-purple-700 cursor-pointer"
             >
               <Rocket className="size-3" />
             </Button>

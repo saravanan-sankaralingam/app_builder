@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 
 interface BuilderUtilityBarProps {
   title: string
-  tabType?: 'home' | 'dataform' | 'board' | 'process' | 'list' | 'navigation' | 'page' | 'variables' | 'resources' | 'components' | 'connections'
+  tabType?: 'home' | 'dataform' | 'board' | 'process' | 'list' | 'navigation' | 'page' | 'variables' | 'resources' | 'components' | 'connections' | 'permissions'
   activeView?: 'form' | 'workflow' | 'permission' | 'views' | 'reports' | 'share' | 'settings' | 'view-detail' | 'report-detail' | 'component-detail'
   onViewChange?: (view: 'form' | 'workflow' | 'permission') => void
   onViewsClick?: () => void
@@ -58,7 +58,7 @@ export function BuilderUtilityBar({
   // Check if we're in drill-through mode (views, reports, share, settings, or view-detail/report-detail sub-page)
   const isDrillThrough = activeView === 'views' || activeView === 'reports' || activeView === 'share' || activeView === 'settings' || activeView === 'view-detail' || activeView === 'report-detail' || activeView === 'component-detail'
 
-  const showActions = tabType !== 'home' && tabType !== 'variables' && tabType !== 'resources' && tabType !== 'components' && tabType !== 'connections' && !isDrillThrough
+  const showActions = tabType !== 'home' && tabType !== 'variables' && tabType !== 'resources' && tabType !== 'components' && tabType !== 'connections' && tabType !== 'permissions' && !isDrillThrough
   const showViewSwitcher = (tabType === 'board' || tabType === 'process') && !isDrillThrough
   const showDetailActions = activeView === 'view-detail' || activeView === 'report-detail'
 

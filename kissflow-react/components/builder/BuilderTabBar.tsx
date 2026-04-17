@@ -3,7 +3,7 @@
 import { X, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type TabType = 'home' | 'dataform' | 'board' | 'process' | 'list' | 'navigation' | 'page' | 'variables' | 'resources' | 'components' | 'connections'
+export type TabType = 'home' | 'dataform' | 'board' | 'process' | 'list' | 'navigation' | 'page' | 'variables' | 'resources' | 'components' | 'connections' | 'permissions'
 
 export interface Tab {
   id: string
@@ -34,6 +34,7 @@ const tabIconColors: Record<TabType, string> = {
   resources: '#EAB308', // yellow
   components: '#B94E15', // rust
   connections: '#22C55E', // green
+  permissions: '#14B8A6', // teal
 }
 
 export function BuilderTabBar({
