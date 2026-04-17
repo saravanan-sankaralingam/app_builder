@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Loader2, Trash2, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/config'
 
 interface ListItem {
   id: string
@@ -42,7 +43,7 @@ export function ListEditor({ entityId }: ListEditorProps) {
     const fetchListItems = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch(`http://localhost:3000/api/data-layers/${entityId}`)
+        const response = await fetch(`${API_BASE_URL}/api/data-layers/${entityId}`)
         if (response.ok) {
           const result = await response.json()
           const listItems = result.data?.config?.items || []
@@ -69,7 +70,7 @@ export function ListEditor({ entityId }: ListEditorProps) {
   const saveItems = async (newItems: ListItem[]) => {
     setIsSaving(true)
     try {
-      await fetch(`http://localhost:3000/api/data-layers/${entityId}`, {
+      await fetch(`${API_BASE_URL}/api/data-layers/${entityId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

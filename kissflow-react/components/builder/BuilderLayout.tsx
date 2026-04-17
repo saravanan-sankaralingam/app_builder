@@ -2,6 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react'
 import { BuilderThemeRoot } from '@/context/BuilderThemeContext'
+import { API_BASE_URL } from '@/lib/config'
 import { ClipboardList, LayoutGrid, Workflow, Navigation, FileText, List, Variable, FolderOpen, Plus, Inbox, Search, Component, Cable, UserKey } from 'lucide-react'
 import { BuilderTopBar } from './BuilderTopBar'
 import { BuilderSidebar } from './BuilderSidebar'
@@ -132,7 +133,7 @@ export function BuilderLayout({
 
     setIsCreating(true)
     try {
-      const response = await fetch(`http://localhost:3000/api/apps/${appId}/data-layers`, {
+      const response = await fetch(`${API_BASE_URL}/api/apps/${appId}/data-layers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +182,7 @@ export function BuilderLayout({
 
     setIsCreating(true)
     try {
-      const response = await fetch(`http://localhost:3000/api/apps/${appId}/data-layers`, {
+      const response = await fetch(`${API_BASE_URL}/api/apps/${appId}/data-layers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -230,7 +231,7 @@ export function BuilderLayout({
 
     setIsCreating(true)
     try {
-      const response = await fetch(`http://localhost:3000/api/apps/${appId}/data-layers`, {
+      const response = await fetch(`${API_BASE_URL}/api/apps/${appId}/data-layers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -279,7 +280,7 @@ export function BuilderLayout({
 
     setIsCreating(true)
     try {
-      const response = await fetch(`http://localhost:3000/api/apps/${appId}/navigations`, {
+      const response = await fetch(`${API_BASE_URL}/api/apps/${appId}/navigations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -327,7 +328,7 @@ export function BuilderLayout({
 
     setIsCreating(true)
     try {
-      const response = await fetch(`http://localhost:3000/api/apps/${appId}/pages`, {
+      const response = await fetch(`${API_BASE_URL}/api/apps/${appId}/pages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -375,7 +376,7 @@ export function BuilderLayout({
 
     setIsCreating(true)
     try {
-      const response = await fetch(`http://localhost:3000/api/apps/${appId}/data-layers`, {
+      const response = await fetch(`${API_BASE_URL}/api/apps/${appId}/data-layers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -614,7 +615,7 @@ export function BuilderLayout({
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/data-layers/${activeTab.entityId}`
+        `${API_BASE_URL}/api/data-layers/${activeTab.entityId}`
       )
       if (response.ok) {
         const result = await response.json()
@@ -639,7 +640,7 @@ export function BuilderLayout({
     setIsRenaming(true)
     try {
       const response = await fetch(
-        `http://localhost:3000/api/apps/${appId}/data-layers/${activeTab.entityId}`,
+        `${API_BASE_URL}/api/apps/${appId}/data-layers/${activeTab.entityId}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -687,7 +688,7 @@ export function BuilderLayout({
     setIsDuplicating(true)
     try {
       const response = await fetch(
-        `http://localhost:3000/api/apps/${appId}/data-layers/${activeTab.entityId}/duplicate`,
+        `${API_BASE_URL}/api/apps/${appId}/data-layers/${activeTab.entityId}/duplicate`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

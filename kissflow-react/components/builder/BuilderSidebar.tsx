@@ -29,6 +29,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { API_BASE_URL } from '@/lib/config'
 import {
   Tooltip,
   TooltipContent,
@@ -195,7 +196,7 @@ export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, o
   useEffect(() => {
     if (selectedDataItem === 'dataform' && appId) {
       setIsLoadingDataForms(true)
-      fetch(`http://localhost:3000/api/apps/${appId}/data-layers`)
+      fetch(`${API_BASE_URL}/api/apps/${appId}/data-layers`)
         .then((res) => res.json())
         .then((result) => {
           const forms = result.data?.filter((d: DataLayer) => d.type === 'dataform') || []
@@ -215,7 +216,7 @@ export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, o
   useEffect(() => {
     if (selectedDataItem === 'board' && appId) {
       setIsLoadingBoards(true)
-      fetch(`http://localhost:3000/api/apps/${appId}/data-layers`)
+      fetch(`${API_BASE_URL}/api/apps/${appId}/data-layers`)
         .then((res) => res.json())
         .then((result) => {
           const boardsList = result.data?.filter((d: DataLayer) => d.type === 'board') || []
@@ -235,7 +236,7 @@ export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, o
   useEffect(() => {
     if (selectedDataItem === 'process' && appId) {
       setIsLoadingProcesses(true)
-      fetch(`http://localhost:3000/api/apps/${appId}/data-layers`)
+      fetch(`${API_BASE_URL}/api/apps/${appId}/data-layers`)
         .then((res) => res.json())
         .then((result) => {
           const processesList = result.data?.filter((d: DataLayer) => d.type === 'process') || []
@@ -255,7 +256,7 @@ export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, o
   useEffect(() => {
     if (selectedDataItem === 'list' && appId) {
       setIsLoadingLists(true)
-      fetch(`http://localhost:3000/api/apps/${appId}/data-layers`)
+      fetch(`${API_BASE_URL}/api/apps/${appId}/data-layers`)
         .then((res) => res.json())
         .then((result) => {
           const listItems = result.data?.filter((d: DataLayer) => d.type === 'list') || []
@@ -275,7 +276,7 @@ export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, o
   useEffect(() => {
     if (selectedDataItem === 'navigation' && appId) {
       setIsLoadingNavigations(true)
-      fetch(`http://localhost:3000/api/apps/${appId}/navigations`)
+      fetch(`${API_BASE_URL}/api/apps/${appId}/navigations`)
         .then((res) => res.json())
         .then((result) => {
           setNavigations(result.data || [])
@@ -294,7 +295,7 @@ export function BuilderSidebar({ activeItem, onItemClick, onCreateItem, appId, o
   useEffect(() => {
     if (selectedDataItem === 'page' && appId) {
       setIsLoadingPages(true)
-      fetch(`http://localhost:3000/api/apps/${appId}/pages`)
+      fetch(`${API_BASE_URL}/api/apps/${appId}/pages`)
         .then((res) => res.json())
         .then((result) => {
           setPages(result.data || [])
