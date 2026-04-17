@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react'
 import { BuilderThemeRoot } from '@/context/BuilderThemeContext'
-import { ClipboardList, LayoutGrid, Workflow, Navigation, FileText, List, Variable, FolderOpen, Plus, Inbox, Search, Component, Cable } from 'lucide-react'
+import { ClipboardList, LayoutGrid, Workflow, Navigation, FileText, List, Variable, FolderOpen, Plus, Inbox, Search, Component, Cable, UserKey } from 'lucide-react'
 import { BuilderTopBar } from './BuilderTopBar'
 import { BuilderSidebar } from './BuilderSidebar'
 import { BuilderTabBar, Tab, HOME_TAB } from './BuilderTabBar'
@@ -19,6 +19,7 @@ import { VariablesEditor } from './VariablesEditor'
 import { ResourcesEditor } from './ResourcesEditor'
 import { ComponentsEditor } from './ComponentsEditor'
 import { ComponentEditor } from './ComponentEditor'
+import { RolesEditor } from './RolesEditor'
 import { ComponentData } from './ComponentCard'
 import { NavigationEditor } from './NavigationEditor'
 import { PageEditor } from './PageEditor'
@@ -1037,6 +1038,10 @@ export function BuilderLayout({
       )
     }
 
+    if (activeTab.type === 'permissions') {
+      return <RolesEditor appId={appId} />
+    }
+
     // Default fallback
     return children
   }
@@ -1266,6 +1271,23 @@ export function BuilderLayout({
                 icon: Cable,
                 closable: true,
                 type: 'connections',
+              }
+              setTabs((prevTabs) => [...prevTabs, newTab])
+              setActiveTabId(newTab.id)
+            }
+          }}
+          onPermissionsClick={() => {
+            // Create new tab for permissions if not already open
+            const existingTab = tabs.find((tab) => tab.type === 'permissions')
+            if (existingTab) {
+              setActiveTabId(existingTab.id)
+            } else {
+              const newTab: Tab = {
+                id: 'permissions',
+                label: 'Roles',
+                icon: UserKey,
+                closable: true,
+                type: 'permissions',
               }
               setTabs((prevTabs) => [...prevTabs, newTab])
               setActiveTabId(newTab.id)
