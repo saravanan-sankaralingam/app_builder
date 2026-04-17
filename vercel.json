@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd kissflow-react && npm run build",
+  "outputDirectory": "kissflow-react/.next",
+  "installCommand": "cd kissflow-react && npm install"
+}
