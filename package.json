@@ -1,0 +1,10 @@
+{
+  "name": "kissflow-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd kissflow-react && npm install && npm run build",
+    "start": "cd kissflow-react && npm start",
+    "dev": "cd kissflow-react && npm run dev"
+  }
+}
