@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Paperclip, Bot, FileText, Database, Zap, Palette, Shield, Cable, Sparkles, ChevronLeft, ChevronRight, Check, PartyPopper, Users, LayoutGrid, ArrowLeft, ArrowRight, CheckCircle, UserKey, Layout, Plug } from 'lucide-react'
+import { Send, Paperclip, Bot, FileText, Database, Zap, Palette, Shield, Cable, Sparkles, ChevronLeft, ChevronRight, ChevronUp, Check, PartyPopper, Users, LayoutGrid, ArrowLeft, ArrowRight, CheckCircle, UserKey, Layout, Plug, Star, BarChart3, Box, Menu, GitBranch, Table } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { IconCircleCheckFilled } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CopilotLoadingMessage, getLoadingConfig } from './copilot'
+import { SlashCommandMenu } from './copilot/SlashCommandMenu'
+import type { Artifact } from './copilot/artifactTypes'
+import { ARTIFACT_TYPE_STYLES } from './copilot/artifactTypes'
 
 interface CopilotPanelProps {
   appName: string
@@ -135,6 +138,71 @@ const MOCK_DATA_ENTITIES = [
   { id: 'training-requests', name: 'Training Requests', type: 'board' as const },
   { id: 'customer-feedback', name: 'Customer Feedback', type: 'dataform' as const },
   { id: 'travel-request', name: 'Travel Request', type: 'process' as const },
+]
+
+// Mock artifacts for slash command (converted from MOCK_DATA_ENTITIES + additional artifacts)
+const MOCK_ARTIFACTS: Artifact[] = [
+  // Role artifacts
+  { id: 'admin-role', name: 'Admin', type: 'role' as const, category: 'role' as const, ...ARTIFACT_TYPE_STYLES.role },
+  { id: 'manager-role', name: 'Manager', type: 'role' as const, category: 'role' as const, ...ARTIFACT_TYPE_STYLES.role },
+  { id: 'employee-role', name: 'Employee', type: 'role' as const, category: 'role' as const, ...ARTIFACT_TYPE_STYLES.role },
+  { id: 'viewer-role', name: 'Viewer', type: 'role' as const, category: 'role' as const, ...ARTIFACT_TYPE_STYLES.role },
+
+  // Dataform artifacts (10+ items)
+  { id: 'employee-directory', name: 'Employee Directory', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'asset-inventory', name: 'Asset Inventory', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'customer-feedback', name: 'Customer Feedback', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'vendor-list', name: 'Vendor List', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'product-catalog', name: 'Product Catalog', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'contact-database', name: 'Contact Database', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'location-directory', name: 'Location Directory', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'department-list', name: 'Department List', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'skill-matrix', name: 'Skill Matrix', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+  { id: 'equipment-register', name: 'Equipment Register', type: 'dataform' as const, category: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.dataform },
+
+  // Board artifacts (10+ items)
+  { id: 'leave-request', name: 'Leave Request', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'project-tracker', name: 'Project Tracker', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'timesheet', name: 'Timesheet', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'training-requests', name: 'Training Requests', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'bug-tracker', name: 'Bug Tracker', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'feature-requests', name: 'Feature Requests', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'task-board', name: 'Task Board', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'sprint-board', name: 'Sprint Board', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'support-tickets', name: 'Support Tickets', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+  { id: 'recruitment-pipeline', name: 'Recruitment Pipeline', type: 'board' as const, category: 'board' as const, ...ARTIFACT_TYPE_STYLES.board },
+
+  // Process artifacts (10+ items)
+  { id: 'expense-report', name: 'Expense Report', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'invoice-approval', name: 'Invoice Approval', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'vendor-onboarding', name: 'Vendor Onboarding', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'purchase-order', name: 'Purchase Order', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'travel-request', name: 'Travel Request', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'contract-approval', name: 'Contract Approval', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'employee-onboarding', name: 'Employee Onboarding', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'change-request', name: 'Change Request', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'asset-request', name: 'Asset Request', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'reimbursement', name: 'Reimbursement', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+  { id: 'it-support', name: 'IT Support', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
+
+  // View artifacts
+  { id: 'all-requests-view', name: 'All Requests', type: 'datatable' as const, category: 'view' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'by-status-view', name: 'By Status', type: 'datatable' as const, category: 'view' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'employee-gallery', name: 'Employee Gallery', type: 'gallery' as const, category: 'view' as const, ...ARTIFACT_TYPE_STYLES.gallery },
+
+  // Report artifacts
+  { id: 'monthly-summary', name: 'Monthly Summary', type: 'table-report' as const, category: 'report' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+  { id: 'expense-chart', name: 'Expense Chart', type: 'chart-report' as const, category: 'report' as const, ...ARTIFACT_TYPE_STYLES['chart-report'] },
+
+  // Page artifacts
+  { id: 'home-page', name: 'Home Page', type: 'page' as const, category: 'page' as const, ...ARTIFACT_TYPE_STYLES.page },
+  { id: 'dashboard-page', name: 'Dashboard', type: 'page' as const, category: 'page' as const, ...ARTIFACT_TYPE_STYLES.page },
+  { id: 'reports-page', name: 'Reports', type: 'page' as const, category: 'page' as const, ...ARTIFACT_TYPE_STYLES.page },
+  { id: 'settings-page', name: 'Settings', type: 'page' as const, category: 'page' as const, ...ARTIFACT_TYPE_STYLES.page },
+
+  // Navigation artifacts
+  { id: 'main-nav', name: 'Main Navigation', type: 'navigation' as const, category: 'navigation' as const, ...ARTIFACT_TYPE_STYLES.navigation },
+  { id: 'sidebar-nav', name: 'Sidebar Navigation', type: 'navigation' as const, category: 'navigation' as const, ...ARTIFACT_TYPE_STYLES.navigation },
 ]
 
 // Mock views for entities (dataform and board only)
@@ -562,6 +630,7 @@ interface ChatMessage {
   isLoading?: boolean
   loadingStages?: string[]
   loadingDuration?: number
+  loadingStageDurations?: number[]
   loadingAnimation?: 'pulse' | 'spin' | 'morph' | 'none'
   loadingComplete?: boolean
 }
@@ -656,6 +725,11 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
   const [pendingRoleName, setPendingRoleName] = useState('')
   const [drillThroughCategory, setDrillThroughCategory] = useState<string | null>(null)
   const [completedAction, setCompletedAction] = useState<string | null>(null)
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false)
+  const [showSlashMenu, setShowSlashMenu] = useState(false)
+  const [slashMenuQuery, setSlashMenuQuery] = useState('')
+  const [slashMenuPosition, setSlashMenuPosition] = useState({ x: 0, y: 0 })
+  const [referencedArtifacts, setReferencedArtifacts] = useState<Artifact[]>([])
   const [suggestedRoles, setSuggestedRoles] = useState<SuggestedRole[]>([])
   const [selectedPermissionOption, setSelectedPermissionOption] = useState<string | null>(null)
   const [selectedRoleToModify, setSelectedRoleToModify] = useState<string | null>(null)
@@ -955,6 +1029,106 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     setDrillThroughCategory(null)
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    setInput(value)
+
+    // Detect "/" at start or after space
+    const lastChar = value[value.length - 1]
+    const beforeLastChar = value[value.length - 2]
+
+    if (lastChar === '/' && (!beforeLastChar || beforeLastChar === ' ')) {
+      // Calculate position for menu (above the input)
+      if (inputRef.current) {
+        const rect = inputRef.current.getBoundingClientRect()
+        setSlashMenuPosition({
+          x: rect.left,
+          y: rect.top
+        })
+      }
+      setShowSlashMenu(true)
+      setSlashMenuQuery('')
+    } else if (showSlashMenu) {
+      // Extract query after "/"
+      const lastSlashIndex = value.lastIndexOf('/')
+      const query = value.slice(lastSlashIndex + 1)
+
+      // Close menu if space is typed after slash (user moved on)
+      if (query.includes(' ')) {
+        setShowSlashMenu(false)
+        setSlashMenuQuery('')
+      } else {
+        setSlashMenuQuery(query)
+      }
+    }
+  }
+
+  const handleArtifactSelect = (artifact: Artifact) => {
+    // Remove the "/" command from input
+    const lastSlashIndex = input.lastIndexOf('/')
+    const beforeSlash = input.slice(0, lastSlashIndex)
+
+    // Insert artifact reference (plain text)
+    const reference = artifact.name
+    setInput(beforeSlash + reference + ' ')
+
+    // Track referenced artifacts for highlighting
+    setReferencedArtifacts(prev => {
+      // Avoid duplicates
+      if (prev.some(a => a.id === artifact.id)) {
+        return prev
+      }
+      return [...prev, artifact]
+    })
+
+    // Close menu
+    setShowSlashMenu(false)
+    setSlashMenuQuery('')
+
+    // Focus back on input
+    inputRef.current?.focus()
+  }
+
+  const handleActionClick = (action: SuggestionAction) => {
+    // Close quick actions
+    setQuickActionsOpen(false)
+
+    // Create user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: action.title,
+      timestamp: new Date(),
+    }
+
+    // Trigger drill-through (same logic as clicking action card)
+    setMessages(prev => [...prev, userMessage])
+    setDrillThroughCategory(action.id)
+
+    // Add assistant response with sub-actions
+    const assistantMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: `Great! What would you like to do with ${action.title.toLowerCase()}?`,
+      timestamp: new Date(),
+      showDisabledSubActions: {
+        categoryTitle: action.title,
+        categoryIconBg: action.iconBg,
+        categoryIconColor: action.iconColor,
+        categoryIconName: getIconName(action.icon),
+        subActions: action.subActions || [],
+        selectedActionId: '',
+      },
+    }
+
+    setMessages(prev => [...prev, assistantMessage])
+  }
+
+  const getIconName = (icon: React.ComponentType<any>): string => {
+    // Extract icon name from component
+    return icon.displayName || icon.name || 'Folder'
+  }
+
   const handleSubActionClick = (subAction: SubAction) => {
     // Mark this action as completed (for disabled state styling)
     setCompletedAction(subAction.id)
@@ -999,12 +1173,13 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
         isLoading: true,
         loadingStages: config.stages,
         loadingDuration: config.duration,
+        loadingStageDurations: config.stageDurations,
         loadingAnimation: config.animation
       }
 
       setMessages(prev => [...prev, loadingMsg])
 
-      // Simulate AI processing (5 seconds)
+      // Simulate AI processing (8 seconds)
       setTimeout(() => {
         const roles = MOCK_SUGGESTED_ROLES.map(role => ({ ...role, selected: false }))
 
@@ -1781,6 +1956,7 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                   <CopilotLoadingMessage
                     stages={message.loadingStages || ['Processing...']}
                     duration={message.loadingDuration || 5000}
+                    stageDurations={message.loadingStageDurations}
                     animationType={message.loadingAnimation || 'pulse'}
                     showResult={message.loadingComplete}
                     resultContent={
@@ -2758,22 +2934,119 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       {/* Input Area */}
       {isExpanded && (
       <div className="flex-shrink-0 mt-4 px-2 pb-2">
+        {/* Quick actions bar */}
+        <div className="bg-purple-50/40 rounded-t-xl px-3 pt-2 pb-6 border border-purple-100/50 border-b-0 -mb-[13px] relative z-0">
+          {/* Collapsible header */}
+          <button
+            onClick={() => setQuickActionsOpen(!quickActionsOpen)}
+            className="flex items-center justify-between text-xs text-gray-700 hover:text-gray-900 transition-colors w-full"
+          >
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded bg-purple-50 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-2.5 h-2.5 text-purple-600" />
+              </div>
+              <span>Quick actions</span>
+            </div>
+            <ChevronUp
+              className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${quickActionsOpen ? 'rotate-0' : 'rotate-180'}`}
+            />
+          </button>
+
+          {/* Expandable content */}
+          {quickActionsOpen && (
+            <div className="mt-3 animate-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-2 flex-wrap">
+                {SUGGESTION_ACTIONS.map((action) => (
+                  <button
+                    key={action.id}
+                    onClick={() => handleActionClick(action)}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-white hover:bg-purple-50 text-gray-700 transition-colors border border-purple-100/30"
+                  >
+                    <div className={`w-4 h-4 rounded flex items-center justify-center ${action.iconBg}`}>
+                      <action.icon className={`w-2.5 h-2.5 ${action.iconColor}`} />
+                    </div>
+                    <span>{action.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div
-          className="rounded-[12px] p-[1px] overflow-hidden"
+          className="rounded-[12px] p-[1px] overflow-hidden relative z-10"
           style={{ background: 'linear-gradient(135deg, #E58DC9 0%, #A8A8E9 100%)' }}
         >
           <div className="rounded-[11px] p-3 bg-white">
-          {/* Text input */}
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder=""
-            className="w-full resize-none text-[12px] text-gray-900 placeholder:text-gray-400 focus:outline-none min-h-[40px] max-h-[100px] bg-transparent"
-            rows={1}
-            disabled={isLoading}
-          />
+          {/* Text input with colored overlay */}
+          <div className="relative">
+            {/* Actual textarea with matching styling */}
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder=""
+              className="relative w-full resize-none text-[12px] placeholder:text-gray-400 focus:outline-none min-h-[40px] max-h-[100px] bg-transparent"
+              style={{
+                color: 'transparent',
+                caretColor: '#111827',
+                lineHeight: '1.5',
+                padding: '0'
+              }}
+              rows={1}
+              disabled={isLoading}
+            />
+            {/* Text overlay showing what user types with artifact highlighting */}
+            <div
+              className="absolute inset-0 pointer-events-none whitespace-pre-wrap break-words text-[12px] overflow-hidden"
+              style={{
+                lineHeight: '1.5',
+                padding: '0',
+                minHeight: '40px',
+                top: 0,
+                left: 0
+              }}
+            >
+              {(() => {
+                // Check if any part of the input matches an artifact name
+                let result: React.ReactNode[] = []
+                let remainingText = input
+                let key = 0
+
+                while (remainingText.length > 0) {
+                  // Find if any artifact name starts at the current position
+                  let matched = false
+
+                  for (const artifact of referencedArtifacts) {
+                    if (remainingText.startsWith(artifact.name)) {
+                      // Found a match
+                      result.push(
+                        <span key={key++} style={{ color: 'var(--purple-600)' }}>
+                          {artifact.name}
+                        </span>
+                      )
+                      remainingText = remainingText.slice(artifact.name.length)
+                      matched = true
+                      break
+                    }
+                  }
+
+                  if (!matched) {
+                    // No artifact match, add the character as normal text
+                    result.push(
+                      <span key={key++} style={{ color: '#111827' }}>
+                        {remainingText[0]}
+                      </span>
+                    )
+                    remainingText = remainingText.slice(1)
+                  }
+                }
+
+                return result
+              })()}
+            </div>
+          </div>
 
           {/* Bottom row with hint and buttons */}
           <div className="flex items-center justify-between mt-2">
@@ -2790,6 +3063,19 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
           </div>
         </div>
         </div>
+
+        {/* Slash Command Menu */}
+        <SlashCommandMenu
+          isOpen={showSlashMenu}
+          position={slashMenuPosition}
+          onSelect={handleArtifactSelect}
+          onClose={() => {
+            setShowSlashMenu(false)
+            setSlashMenuQuery('')
+          }}
+          currentQuery={slashMenuQuery}
+          artifacts={MOCK_ARTIFACTS}
+        />
       </div>
       )}
     </div>

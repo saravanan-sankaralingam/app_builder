@@ -3,13 +3,19 @@ import { AnimationType } from './AnimatedCopilotAvatar'
 export interface LoadingConfig {
   stages: string[]
   duration: number
+  stageDurations?: number[] // Optional: individual duration for each stage (ms)
   animation: AnimationType
 }
 
 export const LOADING_CONFIGS: Record<string, LoadingConfig> = {
   'suggest-roles': {
-    stages: ['Loading...'],
-    duration: 4000,
+    stages: [
+      'Loading...', // 0-2s: shows 3-dot animation
+      'Analysing your app structure...', // 2-5s: first text message
+      'Suggesting your app roles...' // 5-8s: second text message
+    ],
+    duration: 8000, // Increased from 4000ms to 8000ms
+    stageDurations: [2000, 3000, 3000], // Individual stage timings
     animation: 'pulse'
   },
 
