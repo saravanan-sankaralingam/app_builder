@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Check, Loader2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const STEP_DURATION = 10000 // 10 seconds per step (60 seconds total / 6 steps)
@@ -56,33 +56,16 @@ export function LoaderDemoView() {
     switch (stepIndex) {
       case 0: // Creating roles
         return '/role-creation-loader.svg'
-      case 1: // Creating data
+      case 1: // Create data entities
         return '/data-entity-loader.svg'
       case 2: // Creating views
         return '/view-loader.svg'
+      case 3: // Creating reports
+        return '/report-loader.svg'
+      case 4: // Creating pages
+        return '/page-loader.svg'
       default:
         return '/ai-app-loader.svg'
-    }
-  }
-
-  // Determine the state of each step
-  const getStepState = (stepIndex: number): 'pending' | 'active' | 'completed' => {
-    if (stepIndex < currentStep) return 'completed'
-    if (stepIndex === currentStep) return 'active'
-    return 'pending'
-  }
-
-  // Render the appropriate icon based on step state
-  const renderStepIcon = (stepIndex: number) => {
-    const state = getStepState(stepIndex)
-
-    switch (state) {
-      case 'completed':
-        return <Check className="w-4 h-4 text-green-600" />
-      case 'active':
-        return <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
-      case 'pending':
-        return <div className="w-2 h-2 bg-gray-400 rounded-full" />
     }
   }
 
@@ -141,7 +124,7 @@ export function LoaderDemoView() {
         </p>
 
         {/* SVG Animation */}
-        <div className="w-[240px] h-[192px] mb-6">
+        <div className="w-[240px] h-[192px] mb-[20px]">
           <img
             src={getSvgForStep(currentStep)}
             alt="Creating app"
@@ -150,29 +133,34 @@ export function LoaderDemoView() {
           />
         </div>
 
-        {/* Steps List */}
-        <div className="w-full max-w-[480px] space-y-3">
-          {CREATION_STEPS.map((step, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-3"
-            >
-              {/* Left Icon */}
-              <div className="flex-shrink-0 w-4 h-4 mt-0.5 flex items-center justify-center">
-                {renderStepIcon(index)}
-              </div>
+        {/* Current Step Title & Description */}
+        <div className="flex flex-col items-center mb-6">
+          <h1 className="text-[14px] font-medium text-gray-900 text-center mb-1">
+            {CREATION_STEPS[currentStep].title}
+          </h1>
+          <p className="text-[12px] text-gray-600 text-center max-w-[240px]">
+            {CREATION_STEPS[currentStep].description}
+          </p>
+        </div>
 
-              {/* Content */}
-              <div className="flex-1 flex flex-col">
-                <h3 className="text-[14px] font-medium text-gray-900">
-                  {step.title}
-                </h3>
-                <p className="text-[12px] text-gray-600 leading-relaxed">
-                  {step.description}
-                </p>
-              </div>
+        {/* Progress Bar */}
+        <div className="w-[240px]">
+          <div className="h-2 bg-white/50 rounded-full overflow-hidden">
+            <div
+              className="h-full transition-all duration-500 ease-out relative overflow-hidden rounded-full"
+              style={{
+                width: `${CREATION_STEPS[currentStep].progress}%`,
+                background: 'linear-gradient(265deg, #d341a5, #6e6edb)',
+              }}
+            >
+              <div
+                className="absolute inset-0 w-full h-full animate-shimmer"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                }}
+              />
             </div>
-          ))}
+          </div>
         </div>
 
       </div>
