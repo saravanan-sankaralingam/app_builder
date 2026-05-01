@@ -67,6 +67,11 @@ export function BuilderLayout({
   // Component state
   const [selectedComponent, setSelectedComponent] = useState<ComponentData | null>(null)
   const [isComponentNewlyCreated, setIsComponentNewlyCreated] = useState(false)
+
+  // Callback to add nav items to preview from Copilot
+  const [addNavItemCallback, setAddNavItemCallback] = useState<
+    ((pageId: string, pageLabel: string) => void) | null
+  >(null)
   const [components, setComponents] = useState<ComponentData[]>([])
   const [isLoadingComponents, setIsLoadingComponents] = useState(false)
 
@@ -1083,12 +1088,18 @@ export function BuilderLayout({
               appDescription={appDescription}
               appIcon={appIcon}
               appIconBg={appIconBg}
+              onAddPageToPreview={addNavItemCallback}
             />
 
             {/* Runtime Preview - remaining space */}
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 flex flex-col overflow-hidden rounded-tl-lg bg-white">
-                <AppRuntimePreview appName={appName} appIcon={appIcon} appIconBg={appIconBg} />
+              <div className="flex-1 flex flex-col overflow-hidden rounded-tl-lg bg-transparent pr-2 pb-2">
+                <AppRuntimePreview
+                  appName={appName}
+                  appIcon={appIcon}
+                  appIconBg={appIconBg}
+                  onAddNavItem={(callback) => setAddNavItemCallback(() => callback)}
+                />
               </div>
             </div>
           </>

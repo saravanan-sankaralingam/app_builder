@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Paperclip, Bot, FileText, Database, Zap, Palette, Shield, Cable, Sparkles, ChevronLeft, ChevronRight, ChevronUp, Check, PartyPopper, Users, LayoutGrid, ArrowLeft, ArrowRight, CheckCircle, UserKey, Layout, Plug, Star, BarChart3, Box, Menu, GitBranch, Table } from 'lucide-react'
+import { Send, Paperclip, Bot, FileText, Database, Zap, Palette, Shield, Cable, Sparkles, ChevronLeft, ChevronRight, ChevronUp, Check, PartyPopper, Users, LayoutGrid, ArrowLeft, ArrowRight, CheckCircle, UserKey, Layout, Plug, Star, BarChart3, Box, Menu, GitBranch, Table, Trash2, AlertTriangle, CheckCircle2, CheckCheck, ArrowUpRight } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { IconCircleCheckFilled } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
@@ -16,11 +16,13 @@ interface CopilotPanelProps {
   appDescription?: string
   appIcon: string
   appIconBg: string
+  onAddPageToPreview?: ((pageId: string, pageLabel: string) => void) | null
 }
 
 interface SubAction {
   id: string
   title: string
+  prompt?: string
 }
 
 interface PermissionOption {
@@ -185,14 +187,61 @@ const MOCK_ARTIFACTS: Artifact[] = [
   { id: 'reimbursement', name: 'Reimbursement', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
   { id: 'it-support', name: 'IT Support', type: 'process' as const, category: 'process' as const, ...ARTIFACT_TYPE_STYLES.process },
 
-  // View artifacts
-  { id: 'all-requests-view', name: 'All Requests', type: 'datatable' as const, category: 'view' as const, ...ARTIFACT_TYPE_STYLES.datatable },
-  { id: 'by-status-view', name: 'By Status', type: 'datatable' as const, category: 'view' as const, ...ARTIFACT_TYPE_STYLES.datatable },
-  { id: 'employee-gallery', name: 'Employee Gallery', type: 'gallery' as const, category: 'view' as const, ...ARTIFACT_TYPE_STYLES.gallery },
+  // View artifacts (with parent references)
+  // Leave Request (board) - views
+  { id: 'leave-table', name: 'All Requests', type: 'datatable' as const, category: 'view' as const, parentId: 'leave-request', parentName: 'Leave Request', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'leave-kanban', name: 'By Status', type: 'datatable' as const, category: 'view' as const, parentId: 'leave-request', parentName: 'Leave Request', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'leave-calendar', name: 'Calendar View', type: 'datatable' as const, category: 'view' as const, parentId: 'leave-request', parentName: 'Leave Request', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
 
-  // Report artifacts
-  { id: 'monthly-summary', name: 'Monthly Summary', type: 'table-report' as const, category: 'report' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
-  { id: 'expense-chart', name: 'Expense Chart', type: 'chart-report' as const, category: 'report' as const, ...ARTIFACT_TYPE_STYLES['chart-report'] },
+  // Employee Directory (dataform) - views
+  { id: 'emp-table', name: 'Employee List', type: 'datatable' as const, category: 'view' as const, parentId: 'employee-directory', parentName: 'Employee Directory', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'emp-gallery', name: 'Photo Directory', type: 'gallery' as const, category: 'view' as const, parentId: 'employee-directory', parentName: 'Employee Directory', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.gallery },
+
+  // Project Tracker (board) - views
+  { id: 'proj-table', name: 'All Projects', type: 'datatable' as const, category: 'view' as const, parentId: 'project-tracker', parentName: 'Project Tracker', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'proj-kanban', name: 'Project Board', type: 'datatable' as const, category: 'view' as const, parentId: 'project-tracker', parentName: 'Project Tracker', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+
+  // Asset Inventory (dataform) - views
+  { id: 'asset-table', name: 'Asset List', type: 'datatable' as const, category: 'view' as const, parentId: 'asset-inventory', parentName: 'Asset Inventory', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'asset-gallery-view', name: 'Asset Gallery', type: 'gallery' as const, category: 'view' as const, parentId: 'asset-inventory', parentName: 'Asset Inventory', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.gallery },
+
+  // Timesheet (board) - views
+  { id: 'time-table', name: 'Timesheet Entries', type: 'datatable' as const, category: 'view' as const, parentId: 'timesheet', parentName: 'Timesheet', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'time-calendar', name: 'Calendar View', type: 'datatable' as const, category: 'view' as const, parentId: 'timesheet', parentName: 'Timesheet', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+
+  // Training Requests (board) - views
+  { id: 'train-table', name: 'All Requests', type: 'datatable' as const, category: 'view' as const, parentId: 'training-requests', parentName: 'Training Requests', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'train-kanban', name: 'By Status', type: 'datatable' as const, category: 'view' as const, parentId: 'training-requests', parentName: 'Training Requests', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+
+  // Customer Feedback (dataform) - views
+  { id: 'feedback-table', name: 'All Feedback', type: 'datatable' as const, category: 'view' as const, parentId: 'customer-feedback', parentName: 'Customer Feedback', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.datatable },
+  { id: 'feedback-gallery', name: 'Feedback Cards', type: 'gallery' as const, category: 'view' as const, parentId: 'customer-feedback', parentName: 'Customer Feedback', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES.gallery },
+
+  // Report artifacts (with parent references)
+  // Expense Report (process) - reports
+  { id: 'exp-summary', name: 'Expense Summary', type: 'table-report' as const, category: 'report' as const, parentId: 'expense-report', parentName: 'Expense Report', parentType: 'process' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+  { id: 'exp-by-category', name: 'By Category', type: 'chart-report' as const, category: 'report' as const, parentId: 'expense-report', parentName: 'Expense Report', parentType: 'process' as const, ...ARTIFACT_TYPE_STYLES['chart-report'] },
+  { id: 'exp-monthly', name: 'Monthly Trends', type: 'chart-report' as const, category: 'report' as const, parentId: 'expense-report', parentName: 'Expense Report', parentType: 'process' as const, ...ARTIFACT_TYPE_STYLES['chart-report'] },
+
+  // Leave Request (board) - reports
+  { id: 'leave-summary', name: 'Leave Summary', type: 'table-report' as const, category: 'report' as const, parentId: 'leave-request', parentName: 'Leave Request', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+  { id: 'leave-balance', name: 'Balance Report', type: 'table-report' as const, category: 'report' as const, parentId: 'leave-request', parentName: 'Leave Request', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+
+  // Employee Directory (dataform) - reports
+  { id: 'emp-headcount', name: 'Headcount Report', type: 'table-report' as const, category: 'report' as const, parentId: 'employee-directory', parentName: 'Employee Directory', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+  { id: 'emp-dept', name: 'By Department', type: 'chart-report' as const, category: 'report' as const, parentId: 'employee-directory', parentName: 'Employee Directory', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES['chart-report'] },
+
+  // Project Tracker (board) - reports
+  { id: 'proj-status', name: 'Project Status', type: 'table-report' as const, category: 'report' as const, parentId: 'project-tracker', parentName: 'Project Tracker', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+  { id: 'proj-timeline', name: 'Timeline Report', type: 'chart-report' as const, category: 'report' as const, parentId: 'project-tracker', parentName: 'Project Tracker', parentType: 'board' as const, ...ARTIFACT_TYPE_STYLES['chart-report'] },
+
+  // Invoice Approval (process) - reports
+  { id: 'inv-pending', name: 'Pending Approvals', type: 'table-report' as const, category: 'report' as const, parentId: 'invoice-approval', parentName: 'Invoice Approval', parentType: 'process' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+  { id: 'inv-monthly', name: 'Monthly Summary', type: 'table-report' as const, category: 'report' as const, parentId: 'invoice-approval', parentName: 'Invoice Approval', parentType: 'process' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+
+  // Asset Inventory (dataform) - reports
+  { id: 'asset-summary', name: 'Asset Summary', type: 'table-report' as const, category: 'report' as const, parentId: 'asset-inventory', parentName: 'Asset Inventory', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES['table-report'] },
+  { id: 'asset-depreciation', name: 'Depreciation Report', type: 'chart-report' as const, category: 'report' as const, parentId: 'asset-inventory', parentName: 'Asset Inventory', parentType: 'dataform' as const, ...ARTIFACT_TYPE_STYLES['chart-report'] },
 
   // Page artifacts
   { id: 'home-page', name: 'Home Page', type: 'page' as const, category: 'page' as const, ...ARTIFACT_TYPE_STYLES.page },
@@ -439,7 +488,7 @@ function getPermissionColor(level: PermissionLevel): string {
   return level === 'no-permission' ? 'text-gray-400' : 'text-gray-900'
 }
 
-type ConversationState = 'idle' | 'awaiting_role_name' | 'awaiting_permission_type' | 'awaiting_duplicate_role' | 'awaiting_custom_permission' | 'awaiting_new_role_name' | 'awaiting_permission_change' | 'awaiting_duplicated_role_name'
+type ConversationState = 'idle' | 'awaiting_role_name' | 'awaiting_permission_type' | 'awaiting_duplicate_role' | 'awaiting_custom_permission' | 'awaiting_new_role_name' | 'awaiting_permission_change' | 'awaiting_duplicated_role_name' | 'awaiting_role_delete_selection' | 'awaiting_delete_confirmation' | 'awaiting_page_description'
 
 // Intent detection for role-related messages
 interface ParsedRoleIntent {
@@ -567,6 +616,11 @@ interface ChatMessage {
   showRoleSuccess?: { roleName: string; permissionType: string; duplicatedFrom?: string }
   showSuggestedRoles?: SuggestedRole[]
   showAddedRoles?: { selectedRoles: string[] }
+  showPageSuccess?: {
+    pageName: string
+    pageDescription: string
+    pageId: string
+  }
   showDisabledSubActions?: {
     categoryTitle: string
     categoryIconBg: string
@@ -626,6 +680,16 @@ interface ChatMessage {
     roleName: string
     currentPermission: PermissionLevel
   }
+  // Delete role flow fields
+  showAllRolesListForDeletion?: boolean
+  showDeleteConfirmation?: {
+    roleIds: string[]
+    roleNames: string[]
+  }
+  showDeleteSuccess?: {
+    deletedCount: number
+    deletedRoles: string[]
+  }
   // Loading state fields
   isLoading?: boolean
   loadingStages?: string[]
@@ -659,6 +723,7 @@ const SUGGESTION_ACTIONS: SuggestionAction[] = [
       { id: 'add-role', title: 'Add role(s)' },
       { id: 'modify-role-permission', title: 'Modify role/permission' },
       { id: 'duplicate-role', title: 'Duplicate role' },
+      { id: 'delete-roles', title: 'Delete role(s)' },
     ],
   },
   {
@@ -707,7 +772,7 @@ function AppIcon({ name, className }: { name: string; className?: string }) {
   return <IconComponent className={className} />
 }
 
-export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: CopilotPanelProps) {
+export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAddPageToPreview }: CopilotPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -725,12 +790,15 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
   const [pendingRoleName, setPendingRoleName] = useState('')
   const [drillThroughCategory, setDrillThroughCategory] = useState<string | null>(null)
   const [completedAction, setCompletedAction] = useState<string | null>(null)
+  const [drawerDrillThroughCategory, setDrawerDrillThroughCategory] = useState<string | null>(null)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
+  const [hasUserInteracted, setHasUserInteracted] = useState(false)
   const [showSlashMenu, setShowSlashMenu] = useState(false)
   const [slashMenuQuery, setSlashMenuQuery] = useState('')
   const [slashMenuPosition, setSlashMenuPosition] = useState({ x: 0, y: 0 })
   const [referencedArtifacts, setReferencedArtifacts] = useState<Artifact[]>([])
   const [suggestedRoles, setSuggestedRoles] = useState<SuggestedRole[]>([])
+  const [suggestedRolesSubmitted, setSuggestedRolesSubmitted] = useState(false)
   const [selectedPermissionOption, setSelectedPermissionOption] = useState<string | null>(null)
   const [selectedRoleToModify, setSelectedRoleToModify] = useState<string | null>(null)
   const [selectedModificationOption, setSelectedModificationOption] = useState<string | null>(null)
@@ -762,12 +830,20 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     roleName: string
     currentPermission: PermissionLevel
   } | null>(null)
+  const [selectedRolesToDelete, setSelectedRolesToDelete] = useState<string[]>([])
+  const [pendingDeleteRoles, setPendingDeleteRoles] = useState<string[]>([])
+  const [deleteRolesSubmitted, setDeleteRolesSubmitted] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // Get the current drill-through category details
   const currentDrillThrough = drillThroughCategory
     ? SUGGESTION_ACTIONS.find(s => s.id === drillThroughCategory)
+    : null
+
+  // Get the current drawer drill-through category details (separate from top Quick start)
+  const currentDrawerDrillThrough = drawerDrillThroughCategory
+    ? SUGGESTION_ACTIONS.find(s => s.id === drawerDrillThroughCategory)
     : null
 
   const scrollToBottom = () => {
@@ -777,6 +853,21 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Track if user has sent any messages
+  useEffect(() => {
+    const hasUserMessage = messages.some(msg => msg.role === 'user')
+    if (hasUserMessage && !hasUserInteracted) {
+      setHasUserInteracted(true)
+    }
+  }, [messages, hasUserInteracted])
+
+  // Reset drawer drill-through state when drawer is opened
+  useEffect(() => {
+    if (quickActionsOpen) {
+      setDrawerDrillThroughCategory(null)
+    }
+  }, [quickActionsOpen])
 
   // Helper function to add assistant message with loading animation
   const addAssistantMessageWithLoading = (messageContent: Partial<ChatMessage>, duration: number = 4000) => {
@@ -898,6 +989,12 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
         },
       })
       setRoleBeingDuplicated(null)
+      return
+    }
+
+    if (conversationState === 'awaiting_page_description') {
+      // User described the page, create it
+      handlePageDescriptionInput(text)
       return
     }
 
@@ -1133,6 +1230,9 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
     // Mark this action as completed (for disabled state styling)
     setCompletedAction(subAction.id)
 
+    // Collapse the Quick Actions drawer
+    setQuickActionsOpen(false)
+
     // Get icon name from the component
     const getIconName = (icon: React.ComponentType<{ className?: string }>) => {
       if (icon === Users) return 'Users'
@@ -1162,6 +1262,9 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
 
     // Handle "Suggest roles" - show loading then AI suggestions
     if (subAction.id === 'suggest-roles') {
+      // Reset submitted flag for new suggestion
+      setSuggestedRolesSubmitted(false)
+
       const config = getLoadingConfig('suggest-roles')
 
       // Create loading message
@@ -1183,13 +1286,16 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       setTimeout(() => {
         const roles = MOCK_SUGGESTED_ROLES.map(role => ({ ...role, selected: false }))
 
+        // Store roles in state for interactive selection
+        setSuggestedRoles(roles)
+
         // Update message to show results
         setMessages(prev => prev.map(msg =>
           msg.id === loadingMsg.id
             ? {
                 ...msg,
                 loadingComplete: true,
-                showSuggestedRoles: roles
+                showSuggestedRoles: roles // Keep for display purposes
               }
             : msg
         ))
@@ -1240,6 +1346,27 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       return
     }
 
+    // Handle "Delete role(s)" - show list of roles with checkboxes for deletion
+    if (subAction.id === 'delete-roles') {
+      setSelectedRolesToDelete([])
+      setPendingDeleteRoles([])
+      setDeleteRolesSubmitted(false)
+      setConversationState('awaiting_role_delete_selection')
+      addAssistantMessageWithLoading({
+        showAllRolesListForDeletion: true,
+      }, 2000)
+      return
+    }
+
+    // Handle "Add page" - prompt for description
+    if (subAction.id === 'add-page') {
+      setConversationState('awaiting_page_description')
+      addAssistantMessageWithLoading({
+        content: 'Describe the page you want to build.',
+      })
+      return
+    }
+
     // Default response for other sub-actions
     addAssistantMessageWithLoading({
       content: `I'll help you ${subAction.title.toLowerCase()}. This feature is coming soon!`,
@@ -1258,18 +1385,9 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
 
     const selectedRoleNames = selectedRoles.map(r => r.name)
 
-    // Add AI message showing what was suggested (with the list embedded, marking selected ones)
-    const aiSuggestionMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: 'I scanned your app. Based on the data, access patterns, workflows and interface structure, here are roles worth adding:',
-      timestamp: new Date(),
-      showSuggestedRoles: suggestedRoles.map(r => ({ ...r })), // snapshot with selection state preserved
-    }
-
     // Add user message showing what they selected
     const userSelectionMessage: ChatMessage = {
-      id: (Date.now() + 1).toString(),
+      id: Date.now().toString(),
       role: 'user',
       content: `Add ${selectedRoleNames.join(', ')}`,
       timestamp: new Date(),
@@ -1277,7 +1395,7 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
 
     // Add success message showing what was added
     const successMessage: ChatMessage = {
-      id: (Date.now() + 2).toString(),
+      id: (Date.now() + 1).toString(),
       role: 'assistant',
       content: '',
       timestamp: new Date(),
@@ -1286,16 +1404,168 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       },
     }
 
-    // Reset suggested roles
-    setSuggestedRoles([])
+    // Mark as submitted (keep roles visible but disabled)
+    setSuggestedRolesSubmitted(true)
 
-    // Add all messages to the thread
-    setMessages(prev => [...prev, aiSuggestionMessage, userSelectionMessage, successMessage])
+    // Add messages to the thread (removed aiSuggestionMessage to avoid duplicate list)
+    setMessages(prev => [...prev, userSelectionMessage, successMessage])
+  }
+
+  // Handler for drawer main action clicks (to drill through in drawer)
+  const handleDrawerSuggestionClick = (action: SuggestionAction) => {
+    // Set drill-through category for drawer (does NOT affect top Quick start)
+    setDrawerDrillThroughCategory(action.id)
+  }
+
+  // Handler for drawer back button
+  const handleDrawerBackToQuickActions = () => {
+    setDrawerDrillThroughCategory(null)
+  }
+
+  // Handler for drawer sub-action clicks (separate from top Quick start)
+  const handleDrawerSubActionClick = (subAction: SubAction) => {
+    // Collapse the Quick Actions drawer
+    setQuickActionsOpen(false)
+
+    // Handle "Add page" - prompt for description (don't add user message yet)
+    if (subAction.id === 'add-page') {
+      setConversationState('awaiting_page_description')
+
+      const promptMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Describe the page you want to build.',
+        timestamp: new Date(),
+      }
+
+      setMessages(prev => [...prev, promptMessage])
+      return
+    }
+
+    // Add simple user message (no disabled sub-actions card)
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: subAction.title,
+      timestamp: new Date(),
+    }
+
+    setMessages(prev => [...prev, userMessage])
+
+    // Handle "Suggest roles" - show loading then AI suggestions
+    if (subAction.id === 'suggest-roles') {
+      // Reset submitted flag for new suggestion
+      setSuggestedRolesSubmitted(false)
+
+      const config = getLoadingConfig('suggest-roles')
+
+      // Create loading message
+      const loadingMsg: ChatMessage = {
+        id: `loading-${Date.now()}`,
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+        isLoading: true,
+        loadingStages: config.stages,
+        loadingDuration: config.duration,
+        loadingStageDurations: config.stageDurations,
+        loadingAnimation: config.animation
+      }
+
+      setMessages(prev => [...prev, loadingMsg])
+
+      // Simulate AI processing
+      setTimeout(() => {
+        const roles = MOCK_SUGGESTED_ROLES.map(role => ({ ...role, selected: false }))
+
+        // Store roles in state for interactive selection
+        setSuggestedRoles(roles)
+
+        // Update message to show results
+        setMessages(prev => prev.map(msg =>
+          msg.id === loadingMsg.id
+            ? {
+                ...msg,
+                loadingComplete: true,
+                showSuggestedRoles: roles
+              }
+            : msg
+        ))
+      }, config.duration)
+
+      return
+    }
+
+    // Handle custom role creation
+    if (subAction.id === 'custom-role') {
+      handleSend(subAction.prompt!)
+      return
+    }
+
+    // Handle all other actions - send to AI with prompt
+    if (subAction.prompt) {
+      handleSend(subAction.prompt)
+    }
+  }
+
+  // Helper to extract page name from user description
+  const extractPageNameFromDescription = (description: string): string => {
+    // Try to find page name patterns
+    const patterns = [
+      /(?:a|an|the)\s+([a-z\s]+?)\s+page/i,
+      /(?:create|build|make)\s+([a-z\s]+?)\s+page/i,
+      /^([a-z\s]+?)$/i,
+    ]
+
+    for (const pattern of patterns) {
+      const match = description.match(pattern)
+      if (match && match[1]) {
+        return match[1].trim()
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+      }
+    }
+
+    // Default: capitalize first letter of entire description
+    return description.charAt(0).toUpperCase() + description.slice(1)
+  }
+
+  const handlePageDescriptionInput = (description: string) => {
+    // Extract page name from description
+    const pageName = extractPageNameFromDescription(description)
+
+    // Generate page ID (lowercase, hyphenated)
+    const pageId = pageName.toLowerCase().replace(/\s+/g, '-')
+
+    // Add page to preview navigation
+    if (onAddPageToPreview) {
+      onAddPageToPreview(pageId, pageName)
+    }
+
+    // Reset conversation state
+    setConversationState('idle')
+
+    // Show success message
+    const successMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      showPageSuccess: {
+        pageName: pageName,
+        pageDescription: `Your ${pageName} page has been created and added to the navigation.`,
+        pageId: pageId,
+      },
+    }
+
+    setMessages(prev => [...prev, successMessage])
   }
 
   const handleCancelSuggestRoles = () => {
-    // Reset suggested roles
+    // Reset suggested roles and submitted flag
     setSuggestedRoles([])
+    setSuggestedRolesSubmitted(false)
     // Keep completedAction set - don't reset it
     // This keeps "Suggest roles" shown as selected/disabled
 
@@ -1493,6 +1763,121 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
         content: `What would you like to name the new role?`,
       })
     }
+  }
+
+  const handleToggleRoleForDeletion = (roleId: string) => {
+    setSelectedRolesToDelete(prev => {
+      if (prev.includes(roleId)) {
+        return prev.filter(id => id !== roleId)
+      } else {
+        return [...prev, roleId]
+      }
+    })
+  }
+
+  const handleDeleteSelectedRoles = () => {
+    // Store selected roles for confirmation
+    setPendingDeleteRoles(selectedRolesToDelete)
+
+    // Build role names for user message
+    const roleNames = selectedRolesToDelete
+      .map(id => EXISTING_ROLES.find(r => r.id === id)?.name)
+      .filter(Boolean)
+      .join(', ')
+
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: `Delete ${roleNames}`,
+      timestamp: new Date(),
+    }
+    setMessages(prev => [...prev, userMessage])
+
+    // Update conversation state
+    setConversationState('awaiting_delete_confirmation')
+
+    // Mark as submitted (keep list visible but disabled)
+    setDeleteRolesSubmitted(true)
+
+    // Show confirmation message
+    addAssistantMessageWithLoading({
+      showDeleteConfirmation: {
+        roleIds: selectedRolesToDelete,
+        roleNames: roleNames.split(', ')
+      }
+    }, 1000)
+  }
+
+  const handleConfirmDeleteRoles = () => {
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: 'Confirm Delete',
+      timestamp: new Date(),
+    }
+    setMessages(prev => [...prev, userMessage])
+
+    // Get deleted role names
+    const deletedRoleNames = pendingDeleteRoles
+      .map(id => EXISTING_ROLES.find(r => r.id === id)?.name)
+      .filter(Boolean) as string[]
+
+    // Show success message
+    addAssistantMessageWithLoading({
+      showDeleteSuccess: {
+        deletedCount: pendingDeleteRoles.length,
+        deletedRoles: deletedRoleNames
+      }
+    }, 1500)
+
+    // Reset state
+    setSelectedRolesToDelete([])
+    setPendingDeleteRoles([])
+    setConversationState('idle')
+  }
+
+  const handleGoBackFromDeleteConfirmation = () => {
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: 'Go Back',
+      timestamp: new Date(),
+    }
+    setMessages(prev => [...prev, userMessage])
+
+    // Go back to role selection state (re-enable interaction)
+    setConversationState('awaiting_role_delete_selection')
+    setDeleteRolesSubmitted(false)
+
+    // Re-display role selection with previous selections maintained
+    addAssistantMessageWithLoading({
+      showAllRolesListForDeletion: true
+    }, 500)
+  }
+
+  const handleCancelDeleteRoles = () => {
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: 'Cancel',
+      timestamp: new Date(),
+    }
+    setMessages(prev => [...prev, userMessage])
+
+    // Reset state
+    setSelectedRolesToDelete([])
+    setPendingDeleteRoles([])
+    setDeleteRolesSubmitted(false)
+    setConversationState('idle')
+
+    // Show cancellation message
+    addAssistantMessageWithLoading({
+      content: 'Role deletion cancelled.'
+    }, 500)
   }
 
   const handleModificationOptionClick = (option: ModificationOption) => {
@@ -1840,22 +2225,21 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
         "transition-all duration-300",
         isExpanded
           ? "w-[320px] ml-2 mr-2 rounded-t-[8px] p-[1px] overflow-hidden"
-          : "w-11 flex-shrink-0"
+          : "w-[40px] ml-2 mr-2 rounded-t-[8px] p-[1px] overflow-hidden flex-shrink-0"
       )}
-      style={isExpanded ? {
-        background: 'linear-gradient(135deg, #F0C0E1 0%, #CFCFF3 100%)',
-      } : undefined}
+      style={{
+        background: 'var(--ai-gradient-300)',
+      }}
     >
       <div className={cn(
-        "flex flex-col overflow-hidden h-full",
-        isExpanded && "bg-white rounded-t-[7px]"
+        "flex flex-col overflow-hidden h-full bg-white rounded-t-[7px]"
       )}>
 
       {/* Header / Collapsed Icon */}
       {isExpanded ? (
+        <>
         <div
-          className="flex-shrink-0 py-3 px-4 border-b cursor-pointer"
-          style={{ borderColor: '#E0C8DC' }}
+          className="flex-shrink-0 py-3 px-4 cursor-pointer"
           onClick={() => setIsExpanded(false)}
         >
           <div className="flex items-center justify-between">
@@ -1874,20 +2258,27 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
             </button>
           </div>
         </div>
+        {/* Gradient separator */}
+        <div className="h-[1px] flex-shrink-0" style={{ background: 'var(--ai-gradient-300)' }} />
+        </>
       ) : (
-        <div className="pt-2 flex justify-center">
-          <button
-            onClick={() => setIsExpanded(true)}
-            className="w-7 h-7 rounded-md bg-purple-100 hover:bg-purple-200 flex items-center justify-center text-purple-600 hover:text-purple-700 transition-colors cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 fill-purple-600" />
-          </button>
+        <div
+          className="flex-1 flex items-start justify-center pt-2 cursor-pointer"
+          onClick={() => setIsExpanded(true)}
+        >
+          <svg width="20" height="20" viewBox="0 0 40 40" fill="none" className="flex-shrink-0">
+            <path fillRule="evenodd" clipRule="evenodd" d="M7.19688 22.0707L2.81868 34.5322C2.55321 35.2878 1.72546 35.6851 0.969847 35.4197C0.214238 35.1542 -0.183094 34.3264 0.0823803 33.5708L4.46058 21.1094C5.3631 18.5406 8.98821 18.5188 9.92146 21.0766L14.4742 33.5545C14.7487 34.3068 14.3613 35.1393 13.6089 35.4138C12.8565 35.6883 12.0241 35.3009 11.7496 34.5486L7.19688 22.0707Z" fill="#a855f7"/>
+            <path fillRule="evenodd" clipRule="evenodd" d="M1.98084 30.089C1.98084 29.2881 2.63008 28.6388 3.43097 28.6388H11.1318C11.9327 28.6388 12.582 29.2881 12.582 30.089C12.582 30.8898 11.9327 31.5391 11.1318 31.5391H3.43097C2.63008 31.5391 1.98084 30.8898 1.98084 30.089Z" fill="#a855f7"/>
+            <path fillRule="evenodd" clipRule="evenodd" d="M19.0518 18.2953C19.8527 18.2953 20.5019 18.9445 20.5019 19.7454V34.047C20.5019 34.8479 19.8527 35.4971 19.0518 35.4971C18.2509 35.4971 17.6017 34.8479 17.6017 34.047V19.7454C17.6017 18.9445 18.2509 18.2953 19.0518 18.2953Z" fill="#a855f7"/>
+            <path d="M31.8789 10.2327C32.0494 9.44346 33.1753 9.44346 33.3457 10.2327L33.697 11.8591C34.2468 14.4048 36.2517 16.3835 38.8045 16.8998L39.3985 17.02C40.2006 17.1822 40.2006 18.3286 39.3985 18.4908L38.6917 18.6338C36.1966 19.1384 34.2194 21.0421 33.6205 23.5162L33.3416 24.6685C33.1564 25.4336 32.0683 25.4336 31.8831 24.6685L31.6041 23.5163C31.0053 21.0421 29.028 19.1384 26.5329 18.6338L25.8262 18.4908C25.0241 18.3286 25.0241 17.1822 25.8262 17.02L26.4202 16.8998C28.9729 16.3835 30.9778 14.4048 31.5277 11.8591L31.8789 10.2327Z" fill="#22c55e"/>
+            <path d="M17.8046 5.03628C17.974 4.31851 18.9956 4.31851 19.1649 5.03628C19.635 7.02823 21.1903 8.58353 23.1822 9.05357C23.9 9.22295 23.9 10.2445 23.1822 10.4139C21.1903 10.8839 19.635 12.4392 19.1649 14.4312C18.9956 15.1489 17.974 15.1489 17.8046 14.4312C17.3346 12.4392 15.7793 10.8839 13.7874 10.4139C13.0696 10.2445 13.0696 9.22295 13.7874 9.05357C15.7793 8.58353 17.3346 7.02823 17.8046 5.03628Z" fill="#ec4899"/>
+          </svg>
         </div>
       )}
 
       {/* Messages Area */}
       {isExpanded && (
-      <div className="flex-1 overflow-y-auto space-y-4 px-2 pt-2">
+      <div className="flex-1 overflow-y-auto space-y-4 px-2 pt-2 scrollbar-sleek">
         {messages.map((message) => (
           <div key={message.id}>
             {message.role === 'user' ? (
@@ -1943,14 +2334,14 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                     <span className="text-[10px] font-medium text-orange-500">SS</span>
                   </div>
                   {/* Message text */}
-                  <div className="bg-gray-200 px-3 py-1.5 rounded-lg text-[12px] text-gray-900">
+                  <div className="bg-gray-200 px-3 py-1.5 rounded-lg text-[12px] text-gray-900 max-w-[280px]">
                     {message.content}
                   </div>
                 </div>
               </div>
             ) : (
               // Assistant message
-              <div className="space-y-3">
+              <div className="space-y-3 max-w-[280px]">
                 {/* Loading state with new loading components */}
                 {message.isLoading ? (
                   <CopilotLoadingMessage
@@ -1976,31 +2367,60 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                                 I scanned your app. Based on the data, access patterns, workflows and interface structure, here are roles worth adding:
                               </p>
 
-                              {/* Roles list with checkboxes */}
+                              {/* Roles list with checkboxes - render from live state */}
                               <div className="space-y-2">
-                                {message.showSuggestedRoles.map((role) => (
+                                {suggestedRoles.map((role) => (
                                   <button
                                     key={role.id}
-                                    onClick={() => handleToggleSuggestedRole(role.id)}
+                                    onClick={() => !suggestedRolesSubmitted && handleToggleSuggestedRole(role.id)}
+                                    disabled={suggestedRolesSubmitted}
                                     className={cn(
                                       "w-full text-left rounded-lg px-3 py-2.5 border transition-all",
-                                      role.selected
-                                        ? "bg-purple-50 border-purple-200"
-                                        : "bg-white border-gray-200 hover:border-gray-300"
+                                      suggestedRolesSubmitted
+                                        ? role.selected
+                                          ? "bg-purple-100 border-purple-200 cursor-default"
+                                          : "bg-gray-50 border-gray-200 cursor-default opacity-60"
+                                        : role.selected
+                                          ? "bg-purple-100 border-purple-200"
+                                          : "bg-white border-gray-200 hover:border-gray-300"
                                     )}
                                   >
                                     <div className="flex items-start gap-2.5">
                                       <div className={cn(
                                         "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 mt-0.5",
-                                        role.selected
-                                          ? "bg-purple-600 border-purple-600"
-                                          : "bg-white border-gray-300"
+                                        suggestedRolesSubmitted
+                                          ? role.selected
+                                            ? "bg-purple-400 border-purple-400"
+                                            : "bg-gray-100 border-gray-300"
+                                          : role.selected
+                                            ? "bg-purple-600 border-purple-600"
+                                            : "bg-white border-gray-300"
                                       )}>
                                         {role.selected && <Check className="w-3 h-3 text-white" />}
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <div className="text-[12px] font-semibold text-gray-900">{role.name}</div>
-                                        <div className="text-[11px] text-gray-600 leading-relaxed mt-0.5">
+                                        <div className={cn(
+                                          "text-[12px] font-semibold",
+                                          suggestedRolesSubmitted
+                                            ? role.selected
+                                              ? "text-purple-400"
+                                              : "text-gray-500"
+                                            : role.selected
+                                              ? "text-purple-600"
+                                              : "text-gray-900"
+                                        )}>
+                                          {role.name}
+                                        </div>
+                                        <div className={cn(
+                                          "text-[11px] leading-relaxed mt-0.5",
+                                          suggestedRolesSubmitted
+                                            ? role.selected
+                                              ? "text-purple-300"
+                                              : "text-gray-400"
+                                            : role.selected
+                                              ? "text-purple-500"
+                                              : "text-gray-600"
+                                        )}>
                                           {role.description}
                                         </div>
                                       </div>
@@ -2009,27 +2429,126 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                                 ))}
                               </div>
 
-                              {/* Action buttons */}
-                              <div className="flex gap-2 mt-3">
-                                <button
-                                  onClick={handleAddSelectedRoles}
-                                  disabled={!message.showSuggestedRoles.some(r => r.selected)}
-                                  className={cn(
-                                    "flex-1 px-3 py-2 rounded-lg text-[12px] font-medium transition-all",
-                                    message.showSuggestedRoles.some(r => r.selected)
-                                      ? "bg-purple-600 hover:bg-purple-700 text-white"
-                                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                  )}
-                                >
-                                  Add Selected Roles
-                                </button>
-                                <button
-                                  onClick={handleCancelSuggestRoles}
-                                  className="px-3 py-2 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-100 transition-all"
-                                >
-                                  Cancel
-                                </button>
+                              {/* Action buttons - hide when submitted */}
+                              {!suggestedRolesSubmitted && (
+                                <div className="flex gap-2 mt-3">
+                                  <button
+                                    onClick={handleCancelSuggestRoles}
+                                    className="px-3 py-2 rounded-lg text-[12px] font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={handleAddSelectedRoles}
+                                    disabled={!suggestedRoles.some(r => r.selected)}
+                                    className={cn(
+                                      "flex-1 px-3 py-2 rounded-lg text-[12px] font-medium transition-all",
+                                      suggestedRoles.some(r => r.selected)
+                                        ? "bg-purple-600 hover:bg-purple-700 text-white"
+                                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    )}
+                                  >
+                                    Add Selected Roles
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* All Roles List for Deletion (Delete role(s) flow) */}
+                          {message.showAllRolesListForDeletion && (
+                            <div className="space-y-2">
+                              {/* Simple Text Header */}
+                              <p className="text-[12px] text-gray-900 p-1 leading-relaxed">
+                                Select roles to delete
+                              </p>
+
+                              {/* Role Selection with Checkboxes */}
+                              <div className="max-h-[260px] overflow-y-auto space-y-2">
+                                {EXISTING_ROLES.map((role) => {
+                                  const isChecked = selectedRolesToDelete.includes(role.id)
+
+                                  return (
+                                    <label
+                                      key={role.id}
+                                      onClick={() => !deleteRolesSubmitted && handleToggleRoleForDeletion(role.id)}
+                                      className={cn(
+                                        "flex items-start gap-3 p-3 rounded-lg border transition-all",
+                                        deleteRolesSubmitted
+                                          ? isChecked
+                                            ? "bg-red-100 border-red-200 cursor-default"
+                                            : "bg-gray-50 border-gray-200 cursor-default opacity-60"
+                                          : isChecked
+                                            ? "bg-red-100 border-red-200 cursor-pointer"
+                                            : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
+                                      )}
+                                    >
+                                      <div className={cn(
+                                        "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 mt-0.5",
+                                        deleteRolesSubmitted
+                                          ? isChecked
+                                            ? "bg-red-400 border-red-400"
+                                            : "bg-gray-100 border-gray-300"
+                                          : isChecked
+                                            ? "bg-red-600 border-red-600"
+                                            : "bg-white border-gray-300"
+                                      )}>
+                                        {isChecked && <Check className="w-3 h-3 text-white" />}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className={cn(
+                                          "text-[12px] font-medium",
+                                          deleteRolesSubmitted
+                                            ? isChecked
+                                              ? "text-red-400"
+                                              : "text-gray-500"
+                                            : isChecked
+                                              ? "text-red-600"
+                                              : "text-gray-900"
+                                        )}>
+                                          {role.name}
+                                        </h4>
+                                        <p className={cn(
+                                          "text-[11px]",
+                                          deleteRolesSubmitted
+                                            ? isChecked
+                                              ? "text-red-300"
+                                              : "text-gray-400"
+                                            : isChecked
+                                              ? "text-red-500"
+                                              : "text-gray-700"
+                                        )}>
+                                          {role.description}
+                                        </p>
+                                      </div>
+                                    </label>
+                                  )
+                                })}
                               </div>
+
+                              {/* CTAs - hide when submitted */}
+                              {!deleteRolesSubmitted && (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={handleCancelDeleteRoles}
+                                    className="px-3 py-1.5 text-[11px] font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={handleDeleteSelectedRoles}
+                                    disabled={selectedRolesToDelete.length === 0}
+                                    className={cn(
+                                      "px-3 py-1.5 text-[11px] font-medium rounded transition-colors",
+                                      selectedRolesToDelete.length === 0
+                                        ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                                        : "bg-red-600 text-white hover:bg-red-700 border border-red-600"
+                                    )}
+                                  >
+                                    Delete Selected Roles ({selectedRolesToDelete.length})
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -2047,13 +2566,17 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                       <Bot className="w-3 h-3 text-purple-600 fill-purple-600" />
                     </div>
 
-                    {/* Combined App Success Card - Green Theme */}
-                    <div className="rounded-lg border border-green-200 bg-green-50 overflow-hidden">
-                      <div className="px-3 py-3">
+                    {/* Combined App Success Card - AI Gradient Theme */}
+                    <div className="rounded-[9px] p-[1px] overflow-hidden" style={{
+                      background: 'var(--ai-gradient-200)'
+                    }}>
+                      <div className="rounded-[8px] px-3 py-3" style={{
+                        background: 'var(--ai-gradient-100)'
+                      }}>
                         {/* Success Icon and Title Row */}
                         <div className="flex items-center gap-2">
-                          <IconCircleCheckFilled className="w-5 h-5 text-green-600 flex-shrink-0" />
-                          <span className="text-[13px] font-semibold text-green-700">App Created Successfully</span>
+                          <IconCircleCheckFilled className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                          <span className="text-[13px] font-semibold text-purple-600">App Created Successfully</span>
                         </div>
 
                         {/* Description */}
@@ -2436,6 +2959,155 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                       </div>
                     )}
 
+                    {/* All Roles List for Deletion (Delete role(s) flow) */}
+                    {message.showAllRolesListForDeletion && (
+                      <div className="space-y-2">
+                        {/* Simple Text Header */}
+                        <p className="text-[12px] text-gray-900 p-1 leading-relaxed">
+                          Select roles to delete
+                        </p>
+
+                        {/* Role Selection with Checkboxes */}
+                        <div className="max-h-[260px] overflow-y-auto space-y-2">
+                          {EXISTING_ROLES.map((role) => {
+                            const isChecked = selectedRolesToDelete.includes(role.id)
+
+                            return (
+                              <label
+                                key={role.id}
+                                onClick={() => !deleteRolesSubmitted && handleToggleRoleForDeletion(role.id)}
+                                className={cn(
+                                  "flex items-start gap-3 p-3 rounded-lg border transition-all",
+                                  deleteRolesSubmitted
+                                    ? isChecked
+                                      ? "bg-red-100 border-red-200 cursor-default"
+                                      : "bg-gray-50 border-gray-200 cursor-default opacity-60"
+                                    : isChecked
+                                      ? "bg-red-100 border-red-200 cursor-pointer"
+                                      : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
+                                )}
+                              >
+                                <div className={cn(
+                                  "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 mt-0.5",
+                                  deleteRolesSubmitted
+                                    ? isChecked
+                                      ? "bg-red-400 border-red-400"
+                                      : "bg-gray-100 border-gray-300"
+                                    : isChecked
+                                      ? "bg-red-600 border-red-600"
+                                      : "bg-white border-gray-300"
+                                )}>
+                                  {isChecked && <Check className="w-3 h-3 text-white" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className={cn(
+                                    "text-[12px] font-medium",
+                                    deleteRolesSubmitted
+                                      ? isChecked
+                                        ? "text-red-400"
+                                        : "text-gray-500"
+                                      : isChecked
+                                        ? "text-red-600"
+                                        : "text-gray-900"
+                                  )}>
+                                    {role.name}
+                                  </h4>
+                                  <p className={cn(
+                                    "text-[11px]",
+                                    deleteRolesSubmitted
+                                      ? isChecked
+                                        ? "text-red-300"
+                                        : "text-gray-400"
+                                      : isChecked
+                                        ? "text-red-500"
+                                        : "text-gray-700"
+                                  )}>
+                                    {role.description}
+                                  </p>
+                                </div>
+                              </label>
+                            )
+                          })}
+                        </div>
+
+                        {/* CTAs - hide when submitted */}
+                        {!deleteRolesSubmitted && (
+                          <div className="flex gap-2">
+                          <button
+                            onClick={handleCancelDeleteRoles}
+                            className="px-3 py-1.5 text-[11px] font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleDeleteSelectedRoles}
+                            disabled={selectedRolesToDelete.length === 0}
+                            className={cn(
+                              "px-3 py-1.5 text-[11px] font-medium rounded transition-colors",
+                              selectedRolesToDelete.length === 0
+                                ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                                : "bg-red-600 text-white hover:bg-red-700 border border-red-600"
+                            )}
+                          >
+                            Delete Selected Roles ({selectedRolesToDelete.length})
+                          </button>
+                        </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Delete Confirmation */}
+                    {message.showDeleteConfirmation && (
+                      <div className="space-y-2">
+                        <p className="text-[12px] text-gray-900 p-1 leading-relaxed">
+                          Are you sure you want to delete {message.showDeleteConfirmation.roleIds.length} role(s)?
+                        </p>
+                        <ul className="text-[12px] text-gray-700 list-disc list-inside space-y-0.5 p-1 leading-relaxed">
+                          {message.showDeleteConfirmation.roleNames.map((roleName) => (
+                            <li key={roleName}>{roleName}</li>
+                          ))}
+                        </ul>
+                        <p className="text-[12px] text-gray-600 p-1 leading-relaxed">
+                          This action cannot be undone.
+                        </p>
+
+                        {/* CTAs */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleGoBackFromDeleteConfirmation}
+                            className="px-3 py-1.5 text-[11px] font-medium text-gray-700 bg-white border border-gray-200 rounded hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                          >
+                            Go Back
+                          </button>
+                          <button
+                            onClick={handleConfirmDeleteRoles}
+                            className="px-3 py-1.5 text-[11px] font-medium bg-red-600 text-white hover:bg-red-700 border border-red-600 rounded transition-colors"
+                          >
+                            Confirm Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Delete Success */}
+                    {message.showDeleteSuccess && (
+                      <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 mt-2">
+                        <div className="flex items-start gap-3">
+                          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-green-900 mb-1">
+                              Successfully deleted {message.showDeleteSuccess.deletedCount} role(s)
+                            </div>
+                            <ul className="text-xs text-green-800 space-y-0.5">
+                              {message.showDeleteSuccess.deletedRoles.map((roleName) => (
+                                <li key={roleName}>• {roleName}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Role Context Actions (after selecting a role from View all roles) */}
                     {message.showRoleContextActions && (
                       <div className="flex flex-wrap gap-2 mt-2">
@@ -2776,26 +3448,59 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
 
                     {/* Added Roles Success Card */}
                     {message.showAddedRoles && (
-                      <div className="space-y-2 mt-1">
-                        {/* Success Message */}
-                        <p className="text-[12px] text-gray-900 p-1">
-                          {message.showAddedRoles.selectedRoles.length} role{message.showAddedRoles.selectedRoles.length > 1 ? 's' : ''} added successfully!
-                        </p>
-
-                        {/* Roles Cards */}
-                        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                          <div className="px-3 py-3 space-y-2">
-                            {message.showAddedRoles.selectedRoles.map((roleName, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                                  <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                                </div>
-                                <span className="text-[12px] font-semibold text-gray-900">
-                                  {roleName}
-                                </span>
-                              </div>
-                            ))}
+                      <div className="mt-1">
+                        {/* Success Card with purple styling */}
+                        <div className="rounded-lg border border-purple-200 bg-purple-100 px-3 py-3">
+                          {/* Header with icon and title */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCheck className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                            <span className="text-[13px] font-medium text-purple-600">
+                              {message.showAddedRoles.selectedRoles.length} {message.showAddedRoles.selectedRoles.length === 1 ? 'Role' : 'Roles'} successfully added
+                            </span>
                           </div>
+
+                          {/* Bulleted list of roles */}
+                          <ul className="space-y-1 ml-7">
+                            {message.showAddedRoles.selectedRoles.map((roleName, index) => (
+                              <li key={index} className="text-[12px] text-gray-900 list-disc">
+                                {roleName}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Page Created Success Card */}
+                    {message.showPageSuccess && (
+                      <div className="mt-1">
+                        {/* Success Card with purple styling */}
+                        <div className="rounded-lg border border-purple-200 bg-purple-100 px-3 py-3">
+                          {/* Header with icon and title */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <IconCircleCheckFilled className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                            <span className="text-[13px] font-medium text-purple-600">
+                              Page Created Successfully
+                            </span>
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-[12px] text-gray-900 mb-1">
+                            {message.showPageSuccess.pageDescription}
+                          </p>
+
+                          {/* Quick Link */}
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              // Preview already switches to new page automatically
+                            }}
+                            className="text-[12px] font-medium text-purple-600 hover:text-purple-700 cursor-pointer inline-flex items-center gap-1"
+                          >
+                            View Page
+                            <ArrowUpRight className="w-4 h-4" />
+                          </a>
                         </div>
                       </div>
                     )}
@@ -2834,19 +3539,22 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                           {currentDrillThrough.subActions?.map((subAction) => {
                             const isSelected = completedAction === subAction.id
                             const isDisabled = completedAction !== null && !isSelected
+                            const isGloballyDisabled = hasUserInteracted
 
                             return (
                               <button
                                 key={subAction.id}
-                                onClick={() => !completedAction && handleSubActionClick(subAction)}
-                                disabled={completedAction !== null}
+                                onClick={() => !completedAction && !isGloballyDisabled && handleSubActionClick(subAction)}
+                                disabled={completedAction !== null || isGloballyDisabled}
                                 className={cn(
                                   "w-full text-left rounded-lg px-3 py-2.5 transition-all",
-                                  isSelected
-                                    ? "bg-purple-50 border border-purple-100 cursor-default"
-                                    : isDisabled
-                                      ? "bg-gray-100 border border-gray-200 cursor-default"
-                                      : "border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
+                                  isGloballyDisabled
+                                    ? "bg-gray-50 border border-gray-200 cursor-default opacity-60"
+                                    : isSelected
+                                      ? "bg-purple-50 border border-purple-100 cursor-default"
+                                      : isDisabled
+                                        ? "bg-gray-100 border border-gray-200 cursor-default"
+                                        : "border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
                                 )}
                               >
                                 <span className={cn(
@@ -2875,8 +3583,14 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
                             return (
                               <button
                                 key={suggestion.id}
-                                onClick={() => handleSuggestionClick(suggestion)}
-                                className="w-full text-left border border-gray-200 rounded-lg px-3 py-2 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer"
+                                onClick={() => !hasUserInteracted && handleSuggestionClick(suggestion)}
+                                disabled={hasUserInteracted}
+                                className={cn(
+                                  "w-full text-left border rounded-lg px-3 py-2 transition-all",
+                                  hasUserInteracted
+                                    ? "border-gray-200 bg-gray-50 cursor-default opacity-60"
+                                    : "border-purple-100 bg-white hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
+                                )}
                               >
                                 <div className="flex items-center gap-2.5">
                                   {/* Icon */}
@@ -2935,17 +3649,18 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
       {isExpanded && (
       <div className="flex-shrink-0 mt-4 px-2 pb-2">
         {/* Quick actions bar */}
-        <div className="bg-purple-50/40 rounded-t-xl px-3 pt-2 pb-6 border border-purple-100/50 border-b-0 -mb-[13px] relative z-0">
+        {hasUserInteracted && (
+        <div className="rounded-t-xl px-3 pt-2 pb-6 border border-purple-100/50 border-b-0 -mb-[13px] relative z-0" style={{ background: 'var(--ai-gradient-100)' }}>
           {/* Collapsible header */}
           <button
             onClick={() => setQuickActionsOpen(!quickActionsOpen)}
-            className="flex items-center justify-between text-xs text-gray-700 hover:text-gray-900 transition-colors w-full"
+            className="flex items-center justify-between hover:text-gray-900 transition-colors w-full"
           >
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-4 rounded bg-purple-50 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-2.5 h-2.5 text-purple-600" />
+                <Sparkles className="w-3 h-3 text-purple-600" />
               </div>
-              <span>Quick actions</span>
+              <span className="text-[12px] font-medium text-gray-900">Quick actions</span>
             </div>
             <ChevronUp
               className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${quickActionsOpen ? 'rotate-0' : 'rotate-180'}`}
@@ -2955,27 +3670,79 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
           {/* Expandable content */}
           {quickActionsOpen && (
             <div className="mt-3 animate-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center gap-2 flex-wrap">
-                {SUGGESTION_ACTIONS.map((action) => (
-                  <button
-                    key={action.id}
-                    onClick={() => handleActionClick(action)}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-white hover:bg-purple-50 text-gray-700 transition-colors border border-purple-100/30"
-                  >
-                    <div className={`w-4 h-4 rounded flex items-center justify-center ${action.iconBg}`}>
-                      <action.icon className={`w-2.5 h-2.5 ${action.iconColor}`} />
+              {drawerDrillThroughCategory && currentDrawerDrillThrough ? (
+                <>
+                  {/* Drill-through: Header with category title and back button */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <currentDrawerDrillThrough.icon className={cn('w-3 h-3', currentDrawerDrillThrough.iconColor)} />
+                      <h4 className="text-[12px] font-semibold text-gray-900">
+                        {currentDrawerDrillThrough.title}
+                      </h4>
                     </div>
-                    <span>{action.title}</span>
-                  </button>
-                ))}
-              </div>
+                    {/* Back button - always visible in drawer */}
+                    <button
+                      onClick={handleDrawerBackToQuickActions}
+                      className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3 h-3" />
+                      <span>Back</span>
+                    </button>
+                  </div>
+
+                  {/* Sub-actions list - always enabled in drawer */}
+                  <div className="space-y-1.5">
+                    {currentDrawerDrillThrough.subActions?.map((subAction) => (
+                      <button
+                        key={subAction.id}
+                        onClick={() => handleDrawerSubActionClick(subAction)}
+                        className="w-full text-left rounded-lg px-3 py-2.5 transition-all border border-purple-100 bg-white hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
+                      >
+                        <span className="text-[12px] font-medium text-gray-900">
+                          {subAction.title}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Main Quick Actions cards */}
+                  <div className="space-y-1.5">
+                    {SUGGESTION_ACTIONS.map((action) => (
+                      <button
+                        key={action.id}
+                        onClick={() => handleDrawerSuggestionClick(action)}
+                        className="w-full text-left border border-purple-100 rounded-lg px-3 py-2 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {/* Icon */}
+                          <div className={cn('w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0', action.iconBg)}>
+                            <action.icon className={cn('w-3 h-3', action.iconColor)} />
+                          </div>
+                          {/* Text */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-[12px] font-medium text-gray-900">
+                              {action.title}
+                            </h4>
+                            <p className="text-[11px] text-gray-700">
+                              {action.description}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
+        )}
 
         <div
           className="rounded-[12px] p-[1px] overflow-hidden relative z-10"
-          style={{ background: 'linear-gradient(135deg, #E58DC9 0%, #A8A8E9 100%)' }}
+          style={{ background: 'var(--ai-gradient-400)' }}
         >
           <div className="rounded-[11px] p-3 bg-white">
           {/* Text input with colored overlay */}
@@ -3056,7 +3823,7 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg }: Co
               disabled={!input.trim() || isLoading}
               size="sm"
               className="h-7 w-7 p-0 rounded-full disabled:opacity-30"
-              style={{ background: 'linear-gradient(135deg, #D341A5 0%, #6E6EDB 100%)' }}
+              style={{ background: 'var(--ai-gradient-500)' }}
             >
               <ArrowRight className="w-3.5 h-3.5 text-white" />
             </Button>

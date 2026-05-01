@@ -28,6 +28,12 @@ export interface Artifact {
   name: string
   type: ArtifactType
   category: ArtifactCategory
+
+  // Parent relationship for hierarchical artifacts (views/reports belong to data entities)
+  parentId?: string                              // ID of parent DataLayer (for views/reports)
+  parentName?: string                            // Display name of parent entity
+  parentType?: 'dataform' | 'board' | 'process'  // Parent entity type
+
   icon?: string
   iconBg?: string
   iconColor?: string

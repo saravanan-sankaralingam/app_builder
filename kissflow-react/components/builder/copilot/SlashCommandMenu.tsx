@@ -34,7 +34,7 @@ export function SlashCommandMenu({
   currentQuery,
   artifacts
 }: SlashCommandMenuProps) {
-  const [expandedCategory, setExpandedCategory] = useState<ArtifactCategory | null>(null)
+  const [expandedCategories, setExpandedCategories] = useState<Set<ArtifactCategory>>(new Set())
   const [selectedIndex, setSelectedIndex] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -49,6 +49,45 @@ export function SlashCommandMenu({
     ).length
   }
 
+  // Group artifacts by parent entity (for hierarchical categories like views/reports)
+  const groupArtifactsByParent = (artifacts: Artifact[]) => {
+    return artifacts.reduce((acc, artifact) => {
+      if (artifact.parentId) {
+        if (!acc[artifact.parentId]) {
+          acc[artifact.parentId] = {
+            parentId: artifact.parentId,
+            parentName: artifact.parentName!,
+            parentType: artifact.parentType!,
+            items: []
+          }
+        }
+        acc[artifact.parentId].items.push(artifact)
+      } else {
+        // Non-hierarchical artifacts (shouldn't happen for views/reports, but handle gracefully)
+        if (!acc['__root__']) {
+          acc['__root__'] = { items: [] }
+        }
+        acc['__root__'].items.push(artifact)
+      }
+      return acc
+    }, {} as Record<string, { parentId?: string; parentName?: string; parentType?: 'dataform' | 'board' | 'process'; items: Artifact[] }>)
+  }
+
+  // Get parent groups for a specific category
+  const getParentGroupsForCategory = (categoryId: string) => {
+    const categoryArtifacts = artifacts.filter(a => a.category === categoryId)
+    return groupArtifactsByParent(categoryArtifacts)
+  }
+
+  // Get total matching artifacts across all categories
+  const getTotalMatchingArtifacts = () => {
+    if (!currentQuery) return 0
+
+    return artifacts.filter(a =>
+      a.name.toLowerCase().includes(currentQuery.toLowerCase())
+    ).length
+  }
+
   // Get artifacts for a category (with search filter)
   const getArtifactsForCategory = (categoryId: string) => {
     return artifacts.filter(a => {
@@ -58,28 +97,47 @@ export function SlashCommandMenu({
     })
   }
 
-  // Toggle category expansion (accordion behavior)
+  // Toggle category expansion (only one category can be expanded at a time)
   const toggleCategory = (categoryId: ArtifactCategory) => {
-    if (expandedCategory === categoryId) {
-      setExpandedCategory(null)
-    } else {
-      setExpandedCategory(categoryId)
-    }
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(categoryId)) {
+        // Collapse if already expanded
+        newSet.delete(categoryId)
+      } else {
+        // Clear all other categories and expand this one
+        newSet.clear()
+        newSet.add(categoryId)
+      }
+      return newSet
+    })
   }
 
-  // Auto-expand categories that have matching artifacts when user types
+  // Auto-expand categories based on total matching artifacts
   useEffect(() => {
     if (currentQuery) {
-      // Find first category with matching artifacts
-      const categoryWithMatches = ARTIFACT_CATEGORIES.find(cat => getCategoryCount(cat.id) > 0)
-      if (categoryWithMatches) {
-        setExpandedCategory(categoryWithMatches.id)
+      const totalMatches = getTotalMatchingArtifacts()
+
+      if (totalMatches <= 10 && totalMatches > 0) {
+        // Auto-expand ALL categories with matches
+        const categoriesToExpand = new Set<ArtifactCategory>()
+
+        ARTIFACT_CATEGORIES.forEach(cat => {
+          const categoryArtifacts = getArtifactsForCategory(cat.id)
+          if (categoryArtifacts.length > 0) {
+            categoriesToExpand.add(cat.id)
+          }
+        })
+
+        setExpandedCategories(categoriesToExpand)
       } else {
-        setExpandedCategory(null)
+        // Keep all collapsed (user clicks to expand)
+        setExpandedCategories(new Set())
       }
     } else {
-      setExpandedCategory(null)
+      setExpandedCategories(new Set())
     }
+
     setSelectedIndex(0)
   }, [currentQuery])
 
@@ -90,8 +148,8 @@ export function SlashCommandMenu({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
-        if (expandedCategory) {
-          setExpandedCategory(null)
+        if (expandedCategories.size > 0) {
+          setExpandedCategories(new Set())
         } else {
           onClose()
         }
@@ -101,7 +159,7 @@ export function SlashCommandMenu({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, expandedCategory, onSelect, onClose])
+  }, [isOpen, expandedCategories, onSelect, onClose])
 
   // Click outside to close
   useEffect(() => {
@@ -136,7 +194,7 @@ export function SlashCommandMenu({
         {ARTIFACT_CATEGORIES.map((category) => {
           const CategoryIcon = ICON_MAP[category.icon]
           const artifactCount = getCategoryCount(category.id)
-          const isExpanded = expandedCategory === category.id
+          const isExpanded = expandedCategories.has(category.id)
           const categoryArtifacts = getArtifactsForCategory(category.id)
 
           // Get color for category icon based on category type
@@ -179,27 +237,101 @@ export function SlashCommandMenu({
 
               {/* Expanded Artifacts */}
               {isExpanded && (
-                <div className="bg-gray-50/50 max-h-56 overflow-y-auto">
+                <div className="bg-gray-50/50">
                   {categoryArtifacts.length === 0 ? (
                     <div className="px-3 py-4 text-center text-xs text-gray-500">
                       No artifacts found
                     </div>
                   ) : (
-                    categoryArtifacts.map((artifact) => (
-                      <button
-                        key={artifact.id}
-                        onClick={() => onSelect(artifact)}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 pl-6 text-xs transition-colors text-gray-700 hover:bg-purple-50"
-                      >
-                        {/* Category icon with color */}
-                        {CategoryIcon && (
-                          <CategoryIcon className={`w-3 h-3 flex-shrink-0 ${getCategoryIconColor(category.id)}`} />
-                        )}
-                        <div className="flex-1 text-left">
-                          <span>{artifact.name}</span>
-                        </div>
-                      </button>
-                    ))
+                    // Hierarchical categories (view, report) - show 3 levels
+                    category.id === 'view' || category.id === 'report' ? (
+                      (() => {
+                        const parentGroups = groupArtifactsByParent(categoryArtifacts)
+
+                        // Sort parent groups by type: dataform, board, process
+                        const sortedParentEntries = Object.entries(parentGroups).sort(([, groupA], [, groupB]) => {
+                          const typeOrder = { 'dataform': 1, 'board': 2, 'process': 3 }
+                          const orderA = groupA.parentType ? typeOrder[groupA.parentType] : 999
+                          const orderB = groupB.parentType ? typeOrder[groupB.parentType] : 999
+                          return orderA - orderB
+                        })
+
+                        return (
+                          <div className="max-h-72 overflow-y-auto">
+                            {sortedParentEntries.map(([parentId, group]) => {
+                              // Skip __root__ group (shouldn't happen for views/reports)
+                              if (parentId === '__root__') return null
+
+                              // Get icon for parent entity type
+                              const getParentEntityIcon = (parentType: 'dataform' | 'board' | 'process') => {
+                                const iconMap = {
+                                  'dataform': 'Database',
+                                  'board': 'LayoutGrid',
+                                  'process': 'GitBranch'
+                                }
+                                return ICON_MAP[iconMap[parentType]]
+                              }
+
+                              const ParentEntityIcon = group.parentType ? getParentEntityIcon(group.parentType) : null
+
+                              return (
+                                <div key={parentId}>
+                                  {/* Level 2: Parent Entity Header (always visible, not clickable) */}
+                                  <div className="w-full flex items-center px-3 py-2 pl-4 text-xs text-gray-700">
+                                    <div className="flex items-center gap-1.5">
+                                      {/* Parent entity type icon in gray */}
+                                      {ParentEntityIcon && (
+                                        <ParentEntityIcon className="w-3 h-3 flex-shrink-0 text-gray-400" />
+                                      )}
+                                      <span className="font-normal">{group.parentName}</span>
+                                      <span className="text-[11px] text-gray-500">({group.items.length})</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Level 3: Actual Items (always shown) */}
+                                  <div>
+                                    {group.items.map((artifact) => (
+                                      <button
+                                        key={artifact.id}
+                                        onClick={() => onSelect(artifact)}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 pl-8 text-xs transition-colors text-gray-700 hover:bg-purple-50"
+                                      >
+                                        {/* Category icon with color */}
+                                        {CategoryIcon && (
+                                          <CategoryIcon className={`w-3 h-3 flex-shrink-0 ${getCategoryIconColor(category.id)}`} />
+                                        )}
+                                        <div className="flex-1 text-left">
+                                          <span>{artifact.name}</span>
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )
+                      })()
+                    ) : (
+                      // Non-hierarchical categories - show 2 levels (existing logic)
+                      <div className="max-h-56 overflow-y-auto">
+                        {categoryArtifacts.map((artifact) => (
+                          <button
+                            key={artifact.id}
+                            onClick={() => onSelect(artifact)}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 pl-6 text-xs transition-colors text-gray-700 hover:bg-purple-50"
+                          >
+                            {/* Category icon with color */}
+                            {CategoryIcon && (
+                              <CategoryIcon className={`w-3 h-3 flex-shrink-0 ${getCategoryIconColor(category.id)}`} />
+                            )}
+                            <div className="flex-1 text-left">
+                              <span>{artifact.name}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )
                   )}
                 </div>
               )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { MoreHorizontal, Plus, Filter, Download, ChevronDown } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ interface AppRuntimePreviewProps {
   appName: string
   appIcon: string
   appIconBg: string
+  onAddNavItem?: (callback: (pageId: string, pageLabel: string) => void) => void
 }
 
 type UserRole = 'employee' | 'manager' | 'finance' | 'admin'
@@ -53,7 +54,7 @@ const expenseData = [
   { id: 'EXP-008', description: 'Parking - Downtown office', category: 'Transportation', amount: 45.00, date: '2024-03-08', status: 'Reimbursed', submittedBy: 'Jennifer Taylor' },
 ]
 
-const navItems: NavItem[] = [
+const INITIAL_NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'expenses', label: 'My Expenses' },
   { id: 'approvals', label: 'Pending Approvals' },
@@ -78,14 +79,91 @@ const statusStyles: Record<string, { bg: string; text: string }> = {
   'Draft': { bg: 'bg-gray-100', text: 'text-gray-700' },
 }
 
-export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePreviewProps) {
+export function AppRuntimePreview({ appName, appIcon, appIconBg, onAddNavItem }: AppRuntimePreviewProps) {
+  const [navItems, setNavItems] = useState<NavItem[]>(INITIAL_NAV_ITEMS)
   const [activeNav, setActiveNav] = useState('expenses')
   const [selectedRole, setSelectedRole] = useState<UserRole>('employee')
 
+  // Method to add new page to navigation
+  const addNavItem = useCallback((pageId: string, pageLabel: string) => {
+    setNavItems(prev => [...prev, { id: pageId, label: pageLabel }])
+    setActiveNav(pageId) // Automatically switch to new page
+  }, [])
+
+  // Expose addNavItem to parent via callback
+  useEffect(() => {
+    if (onAddNavItem) {
+      onAddNavItem(addNavItem)
+    }
+  }, [addNavItem, onAddNavItem])
+
+  // Render dynamic page based on type/name
+  const renderDynamicPage = (pageId: string) => {
+    const pageData = navItems.find(item => item.id === pageId)
+    if (!pageData) return null
+
+    const pageName = pageData.label.toLowerCase()
+
+    // To Do page template
+    if (pageName.includes('to do') || pageName.includes('todo') || pageName.includes('task')) {
+      return (
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{pageData.label}</h1>
+            <p className="text-sm text-gray-600 mt-1">Manage your tasks and to-do items</p>
+          </div>
+
+          {/* Mock To Do List */}
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="divide-y divide-gray-200">
+              {[
+                { id: 1, title: 'Review project proposal', completed: false },
+                { id: 2, title: 'Update documentation', completed: true },
+                { id: 3, title: 'Schedule team meeting', completed: false },
+              ].map((task) => (
+                <div key={task.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={task.completed}
+                    className="w-4 h-4 text-purple-600 rounded border-gray-300"
+                    readOnly
+                  />
+                  <span className={cn(
+                    "text-sm",
+                    task.completed ? "line-through text-gray-500" : "text-gray-900"
+                  )}>
+                    {task.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button className="px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100">
+            + Add Task
+          </button>
+        </div>
+      )
+    }
+
+    // Default page template (blank)
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{pageData.label}</h1>
+          <p className="text-sm text-gray-600 mt-1">This is a blank page. Add components to get started.</p>
+        </div>
+        <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
+          <p className="text-gray-500">Page content will appear here</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full gap-1">
       {/* Header Section */}
-      <header className="flex-shrink-0 bg-white">
+      <header className="flex-shrink-0 bg-white rounded-lg">
         <div className="flex items-stretch justify-between px-4">
           {/* Left side: App identity (top) + Navigation (bottom) stacked vertically */}
           <div className="flex flex-col justify-center py-4">
@@ -143,16 +221,13 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePre
             </Select>
           </div>
         </div>
-
-        {/* Subtle Gray Separator Line */}
-        <div className="h-px bg-gray-200" />
       </header>
 
       {/* Content Section */}
-      <main className="flex-1 overflow-hidden bg-white">
+      <main className="flex-1 overflow-hidden rounded-lg">
         {/* Dashboard Page */}
         {activeNav === 'dashboard' && (
-          <div className="h-full flex flex-col p-4">
+          <div className="h-full flex flex-col p-4 bg-white">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
               <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs px-3">
@@ -217,7 +292,7 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePre
 
         {/* My Expenses Page */}
         {activeNav === 'expenses' && (
-          <div className="h-full flex flex-col p-4">
+          <div className="h-full flex flex-col p-4 bg-white">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-base font-semibold text-gray-900">My Expenses</h1>
               <div className="flex items-center gap-2">
@@ -301,7 +376,7 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePre
 
         {/* Pending Approvals Page */}
         {activeNav === 'approvals' && (
-          <div className="h-full flex flex-col p-4">
+          <div className="h-full flex flex-col p-4 bg-white">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-base font-semibold text-gray-900">Pending Approvals</h1>
@@ -358,7 +433,7 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePre
 
         {/* Reports Page */}
         {activeNav === 'reports' && (
-          <div className="h-full flex flex-col p-4">
+          <div className="h-full flex flex-col p-4 bg-white">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-base font-semibold text-gray-900">Reports</h1>
               <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs px-3">
@@ -423,7 +498,7 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePre
             </div>
 
             <div className="space-y-4">
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-gray-200 rounded-lg p-4 bg-white">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Expense Categories</h3>
                 <div className="flex flex-wrap gap-2">
                   {Object.keys(categoryStyles).map((cat) => (
@@ -438,7 +513,7 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePre
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-gray-200 rounded-lg p-4 bg-white">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Approval Workflow</h3>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
@@ -467,7 +542,7 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePre
                 </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-gray-200 rounded-lg p-4 bg-white">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Notifications</h3>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between py-2">
@@ -485,6 +560,13 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg }: AppRuntimePre
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Dynamic Pages - render based on page type */}
+        {!['dashboard', 'expenses', 'approvals', 'reports', 'settings'].includes(activeNav) && (
+          <div className="p-6 bg-white h-full overflow-auto">
+            {renderDynamicPage(activeNav)}
           </div>
         )}
       </main>

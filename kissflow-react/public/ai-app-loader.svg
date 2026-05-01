@@ -1,4 +1,4 @@
-<svg width="231" height="260" viewBox="0 0 231 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="231" height="186" viewBox="0 0 231 186" fill="none" xmlns="http://www.w3.org/2000/svg">
 
   <defs>
     <!-- Shimmer sweep gradient – userSpaceOnUse so it covers the full canvas -->
@@ -11,8 +11,6 @@
         values="-462,0; 462,0" dur="2s" repeatCount="indefinite"/>
     </linearGradient>
   </defs>
-
-  <g transform="translate(0,37)">
 
   <!-- ─────────────────────────────────────── -->
   <!-- Container border                        -->
@@ -213,8 +211,5 @@
         fill="#6E6EDB">
     <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" begin="0.67s" repeatCount="indefinite"/>
   </path>
-
-
-  </g>
 
 </svg>

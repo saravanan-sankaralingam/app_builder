@@ -433,7 +433,7 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
 
         {/* Center - Build/Play Toggle */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
-          <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+          <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
             <button
               onClick={() => isRunMode && onRunModeToggle?.()}
               className={cn(
@@ -476,21 +476,14 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
             <MessageSquareText className="!h-[16px] !w-[16px]" strokeWidth={1.5} />
           </Button>
           <div className="h-4 w-px bg-gray-400/50 mx-1" />
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-[28px] w-8 p-0 cursor-pointer bg-white/80 text-purple-700 hover:bg-white hover:text-purple-800 border border-purple-300"
-            >
-              <Play className="size-3" />
-            </Button>
-            <Button
-              size="sm"
-              className="h-[28px] w-8 p-0 bg-purple-600 hover:bg-purple-700 cursor-pointer"
-            >
-              <Rocket className="size-3" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-[28px] px-3 cursor-pointer bg-white/80 text-purple-700 hover:bg-white hover:text-purple-800 border border-purple-300 gap-1.5"
+          >
+            <Rocket className="size-3" fill="currentColor" />
+            <span className="text-xs font-medium">Deploy</span>
+          </Button>
         </div>
       </div>
     </header>
