@@ -238,6 +238,16 @@
   --sidebar-accent-foreground: var(--blue-700);
   --sidebar-border: var(--gray-300);
   --sidebar-ring: var(--blue-500);
+
+  /* AI Gradients (Pink to Purple spectrum - 265deg diagonal) */
+  --ai-gradient-100: linear-gradient(265deg, #fcf2f9, #f5f5fd);
+  --ai-gradient-200: linear-gradient(265deg, #f6d9ed, #e2e2f8);
+  --ai-gradient-300: linear-gradient(265deg, #f0c0e1, #cfcff3);
+  --ai-gradient-400: linear-gradient(265deg, #e58dc9, #a8a8e9);
+  --ai-gradient-500: linear-gradient(265deg, #d341a5, #6e6edb);
+  --ai-gradient-600: linear-gradient(265deg, #861f66, #27279e);
+  --ai-gradient-700: linear-gradient(265deg, #4b1139, #161658);
+  --ai-gradient-800: linear-gradient(265deg, #0f030b, #040412);
 }
 
 /* ============================================
@@ -455,6 +465,16 @@
   --sidebar-accent-foreground: var(--blue-700);
   --sidebar-border: var(--gray-500);
   --sidebar-ring: var(--blue-500);
+
+  /* AI Gradients - Inverted for Dark Mode */
+  --ai-gradient-100: linear-gradient(265deg, #0f030b, #040412);
+  --ai-gradient-200: linear-gradient(265deg, #4b1139, #161658);
+  --ai-gradient-300: linear-gradient(265deg, #861f66, #27279e);
+  --ai-gradient-400: linear-gradient(265deg, #d341a5, #6e6edb);
+  --ai-gradient-500: linear-gradient(265deg, #e58dc9, #a8a8e9);
+  --ai-gradient-600: linear-gradient(265deg, #f0c0e1, #cfcff3);
+  --ai-gradient-700: linear-gradient(265deg, #f6d9ed, #e2e2f8);
+  --ai-gradient-800: linear-gradient(265deg, #fcf2f9, #f5f5fd);
 }
 
 /* ============================================
@@ -949,4 +969,20 @@
 /* Content area - dark mode */
 #builder-root.dark .rounded-tl-lg.bg-white {
   background-color: var(--gray-900) !important;
+}
+
+/* ============================================
+   SHIMMER ANIMATION
+   ============================================ */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }

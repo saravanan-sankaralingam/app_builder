@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Sparkles, PenLine } from 'lucide-react'
+import { ArrowLeft, Sparkles, PenLine, Loader2 } from 'lucide-react'
 import { CreateMethodCard } from './CreateMethodCard'
 import { AppNameForm } from './AppNameForm'
 import { AIPromptView } from './AIPromptView'
@@ -11,9 +11,10 @@ import { AIPromptViewNew } from './AIPromptViewNew'
 import { ConversationView, Message, ConversationPhase, AISuggestionResult } from './conversation'
 import { AIAnalyzingView, AppSuggestionDialog, AppCreatingView } from './analyzing'
 import { AppGenerationLayout } from './generation'
+import { LoaderDemoView } from './LoaderDemoView'
 import { createApp } from '@/lib/api/apps'
 
-type CreateMode = 'selection' | 'ai-prompt' | 'ai-prompt-new' | 'analyzing' | 'name-dialog' | 'creating' | 'conversation' | 'generating' | 'preview' | 'building'
+type CreateMode = 'selection' | 'ai-prompt' | 'ai-prompt-new' | 'analyzing' | 'name-dialog' | 'creating' | 'conversation' | 'generating' | 'preview' | 'building' | 'loader-demo'
 
 export function AppCreateView() {
   const router = useRouter()
@@ -23,6 +24,8 @@ export function AppCreateView() {
   const [aiPrompt, setAiPrompt] = useState('')
   const [generatedAppName, setGeneratedAppName] = useState('')
   const [generatedAppDescription, setGeneratedAppDescription] = useState('')
+  const [generatedAppIcon, setGeneratedAppIcon] = useState('Folder')
+  const [generatedAppIconBg, setGeneratedAppIconBg] = useState('#6E6EDB')
   const [conversationMessages, setConversationMessages] = useState<Message[]>([])
 
   const handleCreateFromScratch = () => {
@@ -35,6 +38,10 @@ export function AppCreateView() {
 
   const handleBuildWithAINew = () => {
     setMode('ai-prompt-new')
+  }
+
+  const handleLoaderDemo = () => {
+    setMode('loader-demo')
   }
 
   const handleBackToSelection = () => {
@@ -77,6 +84,8 @@ export function AppCreateView() {
   const handleNameDialogConfirm = (data: { name: string; description: string; icon: string; iconBg: string }) => {
     setGeneratedAppName(data.name)
     setGeneratedAppDescription(data.description)
+    setGeneratedAppIcon(data.icon)
+    setGeneratedAppIconBg(data.iconBg)
     // Transition to creating view
     setMode('creating')
     console.log('App confirmed:', data)
@@ -175,6 +184,11 @@ export function AppCreateView() {
     )
   }
 
+  // Render Loader Demo View
+  if (mode === 'loader-demo') {
+    return <LoaderDemoView />
+  }
+
   // Render AI Analyzing View
   if (mode === 'analyzing') {
     return (
@@ -204,6 +218,9 @@ export function AppCreateView() {
     return (
       <AppCreatingView
         appName={generatedAppName}
+        appDescription={generatedAppDescription}
+        appIcon={generatedAppIcon}
+        appIconBg={generatedAppIconBg}
         onComplete={handleCreatingComplete}
       />
     )
@@ -277,7 +294,7 @@ export function AppCreateView() {
         </div>
 
         {/* Method Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <CreateMethodCard
             icon={Sparkles}
             iconColor="#EC4899"
@@ -310,6 +327,17 @@ export function AppCreateView() {
             title="Create from scratch"
             description="Build your desired app using the app builder from scratch."
             onClick={handleCreateFromScratch}
+          />
+          <CreateMethodCard
+            icon={Loader2}
+            iconColor="#F97316"
+            gradientFrom="#FED7AA"
+            gradientTo="#FDBA74"
+            hoverGradientFrom="#FB923C"
+            hoverGradientTo="#F97316"
+            title="Loader animation"
+            description="Test the new 60-second app creation animation."
+            onClick={handleLoaderDemo}
           />
         </div>
         </div>

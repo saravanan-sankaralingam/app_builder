@@ -1,0 +1,287 @@
+<svg width="320" height="240" viewBox="0 0 320 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shimmer" x1="0" y1="0" x2="320" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#F5F5FD"/>
+      <stop offset="45%"  stop-color="#EAEAF9"/>
+      <stop offset="55%"  stop-color="#EAEAF9"/>
+      <stop offset="100%" stop-color="#F5F5FD"/>
+      <animateTransform attributeName="gradientTransform" type="translate"
+        values="-640,0; 640,0" dur="2s" repeatCount="indefinite"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0.468" y="0.436" width="317.785" height="239.052" rx="16.155"
+        stroke="#CFCFF3" stroke-width="0.938"/>
+
+  <!-- ============================================================ -->
+  <!-- HEADER — appears at t=0.32 after cards clear                -->
+  <!-- ============================================================ -->
+  <rect x="32" y="25" height="9" rx="2.5" fill="#CFCFF3">
+    <animate attributeName="width" values="0;0;130;130;0;0"
+      keyTimes="0;0.23;0.26;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+  <rect x="32" y="38" height="5.5" rx="2" fill="url(#shimmer)">
+    <animate attributeName="width" values="0;0;196;196;0;0"
+      keyTimes="0;0.26;0.29;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </rect>
+  <line x1="32" y1="51" x2="288" y2="51" stroke="#E2E2F8" stroke-width="0.8">
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.29;0.32;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+  </line>
+
+  <!-- ============================================================ -->
+  <!-- CARDS — appear 0.02 each, highlight at 0.20, fade at 0.28  -->
+  <!-- ============================================================ -->
+
+  <!-- TABLE (R1C1) — selected at t=0.20 -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;1;0;0"
+      keyTimes="0;0.02;0.04;0.17;0.21;0.23;1"
+      dur="12s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="37" y="76" width="74" height="38" rx="6"
+          fill="#6E6EDB" fill-opacity="0.08" stroke="#9E9EE7" stroke-width="0.9">
+      <animate attributeName="fill-opacity" values="0.08;0.08;0.08;0.08;0.18;0.18;0.08"
+        keyTimes="0;0.02;0.04;0.15;0.17;0.21;1"
+        dur="12s" repeatCount="indefinite" calcMode="spline"
+        keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+      <animate attributeName="stroke"
+        values="#9E9EE7;#9E9EE7;#9E9EE7;#9E9EE7;#6E6EDB;#6E6EDB;#9E9EE7"
+        keyTimes="0;0.02;0.04;0.15;0.17;0.21;1"
+        dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-width" values="0.9;0.9;0.9;0.9;1.4;1.4;0.9"
+        keyTimes="0;0.02;0.04;0.15;0.17;0.21;1"
+        dur="12s" repeatCount="indefinite" calcMode="spline"
+        keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    </rect>
+    <rect x="45" y="87" width="7" height="6" rx="1.2" fill="#9E9EE7" opacity="0.7"/>
+    <rect x="54" y="87" width="7" height="6" rx="1.2" fill="#9E9EE7" opacity="0.7"/>
+    <rect x="45" y="95" width="7" height="6" rx="1.2" fill="#9E9EE7" opacity="0.4"/>
+    <rect x="54" y="95" width="7" height="6" rx="1.2" fill="#9E9EE7" opacity="0.4"/>
+    <rect x="66" y="88" width="36" height="5.5" rx="1.5" fill="#CFCFF3"/>
+    <rect x="66" y="97" width="24" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- GALLERY (R1C2) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0.3;0;0"
+      keyTimes="0;0.04;0.06;0.17;0.21;0.23;1"
+      dur="12s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="123" y="76" width="74" height="38" rx="6"
+          fill="#6E6EDB" fill-opacity="0.08" stroke="#9E9EE7" stroke-width="0.9"/>
+    <rect x="131" y="84" width="8" height="12" rx="1.5" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="141" y="84" width="8" height="12" rx="1.5" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="151" y="84" width="8" height="12" rx="1.5" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="164" y="87" width="26" height="5.5" rx="1.5" fill="#CFCFF3"/>
+    <rect x="164" y="96" width="18" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- KANBAN (R1C3) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0.3;0;0"
+      keyTimes="0;0.06;0.08;0.17;0.21;0.23;1"
+      dur="12s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="209" y="76" width="74" height="38" rx="6"
+          fill="#6E6EDB" fill-opacity="0.08" stroke="#9E9EE7" stroke-width="0.9"/>
+    <rect x="217" y="87" width="6" height="11" rx="1" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="225" y="83" width="6" height="15" rx="1" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="233" y="90" width="6" height="8"  rx="1" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="244" y="87" width="26" height="5.5" rx="1.5" fill="#CFCFF3"/>
+    <rect x="244" y="96" width="18" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- TIMELINE (R2C1) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0.3;0;0"
+      keyTimes="0;0.08;0.10;0.17;0.21;0.23;1"
+      dur="12s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="37" y="126" width="74" height="38" rx="6"
+          fill="#6E6EDB" fill-opacity="0.08" stroke="#9E9EE7" stroke-width="0.9"/>
+    <line x1="45" y1="145" x2="75" y2="145" stroke="#9E9EE7" stroke-width="1.2" opacity="0.6"/>
+    <circle cx="51" cy="145" r="2.5" fill="#9E9EE7" opacity="0.7"/>
+    <circle cx="61" cy="145" r="2.5" fill="#9E9EE7" opacity="0.7"/>
+    <circle cx="71" cy="145" r="2.5" fill="#9E9EE7" opacity="0.7"/>
+    <rect x="80" y="141" width="26" height="5.5" rx="1.5" fill="#CFCFF3"/>
+    <rect x="80" y="150" width="18" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- SHEET (R2C2) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0.3;0;0"
+      keyTimes="0;0.10;0.12;0.17;0.21;0.23;1"
+      dur="12s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="123" y="126" width="74" height="38" rx="6"
+          fill="#6E6EDB" fill-opacity="0.08" stroke="#9E9EE7" stroke-width="0.9"/>
+    <rect x="131" y="135" width="22" height="3" rx="1" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="131" y="142" width="28" height="3" rx="1" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="131" y="149" width="18" height="3" rx="1" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="164" y="141" width="26" height="5.5" rx="1.5" fill="#CFCFF3"/>
+    <rect x="164" y="150" width="18" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- LIST (R2C3) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0.3;0;0"
+      keyTimes="0;0.12;0.14;0.17;0.21;0.23;1"
+      dur="12s" repeatCount="indefinite" calcMode="spline"
+      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="209" y="126" width="74" height="38" rx="6"
+          fill="#6E6EDB" fill-opacity="0.08" stroke="#9E9EE7" stroke-width="0.9"/>
+    <circle cx="217" cy="135" r="2.2" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="222" y="133" width="22" height="3" rx="1" fill="#9E9EE7" opacity="0.5"/>
+    <circle cx="217" cy="143" r="2.2" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="222" y="141" width="18" height="3" rx="1" fill="#9E9EE7" opacity="0.5"/>
+    <circle cx="217" cy="151" r="2.2" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="222" y="149" width="20" height="3" rx="1" fill="#9E9EE7" opacity="0.5"/>
+    <rect x="244" y="141" width="26" height="5.5" rx="1.5" fill="#CFCFF3"/>
+    <rect x="244" y="150" width="18" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- TABLE — frame t=0.41, cols t=0.44, header t=0.47, rows 0.50+ -->
+  <!-- ============================================================ -->
+
+  <!-- Outer border + header divider -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.32;0.35;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="71" width="256" height="112" rx="4"
+          fill="none" stroke="#9E9EE7" stroke-width="0.9"/>
+    <line x1="32" y1="85" x2="288" y2="85" stroke="#9E9EE7" stroke-width="0.9"/>
+  </g>
+
+  <!-- Column dividers -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.35;0.38;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <line x1="134" y1="71" x2="134" y2="183" stroke="#E2E2F8" stroke-width="0.8"/>
+    <line x1="198" y1="71" x2="198" y2="183" stroke="#E2E2F8" stroke-width="0.8"/>
+    <line x1="262" y1="71" x2="262" y2="183" stroke="#E2E2F8" stroke-width="0.8"/>
+  </g>
+
+  <!-- Header row -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.38;0.41;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="71" width="256" height="14" rx="4" fill="#6E6EDB" fill-opacity="0.12"/>
+    <rect x="38" y="74.5" width="58" height="5" rx="1.5" fill="#9E9EE7" opacity="0.8"/>
+    <rect x="140" y="74.5" width="38" height="5" rx="1.5" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="204" y="74.5" width="38" height="5" rx="1.5" fill="#9E9EE7" opacity="0.6"/>
+    <rect x="265" y="74.5" width="14" height="5" rx="1.5" fill="#9E9EE7" opacity="0.5"/>
+  </g>
+
+  <!-- Row 1 (y=85) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.41;0.44;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="85" width="256" height="14" fill="#6E6EDB" fill-opacity="0.04"/>
+    <line x1="32" y1="99" x2="288" y2="99" stroke="#E2E2F8" stroke-width="0.5" opacity="0.7"/>
+    <rect x="38" y="88.5" width="52" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="140" y="88.5" width="34" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="204" y="88.5" width="36" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="265" y="88.5" width="14" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- Row 2 (y=99) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.44;0.47;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="99" width="256" height="14" fill="#6E6EDB" fill-opacity="0.04"/>
+    <line x1="32" y1="113" x2="288" y2="113" stroke="#E2E2F8" stroke-width="0.5" opacity="0.7"/>
+    <rect x="38" y="102.5" width="62" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="140" y="102.5" width="28" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="204" y="102.5" width="40" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="265" y="102.5" width="14" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- Row 3 (y=113) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.47;0.50;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="113" width="256" height="14" fill="#6E6EDB" fill-opacity="0.04"/>
+    <line x1="32" y1="127" x2="288" y2="127" stroke="#E2E2F8" stroke-width="0.5" opacity="0.7"/>
+    <rect x="38" y="116.5" width="46" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="140" y="116.5" width="38" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="204" y="116.5" width="30" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="265" y="116.5" width="14" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- Row 4 (y=127) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.50;0.53;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="127" width="256" height="14" fill="#6E6EDB" fill-opacity="0.04"/>
+    <line x1="32" y1="141" x2="288" y2="141" stroke="#E2E2F8" stroke-width="0.5" opacity="0.7"/>
+    <rect x="38" y="130.5" width="56" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="140" y="130.5" width="32" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="204" y="130.5" width="36" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="265" y="130.5" width="14" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- Row 5 (y=141) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.53;0.56;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="141" width="256" height="14" fill="#6E6EDB" fill-opacity="0.04"/>
+    <line x1="32" y1="155" x2="288" y2="155" stroke="#E2E2F8" stroke-width="0.5" opacity="0.7"/>
+    <rect x="38" y="144.5" width="44" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="140" y="144.5" width="36" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="204" y="144.5" width="28" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="265" y="144.5" width="14" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- Row 6 (y=155) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.56;0.59;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="155" width="256" height="14" fill="#6E6EDB" fill-opacity="0.04"/>
+    <line x1="32" y1="169" x2="288" y2="169" stroke="#E2E2F8" stroke-width="0.5" opacity="0.7"/>
+    <rect x="38" y="158.5" width="60" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="140" y="158.5" width="30" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="204" y="158.5" width="38" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="265" y="158.5" width="14" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- Row 7 (y=169) -->
+  <g>
+    <animate attributeName="opacity" values="0;0;1;1;0;0"
+      keyTimes="0;0.59;0.62;0.93;0.97;1" dur="12s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
+    <rect x="32" y="169" width="256" height="14" fill="#6E6EDB" fill-opacity="0.04"/>
+    <rect x="38" y="172.5" width="50" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="140" y="172.5" width="34" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="204" y="172.5" width="32" height="4" rx="1.5" fill="url(#shimmer)"/>
+    <rect x="265" y="172.5" width="14" height="4" rx="1.5" fill="url(#shimmer)"/>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- SPARKLE                                                      -->
+  <!-- ============================================================ -->
+  <rect x="262.947" y="187.972" width="40.309" height="37.546" rx="20.154" fill="white"/>
+  <rect x="262.947" y="187.972" width="40.309" height="37.546" rx="20.154" stroke="#E2E2F8" stroke-width="0.938"/>
+  <path d="M280.301 199.425L281.423 202.434C281.917 203.759 283.037 204.801 284.461 205.262L287.690 206.307L284.461 207.352C283.037 207.813 281.917 208.855 281.423 210.182L280.301 213.190L279.179 210.182C278.684 208.855 277.565 207.813 276.142 207.352L272.912 206.307L276.142 205.262C277.565 204.801 278.684 203.759 279.179 202.434L280.301 199.425Z" fill="#6E6EDB">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite"/>
+  </path>
+  <path d="M288.996 208.737L289.147 209.141C289.642 210.467 290.759 211.510 292.184 211.970L292.619 212.110L292.184 212.250C290.759 212.711 289.642 213.754 289.147 215.080L288.996 215.484L288.845 215.080C288.350 213.754 287.231 212.711 285.807 212.250L285.374 212.110L285.807 211.970C287.231 211.510 288.350 210.467 288.845 209.141L288.996 208.737Z" fill="#6E6EDB">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" begin="0.33s" repeatCount="indefinite"/>
+  </path>
+  <path d="M287.547 198.617C287.853 199.439 288.547 200.085 289.430 200.370C288.547 200.657 287.853 201.303 287.547 202.125C287.239 201.303 286.545 200.657 285.663 200.370C286.545 200.085 287.239 199.439 287.547 198.617Z" fill="#6E6EDB">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" begin="0.67s" repeatCount="indefinite"/>
+  </path>
+</svg>
