@@ -72,6 +72,9 @@ export function BuilderLayout({
   const [addNavItemCallback, setAddNavItemCallback] = useState<
     ((pageId: string, pageLabel: string) => void) | null
   >(null)
+  const [switchToPageCallback, setSwitchToPageCallback] = useState<
+    ((pageId: string) => void) | null
+  >(null)
   const [components, setComponents] = useState<ComponentData[]>([])
   const [isLoadingComponents, setIsLoadingComponents] = useState(false)
 
@@ -1089,6 +1092,7 @@ export function BuilderLayout({
               appIcon={appIcon}
               appIconBg={appIconBg}
               onAddPageToPreview={addNavItemCallback}
+              onSwitchToPage={switchToPageCallback}
             />
 
             {/* Runtime Preview - remaining space */}
@@ -1099,6 +1103,7 @@ export function BuilderLayout({
                   appIcon={appIcon}
                   appIconBg={appIconBg}
                   onAddNavItem={(callback) => setAddNavItemCallback(() => callback)}
+                  onSwitchToPage={(callback) => setSwitchToPageCallback(() => callback)}
                 />
               </div>
             </div>

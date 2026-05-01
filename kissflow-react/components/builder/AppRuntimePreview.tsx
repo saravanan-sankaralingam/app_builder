@@ -17,6 +17,7 @@ interface AppRuntimePreviewProps {
   appIcon: string
   appIconBg: string
   onAddNavItem?: (callback: (pageId: string, pageLabel: string) => void) => void
+  onSwitchToPage?: (callback: (pageId: string) => void) => void
 }
 
 type UserRole = 'employee' | 'manager' | 'finance' | 'admin'
@@ -79,7 +80,7 @@ const statusStyles: Record<string, { bg: string; text: string }> = {
   'Draft': { bg: 'bg-gray-100', text: 'text-gray-700' },
 }
 
-export function AppRuntimePreview({ appName, appIcon, appIconBg, onAddNavItem }: AppRuntimePreviewProps) {
+export function AppRuntimePreview({ appName, appIcon, appIconBg, onAddNavItem, onSwitchToPage }: AppRuntimePreviewProps) {
   const [navItems, setNavItems] = useState<NavItem[]>(INITIAL_NAV_ITEMS)
   const [activeNav, setActiveNav] = useState('expenses')
   const [selectedRole, setSelectedRole] = useState<UserRole>('employee')
@@ -90,12 +91,24 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg, onAddNavItem }:
     setActiveNav(pageId) // Automatically switch to new page
   }, [])
 
+  // Method to switch to an existing page
+  const switchToPage = useCallback((pageId: string) => {
+    setActiveNav(pageId)
+  }, [])
+
   // Expose addNavItem to parent via callback
   useEffect(() => {
     if (onAddNavItem) {
       onAddNavItem(addNavItem)
     }
   }, [addNavItem, onAddNavItem])
+
+  // Expose switchToPage to parent via callback
+  useEffect(() => {
+    if (onSwitchToPage) {
+      onSwitchToPage(switchToPage)
+    }
+  }, [switchToPage, onSwitchToPage])
 
   // Render dynamic page based on type/name
   const renderDynamicPage = (pageId: string) => {

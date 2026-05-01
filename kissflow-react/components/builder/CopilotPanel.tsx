@@ -17,6 +17,7 @@ interface CopilotPanelProps {
   appIcon: string
   appIconBg: string
   onAddPageToPreview?: ((pageId: string, pageLabel: string) => void) | null
+  onSwitchToPage?: ((pageId: string) => void) | null
 }
 
 interface SubAction {
@@ -772,7 +773,7 @@ function AppIcon({ name, className }: { name: string; className?: string }) {
   return <IconComponent className={className} />
 }
 
-export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAddPageToPreview }: CopilotPanelProps) {
+export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAddPageToPreview, onSwitchToPage }: CopilotPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -2796,123 +2797,107 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAd
 
                     {/* Role Success Card */}
                     {message.showRoleSuccess && (
-                      <div className="space-y-2 mt-1">
-                        {/* Success Message */}
-                        <p className="text-[12px] text-gray-900 p-1">
-                          New role created successfully!
-                        </p>
-
-                        {/* Role Card */}
-                        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                          <div className="px-3 py-3">
-                            {/* Role Name with checkmark */}
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                              </div>
-                              <span className="text-[12px] font-semibold text-gray-900">
-                                {message.showRoleSuccess.roleName}
-                              </span>
-                            </div>
-
-                            {/* Permission Description */}
-                            <p className="text-[11px] text-gray-600 mt-1.5 ml-6">
-                              {message.showRoleSuccess.duplicatedFrom
-                                ? `Permissions duplicated from ${message.showRoleSuccess.duplicatedFrom}`
-                                : message.showRoleSuccess.permissionType
-                              }
-                            </p>
+                      <div className="mt-1">
+                        {/* Success Card with purple styling */}
+                        <div className="rounded-lg border border-purple-200 bg-purple-100 px-3 py-3">
+                          {/* Header with icon and title */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCheck className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                            <span className="text-[13px] font-medium text-purple-600">
+                              Role Created Successfully
+                            </span>
                           </div>
+
+                          {/* Role Name */}
+                          <p className="text-[12px] font-semibold text-gray-900 mb-1">
+                            {message.showRoleSuccess.roleName}
+                          </p>
+
+                          {/* Permission Description */}
+                          <p className="text-[12px] text-gray-900">
+                            {message.showRoleSuccess.duplicatedFrom
+                              ? `Permissions duplicated from ${message.showRoleSuccess.duplicatedFrom}`
+                              : message.showRoleSuccess.permissionType
+                            }
+                          </p>
                         </div>
                       </div>
                     )}
 
                     {/* Role Rename Success Card */}
                     {message.showRoleRenameSuccess && (
-                      <div className="space-y-2 mt-1">
-                        {/* Success Message */}
-                        <p className="text-[12px] text-gray-900 p-1">
-                          Role renamed successfully!
-                        </p>
-
-                        {/* Rename Card */}
-                        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                          <div className="px-3 py-3">
-                            {/* New Role Name with checkmark */}
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                              </div>
-                              <span className="text-[12px] font-semibold text-gray-900">
-                                {message.showRoleRenameSuccess.newName}
-                              </span>
-                            </div>
-
-                            {/* Previous name */}
-                            <p className="text-[11px] text-gray-600 mt-1.5 ml-6">
-                              Previously: {message.showRoleRenameSuccess.oldName}
-                            </p>
+                      <div className="mt-1">
+                        {/* Success Card with purple styling */}
+                        <div className="rounded-lg border border-purple-200 bg-purple-100 px-3 py-3">
+                          {/* Header with icon and title */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCheck className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                            <span className="text-[13px] font-medium text-purple-600">
+                              Role Renamed Successfully
+                            </span>
                           </div>
+
+                          {/* New Role Name */}
+                          <p className="text-[12px] font-semibold text-gray-900 mb-1">
+                            {message.showRoleRenameSuccess.newName}
+                          </p>
+
+                          {/* Previous name */}
+                          <p className="text-[12px] text-gray-900">
+                            Previously: {message.showRoleRenameSuccess.oldName}
+                          </p>
                         </div>
                       </div>
                     )}
 
                     {/* Permission Change Success Card */}
                     {message.showPermissionChangeSuccess && (
-                      <div className="space-y-2 mt-1">
-                        {/* Success Message */}
-                        <p className="text-[12px] text-gray-900 p-1">
-                          Permissions updated successfully!
-                        </p>
-
-                        {/* Permission Change Card */}
-                        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                          <div className="px-3 py-3">
-                            {/* Role Name with checkmark */}
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                              </div>
-                              <span className="text-[12px] font-semibold text-gray-900">
-                                {message.showPermissionChangeSuccess.roleName}
-                              </span>
-                            </div>
-
-                            {/* Change description */}
-                            <p className="text-[11px] text-gray-600 mt-1.5 ml-6">
-                              {message.showPermissionChangeSuccess.changeDescription}
-                            </p>
+                      <div className="mt-1">
+                        {/* Success Card with purple styling */}
+                        <div className="rounded-lg border border-purple-200 bg-purple-100 px-3 py-3">
+                          {/* Header with icon and title */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCheck className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                            <span className="text-[13px] font-medium text-purple-600">
+                              Permissions Updated Successfully
+                            </span>
                           </div>
+
+                          {/* Role Name */}
+                          <p className="text-[12px] font-semibold text-gray-900 mb-1">
+                            {message.showPermissionChangeSuccess.roleName}
+                          </p>
+
+                          {/* Change description */}
+                          <p className="text-[12px] text-gray-900">
+                            {message.showPermissionChangeSuccess.changeDescription}
+                          </p>
                         </div>
                       </div>
                     )}
 
                     {/* Duplicate Role Success Card */}
                     {message.showDuplicateRoleSuccess && (
-                      <div className="space-y-2 mt-1">
-                        {/* Success Message */}
-                        <p className="text-[12px] text-gray-900 p-1">
-                          Role duplicated successfully!
-                        </p>
-
-                        {/* Duplicate Role Card */}
-                        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                          <div className="px-3 py-3">
-                            {/* New Role Name with checkmark */}
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                              </div>
-                              <span className="text-[12px] font-semibold text-gray-900">
-                                {message.showDuplicateRoleSuccess.newRoleName}
-                              </span>
-                            </div>
-
-                            {/* Duplicated from */}
-                            <p className="text-[11px] text-gray-600 mt-1.5 ml-6">
-                              Duplicated from: {message.showDuplicateRoleSuccess.duplicatedFrom}
-                            </p>
+                      <div className="mt-1">
+                        {/* Success Card with purple styling */}
+                        <div className="rounded-lg border border-purple-200 bg-purple-100 px-3 py-3">
+                          {/* Header with icon and title */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCheck className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                            <span className="text-[13px] font-medium text-purple-600">
+                              Role Duplicated Successfully
+                            </span>
                           </div>
+
+                          {/* New Role Name */}
+                          <p className="text-[12px] font-semibold text-gray-900 mb-1">
+                            {message.showDuplicateRoleSuccess.newRoleName}
+                          </p>
+
+                          {/* Duplicated from */}
+                          <p className="text-[12px] text-gray-900">
+                            Duplicated from: {message.showDuplicateRoleSuccess.duplicatedFrom}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -3091,19 +3076,25 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAd
 
                     {/* Delete Success */}
                     {message.showDeleteSuccess && (
-                      <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 mt-2">
-                        <div className="flex items-start gap-3">
-                          <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-green-900 mb-1">
-                              Successfully deleted {message.showDeleteSuccess.deletedCount} role(s)
-                            </div>
-                            <ul className="text-xs text-green-800 space-y-0.5">
-                              {message.showDeleteSuccess.deletedRoles.map((roleName) => (
-                                <li key={roleName}>• {roleName}</li>
-                              ))}
-                            </ul>
+                      <div className="mt-1">
+                        {/* Success Card with purple styling */}
+                        <div className="rounded-lg border border-purple-200 bg-purple-100 px-3 py-3">
+                          {/* Header with icon and title */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCheck className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                            <span className="text-[13px] font-medium text-purple-600">
+                              Successfully Deleted {message.showDeleteSuccess.deletedCount} {message.showDeleteSuccess.deletedCount === 1 ? 'Role' : 'Roles'}
+                            </span>
                           </div>
+
+                          {/* Bulleted list of deleted roles */}
+                          <ul className="space-y-1 ml-7">
+                            {message.showDeleteSuccess.deletedRoles.map((roleName) => (
+                              <li key={roleName} className="text-[12px] text-gray-900 list-disc">
+                                {roleName}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
                     )}
@@ -3474,11 +3465,11 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAd
                     {/* Page Created Success Card */}
                     {message.showPageSuccess && (
                       <div className="mt-1">
-                        {/* Success Card with purple styling */}
+                        {/* Success Card with purple background */}
                         <div className="rounded-lg border border-purple-200 bg-purple-100 px-3 py-3">
                           {/* Header with icon and title */}
                           <div className="flex items-center gap-2 mb-2">
-                            <IconCircleCheckFilled className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                            <CheckCheck className="w-5 h-5 text-purple-500 flex-shrink-0" />
                             <span className="text-[13px] font-medium text-purple-600">
                               Page Created Successfully
                             </span>
@@ -3494,7 +3485,9 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAd
                             href="#"
                             onClick={(e) => {
                               e.preventDefault()
-                              // Preview already switches to new page automatically
+                              if (onSwitchToPage && message.showPageSuccess) {
+                                onSwitchToPage(message.showPageSuccess.pageId)
+                              }
                             }}
                             className="text-[12px] font-medium text-purple-600 hover:text-purple-700 cursor-pointer inline-flex items-center gap-1"
                           >
