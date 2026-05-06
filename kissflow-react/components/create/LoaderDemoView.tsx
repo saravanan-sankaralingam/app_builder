@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-const STEP_DURATION = 10000 // 10 seconds per step (60 seconds total / 6 steps)
 const TOTAL_STEPS = 6
+const TOTAL_CYCLES = 1 // Play full sequence once
 
 interface CreationStep {
   title: string
   description: string
   progress: number
+  duration: number // Duration in milliseconds
 }
 
 const CREATION_STEPS: CreationStep[] = [
@@ -19,37 +20,45 @@ const CREATION_STEPS: CreationStep[] = [
     title: 'Creating roles',
     description: 'Defining user permissions and roles',
     progress: 16,
+    duration: 24000, // 2 cycles of 12s SVG animation
   },
   {
     title: 'Create data entities',
     description: 'Setting up data models',
     progress: 33,
+    duration: 48000, // 1 cycle of 48s SVG animation
   },
   {
     title: 'Creating views',
     description: 'Building visualization views',
     progress: 50,
+    duration: 48000, // 2 cycles of 24s SVG animation
   },
   {
     title: 'Creating reports',
     description: 'Generating analytics and reports',
     progress: 67,
+    duration: 48000, // 2 cycles of 24s SVG animation
   },
   {
     title: 'Creating pages',
     description: 'Designing custom pages',
     progress: 83,
+    duration: 72000, // 2 cycles of 36s SVG animation
   },
   {
     title: 'Finalising app',
     description: 'Finalizing app configurations',
     progress: 100,
+    duration: 80000, // 2 cycles of 40s SVG animation
   },
 ]
 
 export function LoaderDemoView() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
+  const stepCountRef = useRef(0)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Get the appropriate SVG for the current step
   const getSvgForStep = (stepIndex: number): string => {
@@ -70,21 +79,46 @@ export function LoaderDemoView() {
   }
 
   useEffect(() => {
-    console.log('🎨 LoaderDemoView mounted - Starting animation loop')
+    const totalSteps = TOTAL_STEPS * TOTAL_CYCLES
+    const totalDuration = CREATION_STEPS.reduce((sum, step) => sum + step.duration, 0) * TOTAL_CYCLES
+    console.log(`🎨 LoaderDemoView mounted - Will play ${TOTAL_CYCLES} complete cycles (${totalSteps} total steps, ${totalDuration / 1000} seconds)`)
 
-    // Simple interval to advance through steps
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => {
-        const nextStep = (prev + 1) % TOTAL_STEPS
-        console.log(`➡️ Moving from step ${prev} to step ${nextStep}`)
-        return nextStep
-      })
-    }, STEP_DURATION)
+    // Function to schedule the next step
+    const scheduleNextStep = () => {
+      const currentStepIndex = currentStep
+      const stepDuration = CREATION_STEPS[currentStepIndex].duration
+
+      intervalRef.current = setTimeout(() => {
+        stepCountRef.current += 1
+
+        // Check if we've completed all cycles
+        if (stepCountRef.current >= totalSteps) {
+          console.log('✅ Completed all cycles, stopping animation')
+          return
+        }
+
+        setCurrentStep((prev) => {
+          const nextStep = (prev + 1) % TOTAL_STEPS
+          const currentCycle = Math.floor(stepCountRef.current / TOTAL_STEPS) + 1
+
+          if (nextStep === 0 && prev === TOTAL_STEPS - 1) {
+            console.log(`🔁 Completed cycle ${currentCycle - 1}/${TOTAL_CYCLES}`)
+          }
+
+          console.log(`➡️ Step ${stepCountRef.current}/${totalSteps} - Moving to step ${nextStep} (Cycle ${currentCycle}/${TOTAL_CYCLES})`)
+          return nextStep
+        })
+      }, stepDuration)
+    }
+
+    scheduleNextStep()
 
     return () => {
-      clearInterval(stepInterval)
+      if (intervalRef.current) {
+        clearTimeout(intervalRef.current)
+      }
     }
-  }, [])
+  }, [currentStep])
 
   const handleBack = () => {
     router.push('/create/app')

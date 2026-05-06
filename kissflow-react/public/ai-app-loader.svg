@@ -1,215 +1,215 @@
-<svg width="231" height="186" viewBox="0 0 231 186" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="320" height="240" viewBox="0 0 320 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="sg" x1="0" y1="0" x2="320" y2="0" gradientUnits="userSpaceOnUse">
+    <stop offset="0%"   stop-color="#F5F5FD"/>
+    <stop offset="45%"  stop-color="#EAEAF9"/>
+    <stop offset="55%"  stop-color="#EAEAF9"/>
+    <stop offset="100%" stop-color="#F5F5FD"/>
+    <animateTransform attributeName="gradientTransform" type="translate" values="-320,0;320,0" dur="2s" repeatCount="indefinite"/>
+  </linearGradient>
+  <pattern id="sp" x="0" y="0" width="320" height="1" patternUnits="userSpaceOnUse">
+    <rect width="320" height="240" fill="url(#sg)"/>
+  </pattern>
+  <clipPath id="acclip">
+    <rect x="180" y="157" width="0" height="40" style="animation:acr 40s cubic-bezier(.4,0,.2,1) infinite both"/>
+  </clipPath>
+  <linearGradient id="af" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#6E6EDB" stop-opacity=".18"/>
+    <stop offset="100%" stop-color="#6E6EDB" stop-opacity=".02"/>
+  </linearGradient>
+  <style>
+    .vl{opacity:0;animation-duration:40s;animation-timing-function:cubic-bezier(.4,0,.2,1);animation-iteration-count:infinite;animation-fill-mode:both}
 
-  <defs>
-    <!-- Shimmer sweep gradient – userSpaceOnUse so it covers the full canvas -->
-    <linearGradient id="shimmer" x1="0" y1="0" x2="231" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#F5F5FD"/>
-      <stop offset="45%"  stop-color="#EAEAF9"/>
-      <stop offset="55%"  stop-color="#EAEAF9"/>
-      <stop offset="100%" stop-color="#F5F5FD"/>
-      <animateTransform attributeName="gradientTransform" type="translate"
-        values="-462,0; 462,0" dur="2s" repeatCount="indefinite"/>
-    </linearGradient>
-  </defs>
+    /* ── PAGE 1: builds 0–22%, holds 22–25%, fades 25–29% ── */
+    @keyframes p1ttl{0%{opacity:0}2%{opacity:1}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes p1sub{0%,2%{opacity:0}4%{opacity:1}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes c1{0%,4%{opacity:0;transform:translateX(32px)}7%{opacity:1;transform:translateX(0)}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes c2{0%,6%{opacity:0;transform:translateX(32px)}9%{opacity:1;transform:translateX(0)}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes c3{0%,8%{opacity:0;transform:translateX(32px)}11%{opacity:1;transform:translateX(0)}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes c4{0%,10%{opacity:0;transform:translateX(32px)}13%{opacity:1;transform:translateX(0)}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes cfr{0%,12%{opacity:0;transform:translateY(14px)}15%{opacity:1;transform:translateY(0)}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    .bar{transform-box:fill-box;transform-origin:center bottom}
+    @keyframes bar{0%,14%{opacity:0;transform:scaleY(0)}18%{opacity:1;transform:scaleY(1)}25%{opacity:1;transform:scaleY(1)}29%{opacity:0}100%{opacity:0}}
+    @keyframes lbl{0%,17%{opacity:0}20%{opacity:1}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes tbl{0%,19%{opacity:0;transform:translateY(14px)}22%{opacity:1;transform:translateY(0)}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes ach{0%,21%{opacity:0;transform:translateY(14px)}24%{opacity:1;transform:translateY(0)}25%{opacity:1}29%{opacity:0}100%{opacity:0}}
+    @keyframes acr{0%,21%{width:0}24%{width:100px}25%{width:100px}29%{width:0}100%{width:0}}
 
-  <!-- ─────────────────────────────────────── -->
-  <!-- Container border                        -->
-  <!-- ─────────────────────────────────────── -->
-  <rect x="0.338" y="0.338" width="229.401" height="185.265" rx="11.662"
-        stroke="#CFCFF3" stroke-width="0.677"/>
+    /* ── NAV slides: item1→2 at 25–29%, 2→3 at 50–54%, 3→4 at 75–79% ── */
+    @keyframes navhl{
+      0%{opacity:.85;transform:translateX(0)}
+      25%{opacity:.85;transform:translateX(0)}
+      29%{opacity:.85;transform:translateX(32px)}
+      50%{opacity:.85;transform:translateX(32px)}
+      54%{opacity:.85;transform:translateX(64px)}
+      75%{opacity:.85;transform:translateX(64px)}
+      79%{opacity:.85;transform:translateX(96px)}
+      97%{opacity:.85;transform:translateX(96px)}
+      99%{opacity:0;transform:translateX(96px)}
+      100%{opacity:0}
+    }
 
-  <!-- ─────────────────────────────────────── -->
-  <!-- TOP NAVBAR  (always visible)            -->
-  <!-- ─────────────────────────────────────── -->
+    /* ── PAGE 2: builds 29–48%, holds 48–50%, fades 50–54% ── */
+    @keyframes p2ttl{0%,30%{opacity:0}32%{opacity:1}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
+    @keyframes p2sub{0%,32%{opacity:0}34%{opacity:1}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
+    @keyframes p2c1{0%,34%{opacity:0;transform:translateX(32px)}37%{opacity:1;transform:translateX(0)}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
+    @keyframes p2c2{0%,36%{opacity:0;transform:translateX(32px)}39%{opacity:1;transform:translateX(0)}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
+    @keyframes p2c3{0%,38%{opacity:0;transform:translateX(32px)}41%{opacity:1;transform:translateX(0)}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
+    @keyframes p2r1{0%,41%{opacity:0;transform:translateY(14px)}44%{opacity:1;transform:translateY(0)}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
+    @keyframes p2r2{0%,43%{opacity:0;transform:translateY(14px)}46%{opacity:1;transform:translateY(0)}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
+    @keyframes p2r3{0%,45%{opacity:0;transform:translateY(14px)}48%{opacity:1;transform:translateY(0)}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
+    @keyframes p2r4{0%,47%{opacity:0;transform:translateY(14px)}50%{opacity:1;transform:translateY(0)}50%{opacity:1}54%{opacity:0}100%{opacity:0}}
 
-  <!-- Navbar background -->
-  <rect x="11" y="11" width="209" height="15" rx="3" fill="#F5F5FD"/>
+    /* ── PAGE 3: builds 54–73%, holds 73–75%, fades 75–79% ── */
+    @keyframes p3ttl{0%,55%{opacity:0}57%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3sub{0%,57%{opacity:0}59%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3fr{0%,59%{opacity:0;transform:translateY(14px)}62%{opacity:1;transform:translateY(0)}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3t1{0%,62%{opacity:0}64%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3t2{0%,63.5%{opacity:0}65.5%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3t3{0%,65%{opacity:0}67%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3t4{0%,66.5%{opacity:0}68.5%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3t5{0%,68%{opacity:0}70%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3t6{0%,69.5%{opacity:0}71.5%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
+    @keyframes p3t7{0%,71%{opacity:0}73%{opacity:1}75%{opacity:1}79%{opacity:0}100%{opacity:0}}
 
-  <!-- Logo square -->
-  <rect x="16" y="14" width="9" height="9" rx="2" fill="#CFCFF3"/>
+    /* ── PAGE 4 FORM: builds 79–95%, holds 95–97%, fades 97–100% ── */
+    @keyframes p4ttl{0%,80%{opacity:0}82%{opacity:1}97%{opacity:1}99%{opacity:0}100%{opacity:0}}
+    @keyframes p4sub{0%,82%{opacity:0}84%{opacity:1}97%{opacity:1}99%{opacity:0}100%{opacity:0}}
+    @keyframes p4f1{0%,83%{opacity:0;transform:translateY(10px)}86%{opacity:1;transform:translateY(0)}97%{opacity:1}99%{opacity:0}100%{opacity:0}}
+    @keyframes p4f2{0%,85.5%{opacity:0;transform:translateY(10px)}88.5%{opacity:1;transform:translateY(0)}97%{opacity:1}99%{opacity:0}100%{opacity:0}}
+    @keyframes p4f3{0%,88%{opacity:0;transform:translateY(10px)}91%{opacity:1;transform:translateY(0)}97%{opacity:1}99%{opacity:0}100%{opacity:0}}
+    @keyframes p4f4{0%,90.5%{opacity:0;transform:translateY(10px)}93.5%{opacity:1;transform:translateY(0)}97%{opacity:1}99%{opacity:0}100%{opacity:0}}
+    @keyframes p4btn{0%,93%{opacity:0;transform:translateY(10px)}96%{opacity:1;transform:translateY(0)}97%{opacity:1}99%{opacity:0}100%{opacity:0}}
+  </style>
+</defs>
 
-  <!-- Nav-item base pill (muted) -->
-  <rect x="32"  y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
-  <rect x="64"  y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
-  <rect x="96"  y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
+<rect x=".468" y=".436" width="317.785" height="239.052" rx="16.155" fill="white" fill-opacity=".5" stroke="#CFCFF3" stroke-width=".938"/>
 
-  <!-- Nav-item active highlight: Dashboard (state 1) -->
-  <rect x="32" y="15" width="26" height="7" rx="2" fill="#6E6EDB">
-    <animate attributeName="opacity"
-      values="0.85;0.85;0;0;0;0;0.85"
-      keyTimes="0;0.133;0.333;0.467;0.667;0.8;1"
-      dur="5s" repeatCount="indefinite" calcMode="spline"
-      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
+<!-- NAVBAR -->
+<rect x="32" y="11" width="256" height="15" rx="3" fill="#F5F5FD"/>
+<rect x="40" y="14" width="9" height="9" rx="2" fill="#CFCFF3"/>
+<rect x="54"  y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
+<rect x="86"  y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
+<rect x="118" y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
+<rect x="150" y="15" width="26" height="7" rx="2" fill="#E2E2F8"/>
+<rect x="54" y="15" width="26" height="7" rx="2" fill="#6E6EDB" class="vl" style="animation-name:navhl"/>
+<line x1="32" y1="27.5" x2="288" y2="27.5" stroke="#CFCFF3" stroke-width=".5"/>
 
-  <!-- Nav-item active highlight: Table (state 2) -->
-  <rect x="64" y="15" width="26" height="7" rx="2" fill="#6E6EDB">
-    <animate attributeName="opacity"
-      values="0;0;0.85;0.85;0;0;0"
-      keyTimes="0;0.133;0.333;0.467;0.667;0.8;1"
-      dur="5s" repeatCount="indefinite" calcMode="spline"
-      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
+<!-- ══ PAGE 1 ══ -->
+<rect x="32" y="42" width="72" height="7" rx="2" fill="#CFCFF3" class="vl" style="animation-name:p1ttl"/>
+<rect x="32" y="53" width="116" height="4" rx="1.5" fill="url(#sp)" class="vl" style="animation-name:p1sub"/>
+<g class="vl" style="animation-name:c1"><rect x="32" y="65" width="61" height="20" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><rect x="37" y="69" width="24" height="5" rx="1.5" fill="#9E9EE7"/><rect x="37" y="77" width="36" height="3.5" rx="1" fill="url(#sp)"/></g>
+<g class="vl" style="animation-name:c2"><rect x="97" y="65" width="61" height="20" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><rect x="102" y="69" width="24" height="5" rx="1.5" fill="#9E9EE7"/><rect x="102" y="77" width="36" height="3.5" rx="1" fill="url(#sp)"/></g>
+<g class="vl" style="animation-name:c3"><rect x="162" y="65" width="61" height="20" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><rect x="167" y="69" width="24" height="5" rx="1.5" fill="#9E9EE7"/><rect x="167" y="77" width="36" height="3.5" rx="1" fill="url(#sp)"/></g>
+<g class="vl" style="animation-name:c4"><rect x="227" y="65" width="61" height="20" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><rect x="232" y="69" width="24" height="5" rx="1.5" fill="#9E9EE7"/><rect x="232" y="77" width="36" height="3.5" rx="1" fill="url(#sp)"/></g>
+<g class="vl" style="animation-name:cfr"><rect x="32" y="95" width="256" height="52" rx="4" fill="none" stroke="#CFCFF3" stroke-width=".8"/><line x1="48" y1="141" x2="288" y2="141" stroke="#CFCFF3" stroke-width=".8"/><line x1="48" y1="99" x2="48" y2="141" stroke="#E2E2F8" stroke-width=".7"/><rect x="34" y="118" width="10" height="3" rx="1" fill="#E2E2F8"/><rect x="34" y="128" width="10" height="3" rx="1" fill="#E2E2F8"/><line x1="48" y1="119" x2="288" y2="119" stroke="#E2E2F8" stroke-width=".4" stroke-dasharray="3 3"/><line x1="48" y1="129" x2="288" y2="129" stroke="#E2E2F8" stroke-width=".4" stroke-dasharray="3 3"/></g>
+<rect class="vl bar" style="animation-name:bar" x="60"  y="120" width="16" height="21" rx="2" fill="#6E6EDB" fill-opacity=".28"/>
+<rect class="vl bar" style="animation-name:bar" x="100" y="108" width="16" height="33" rx="2" fill="#6E6EDB" fill-opacity=".28"/>
+<rect class="vl bar" style="animation-name:bar" x="140" y="125" width="16" height="16" rx="2" fill="#6E6EDB" fill-opacity=".28"/>
+<rect class="vl bar" style="animation-name:bar" x="180" y="113" width="16" height="28" rx="2" fill="#6E6EDB" fill-opacity=".28"/>
+<rect class="vl bar" style="animation-name:bar" x="220" y="122" width="16" height="19" rx="2" fill="#6E6EDB" fill-opacity=".28"/>
+<rect class="vl bar" style="animation-name:bar" x="260" y="116" width="16" height="25" rx="2" fill="#6E6EDB" fill-opacity=".28"/>
+<g class="vl" style="animation-name:lbl"><rect x="60" y="145" width="16" height="3.5" rx="1" fill="url(#sp)"/><rect x="100" y="145" width="16" height="3.5" rx="1" fill="url(#sp)"/><rect x="140" y="145" width="16" height="3.5" rx="1" fill="url(#sp)"/><rect x="180" y="145" width="16" height="3.5" rx="1" fill="url(#sp)"/><rect x="220" y="145" width="16" height="3.5" rx="1" fill="url(#sp)"/><rect x="260" y="145" width="16" height="3.5" rx="1" fill="url(#sp)"/></g>
+<g class="vl" style="animation-name:tbl"><rect x="32" y="157" width="124" height="40" rx="4" fill="none" stroke="#CFCFF3" stroke-width=".8"/><rect x="32" y="157" width="124" height="11" rx="4" fill="#6E6EDB" fill-opacity=".06"/><line x1="32" y1="168" x2="156" y2="168" stroke="#CFCFF3" stroke-width=".7"/><rect x="38" y="161" width="34" height="3.5" rx="1" fill="#9E9EE7" opacity=".7"/><rect x="96" y="161" width="26" height="3.5" rx="1" fill="#9E9EE7" opacity=".5"/><line x1="90" y1="157" x2="90" y2="197" stroke="#E2E2F8" stroke-width=".6"/><line x1="32" y1="177" x2="156" y2="177" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="171" width="30" height="3.5" rx="1" fill="url(#sp)"/><rect x="96" y="171" width="22" height="3.5" rx="1" fill="url(#sp)"/><line x1="32" y1="186" x2="156" y2="186" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="180" width="36" height="3.5" rx="1" fill="url(#sp)"/><rect x="96" y="180" width="18" height="3.5" rx="1" fill="url(#sp)"/><rect x="38" y="189" width="26" height="3.5" rx="1" fill="url(#sp)"/><rect x="96" y="189" width="28" height="3.5" rx="1" fill="url(#sp)"/></g>
+<g class="vl" style="animation-name:ach"><rect x="164" y="157" width="124" height="40" rx="4" fill="none" stroke="#CFCFF3" stroke-width=".8"/><line x1="180" y1="195" x2="284" y2="195" stroke="#CFCFF3" stroke-width=".7"/><line x1="180" y1="161" x2="180" y2="195" stroke="#E2E2F8" stroke-width=".6"/><line x1="180" y1="182" x2="284" y2="177" stroke="#E2E2F8" stroke-width=".4" stroke-dasharray="3 3"/><g clip-path="url(#acclip)"><path d="M180,178 C188,178 192,170 200,170 C208,170 212,182 220,182 C228,182 232,172 240,172 C248,172 252,166 260,166 C268,166 272,176 280,176 L280,190 L180,190 Z" fill="url(#af)"/><path d="M180,178 C188,178 192,170 200,170 C208,170 212,182 220,182 C228,182 232,172 240,172 C248,172 252,166 260,166 C268,166 272,176 280,176" fill="none" stroke="#CFCFF3" stroke-width="1.5" stroke-linecap="round"/></g></g>
 
-  <!-- Nav-item active highlight: Form (state 3) -->
-  <rect x="96" y="15" width="26" height="7" rx="2" fill="#6E6EDB">
-    <animate attributeName="opacity"
-      values="0;0;0;0;0.85;0.85;0"
-      keyTimes="0;0.133;0.333;0.467;0.667;0.8;1"
-      dur="5s" repeatCount="indefinite" calcMode="spline"
-      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
+<!-- ══ PAGE 2 ══ -->
+<rect x="32" y="42" width="60" height="7" rx="2" fill="#CFCFF3" class="vl" style="animation-name:p2ttl"/>
+<rect x="32" y="53" width="96" height="4" rx="1.5" fill="url(#sp)" class="vl" style="animation-name:p2sub"/>
+<g class="vl" style="animation-name:p2c1"><rect x="32" y="65" width="82" height="16" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><rect x="38" y="71" width="36" height="4" rx="1.5" fill="#9E9EE7"/><circle cx="106" cy="73" r="4" fill="#6E6EDB" fill-opacity=".5"/></g>
+<g class="vl" style="animation-name:p2c2"><rect x="119" y="65" width="82" height="16" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><rect x="125" y="71" width="36" height="4" rx="1.5" fill="#9E9EE7"/><circle cx="193" cy="73" r="4" fill="#6E6EDB" fill-opacity=".5"/></g>
+<g class="vl" style="animation-name:p2c3"><rect x="206" y="65" width="82" height="16" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><rect x="212" y="71" width="36" height="4" rx="1.5" fill="#9E9EE7"/><circle cx="280" cy="73" r="4" fill="#6E6EDB" fill-opacity=".5"/></g>
+<g class="vl" style="animation-name:p2r1"><rect x="32" y="91" width="256" height="18" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><circle cx="44" cy="100" r="4" fill="#6E6EDB" fill-opacity=".5"/><rect x="54" y="96" width="72" height="4" rx="1.5" fill="#CFCFF3"/><rect x="54" y="103" width="48" height="3" rx="1" fill="url(#sp)"/><rect x="246" y="96" width="32" height="6" rx="3" fill="#6E6EDB" fill-opacity=".09" stroke="#CFCFF3" stroke-width=".7"/></g>
+<g class="vl" style="animation-name:p2r2"><rect x="32" y="117" width="256" height="18" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><circle cx="44" cy="126" r="4" fill="#6E6EDB" fill-opacity=".5"/><rect x="54" y="122" width="88" height="4" rx="1.5" fill="#CFCFF3"/><rect x="54" y="129" width="56" height="3" rx="1" fill="url(#sp)"/><rect x="246" y="122" width="32" height="6" rx="3" fill="#6E6EDB" fill-opacity=".09" stroke="#CFCFF3" stroke-width=".7"/></g>
+<g class="vl" style="animation-name:p2r3"><rect x="32" y="143" width="256" height="18" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><circle cx="44" cy="152" r="4" fill="#6E6EDB" fill-opacity=".5"/><rect x="54" y="148" width="60" height="4" rx="1.5" fill="#CFCFF3"/><rect x="54" y="155" width="40" height="3" rx="1" fill="url(#sp)"/><rect x="246" y="148" width="32" height="6" rx="3" fill="#6E6EDB" fill-opacity=".09" stroke="#CFCFF3" stroke-width=".7"/></g>
+<g class="vl" style="animation-name:p2r4"><rect x="32" y="169" width="256" height="18" rx="3" fill="#6E6EDB" fill-opacity=".05" stroke="#CFCFF3" stroke-width=".8"/><circle cx="44" cy="178" r="4" fill="#6E6EDB" fill-opacity=".5"/><rect x="54" y="174" width="80" height="4" rx="1.5" fill="#CFCFF3"/><rect x="54" y="181" width="52" height="3" rx="1" fill="url(#sp)"/><rect x="246" y="174" width="32" height="6" rx="3" fill="#6E6EDB" fill-opacity=".09" stroke="#CFCFF3" stroke-width=".7"/></g>
 
-  <!-- Nav / content separator -->
-  <line x1="11" y1="27.5" x2="220" y2="27.5" stroke="#CFCFF3" stroke-width="0.5"/>
+<!-- ══ PAGE 3 ══ -->
+<rect x="32" y="42" width="60" height="7" rx="2" fill="#CFCFF3" class="vl" style="animation-name:p3ttl"/>
+<rect x="32" y="53" width="96" height="4" rx="1.5" fill="url(#sp)" class="vl" style="animation-name:p3sub"/>
+<g class="vl" style="animation-name:p3fr"><rect x="32" y="65" width="256" height="117" rx="4" fill="none" stroke="#CFCFF3" stroke-width=".8"/><rect x="32" y="65" width="256" height="13" rx="4" fill="#6E6EDB" fill-opacity=".06"/><line x1="32" y1="78" x2="288" y2="78" stroke="#CFCFF3" stroke-width=".7"/><rect x="38" y="69" width="40" height="3.5" rx="1" fill="#9E9EE7" opacity=".7"/><rect x="102" y="69" width="34" height="3.5" rx="1" fill="#9E9EE7" opacity=".55"/><rect x="170" y="69" width="34" height="3.5" rx="1" fill="#9E9EE7" opacity=".55"/><rect x="238" y="69" width="28" height="3.5" rx="1" fill="#9E9EE7" opacity=".45"/><line x1="96"  y1="65" x2="96"  y2="182" stroke="#E2E2F8" stroke-width=".6"/><line x1="164" y1="60" x2="164" y2="177" stroke="#E2E2F8" stroke-width=".6"/><line x1="232" y1="60" x2="232" y2="177" stroke="#E2E2F8" stroke-width=".6"/></g>
+<g class="vl" style="animation-name:p3t1"><line x1="32" y1="91" x2="288" y2="91" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="82" width="44" height="3.5" rx="1" fill="#CFCFF3"/><rect x="102" y="82" width="30" height="3.5" rx="1" fill="#CFCFF3"/><rect x="170" y="82" width="32" height="3.5" rx="1" fill="#CFCFF3"/><rect x="238" y="82" width="20" height="3.5" rx="1" fill="#CFCFF3"/></g>
+<g class="vl" style="animation-name:p3t2"><line x1="32" y1="104" x2="288" y2="104" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="95" width="38" height="3.5" rx="1" fill="#CFCFF3"/><rect x="102" y="95" width="36" height="3.5" rx="1" fill="#CFCFF3"/><rect x="170" y="95" width="28" height="3.5" rx="1" fill="#CFCFF3"/><rect x="238" y="95" width="24" height="3.5" rx="1" fill="#CFCFF3"/></g>
+<g class="vl" style="animation-name:p3t3"><line x1="32" y1="117" x2="288" y2="117" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="108" width="50" height="3.5" rx="1" fill="#CFCFF3"/><rect x="102" y="108" width="26" height="3.5" rx="1" fill="#CFCFF3"/><rect x="170" y="108" width="36" height="3.5" rx="1" fill="#CFCFF3"/><rect x="238" y="108" width="18" height="3.5" rx="1" fill="#CFCFF3"/></g>
+<g class="vl" style="animation-name:p3t4"><line x1="32" y1="130" x2="288" y2="130" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="121" width="42" height="3.5" rx="1" fill="#CFCFF3"/><rect x="102" y="121" width="34" height="3.5" rx="1" fill="#CFCFF3"/><rect x="170" y="121" width="30" height="3.5" rx="1" fill="#CFCFF3"/><rect x="238" y="121" width="22" height="3.5" rx="1" fill="#CFCFF3"/></g>
+<g class="vl" style="animation-name:p3t5"><line x1="32" y1="143" x2="288" y2="143" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="134" width="48" height="3.5" rx="1" fill="#CFCFF3"/><rect x="102" y="134" width="28" height="3.5" rx="1" fill="#CFCFF3"/><rect x="170" y="134" width="34" height="3.5" rx="1" fill="#CFCFF3"/><rect x="238" y="134" width="20" height="3.5" rx="1" fill="#CFCFF3"/></g>
+<g class="vl" style="animation-name:p3t6"><line x1="32" y1="156" x2="288" y2="156" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="147" width="36" height="3.5" rx="1" fill="#CFCFF3"/><rect x="102" y="147" width="32" height="3.5" rx="1" fill="#CFCFF3"/><rect x="170" y="147" width="32" height="3.5" rx="1" fill="#CFCFF3"/><rect x="238" y="147" width="24" height="3.5" rx="1" fill="#CFCFF3"/></g>
+<g class="vl" style="animation-name:p3t7"><line x1="32" y1="169" x2="288" y2="169" stroke="#E2E2F8" stroke-width=".5"/><rect x="38" y="160" width="44" height="3.5" rx="1" fill="#CFCFF3"/><rect x="102" y="160" width="30" height="3.5" rx="1" fill="#CFCFF3"/><rect x="170" y="160" width="28" height="3.5" rx="1" fill="#CFCFF3"/><rect x="238" y="160" width="22" height="3.5" rx="1" fill="#CFCFF3"/></g>
 
-  <!-- ─────────────────────────────────────── -->
-  <!-- PAGE TITLE  (morphs width per state)   -->
-  <!-- ─────────────────────────────────────── -->
-  <!--
-    States:  Dashboard → Table   → Form
-    Width:   68        → 52      → 46
-  -->
-  <rect x="22" y="41" height="7" rx="2" fill="#CFCFF3">
-    <animate attributeName="width"
-      values="68;68;52;52;46;46;68"
-      keyTimes="0;0.133;0.333;0.467;0.667;0.8;1"
-      dur="5s" repeatCount="indefinite" calcMode="spline"
-      keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
+<!-- ══ PAGE 4 FORM ══ -->
+<rect x="32" y="42" width="60" height="7" rx="2" fill="#CFCFF3" class="vl" style="animation-name:p4ttl"/>
+<rect x="32" y="53" width="96" height="4" rx="1.5" fill="url(#sp)" class="vl" style="animation-name:p4sub"/>
+<!-- Row 1: INPUT | DROPDOWN | USER -->
+<g class="vl" style="animation-name:p4f1">
+  <rect x="32" y="65" width="46" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="32" y="73" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="38" y="78" width="48" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <rect x="122" y="65" width="40" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="122" y="73" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="128" y="78" width="36" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <path d="M186 77.5 L188.5 80.5 L191 77.5" fill="none" stroke="#9E9EE7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="212" y="65" width="50" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="212" y="73" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <circle cx="222" cy="80" r="3" fill="#9E9EE7" opacity=".7"/>
+  <rect x="230" y="78" width="38" height="3.5" rx="1.5" fill="url(#sp)"/>
+</g>
+<!-- Row 2: TOGGLE | INPUT | DROPDOWN -->
+<g class="vl" style="animation-name:p4f2">
+  <rect x="32" y="98" width="32" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="32"  y="101" width="35" height="14" rx="7" fill="#6E6EDB" fill-opacity=".11" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="39"  y="105.5" width="21" height="3.5" rx="1.5" fill="#9E9EE7"/>
+  <rect x="73"  y="101" width="35" height="14" rx="7" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="80"  y="105.5" width="21" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <rect x="122" y="98" width="52" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="122" y="106" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="128" y="110.5" width="44" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <rect x="212" y="98" width="40" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="212" y="106" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="218" y="110.5" width="40" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <path d="M276 110 L278.5 113 L281 110" fill="none" stroke="#9E9EE7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<!-- Row 3: USER | RATING | INPUT -->
+<g class="vl" style="animation-name:p4f3">
+  <rect x="32" y="131" width="50" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="32" y="139" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <circle cx="42" cy="146" r="3" fill="#9E9EE7" opacity=".7"/>
+  <rect x="50" y="143.5" width="38" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <rect x="122" y="131" width="36" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="122" y="139" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <path d="M135,143 L135.7,144.6 L137.4,144.8 L136.2,145.9 L136.5,147.6 L135,146.7 L133.5,147.6 L133.8,145.9 L132.6,144.8 L134.3,144.6 Z" fill="#9E9EE7"/>
+  <path d="M142,143 L142.7,144.6 L144.4,144.8 L143.2,145.9 L143.5,147.6 L142,146.7 L140.5,147.6 L140.8,145.9 L139.6,144.8 L141.3,144.6 Z" fill="#9E9EE7"/>
+  <path d="M149,143 L149.7,144.6 L151.4,144.8 L150.2,145.9 L150.5,147.6 L149,146.7 L147.5,147.6 L147.8,145.9 L146.6,144.8 L148.3,144.6 Z" fill="#9E9EE7"/>
+  <path d="M156,143 L156.7,144.6 L158.4,144.8 L157.2,145.9 L157.5,147.6 L156,146.7 L154.5,147.6 L154.8,145.9 L153.6,144.8 L155.3,144.6 Z" fill="#E2E2F8"/>
+  <path d="M163,143 L163.7,144.6 L165.4,144.8 L164.2,145.9 L164.5,147.6 L163,146.7 L161.5,147.6 L161.8,145.9 L160.6,144.8 L162.3,144.6 Z" fill="#E2E2F8"/>
+  <rect x="212" y="131" width="52" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="212" y="139" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="218" y="143.5" width="48" height="3.5" rx="1.5" fill="url(#sp)"/>
+</g>
+<!-- Row 4: ATTACHMENT | INPUT | DROPDOWN -->
+<g class="vl" style="animation-name:p4f4">
+  <rect x="32" y="164" width="50" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="32" y="172" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <path d="M40 176.5 L40 180 C40 181.3 41.2 182 42.5 182 C43.8 182 45 181.3 45 180 L45 176 C45 175.3 44.5 174.8 43.8 174.8 C43.1 174.8 42.6 175.3 42.6 176 L42.6 180" fill="none" stroke="#9E9EE7" stroke-width=".9" stroke-linecap="round"/>
+  <rect x="49" y="176.5" width="33" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <rect x="122" y="164" width="44" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="122" y="172" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="128" y="176.5" width="44" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <rect x="212" y="164" width="40" height="4" rx="1.5" fill="url(#sp)"/>
+  <rect x="212" y="172" width="76" height="14" rx="3" fill="#6E6EDB" fill-opacity=".06" stroke="#9E9EE7" stroke-width=".9"/>
+  <rect x="218" y="176.5" width="36" height="3.5" rx="1.5" fill="url(#sp)"/>
+  <path d="M276 176 L278.5 179 L281 176" fill="none" stroke="#9E9EE7" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<!-- Submit button -->
+<g class="vl" style="animation-name:p4btn">
+  <rect x="32" y="195" width="256" height="14" rx="3" fill="#6E6EDB" fill-opacity=".11" stroke="#6E6EDB" stroke-opacity=".4" stroke-width=".8"/>
+  <rect x="136" y="200" width="48" height="3.5" rx="1.5" fill="#6E6EDB" fill-opacity=".45"/>
+</g>
 
-  <!-- ─────────────────────────────────────── -->
-  <!-- CONTENT BLOCKS                          -->
-  <!--                                         -->
-  <!-- State layout (y origin = 44):           -->
-  <!--  DASHBOARD  │  TABLE     │  FORM        -->
-  <!--  2 stat cards│  hdr row   │  label       -->
-  <!--  wide chart  │  3 rows×3c │  input       -->
-  <!--  2 mini bars │            │  label+input -->
-  <!-- ─────────────────────────────────────── -->
-  <!--
-    keyTimes: 0=Dash  0.133=hold  0.333=Table  0.467=hold  0.667=Form  0.8=hold  1.0=Dash
-  -->
 
-  <!-- ── Block 1: Stat-card L / Hdr-col-1 / Label-1 ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="22;22;22;22;22;22;22"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0s"     repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="54;54;54;54;54;54;54"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0s"     repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="87;87;57;57;65;65;87"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0s"     repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="28;28;14;14;8;8;28"         keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0s"     repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 2: Stat-card R / Hdr-col-2 / Input-1 ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="117;117;85;85;22;22;117"    keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.055s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="54;54;54;54;67;67;54"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.055s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="89;89;57;57;184;184;89"     keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.055s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="28;28;14;14;18;18;28"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.055s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 3: Chart / Hdr-col-3 / Label-2 ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="22;22;148;148;22;22;22"     keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.11s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="90;90;54;54;93;93;90"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.11s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="184;184;57;57;65;65;184"    keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.11s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="44;44;14;14;8;8;44"         keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.11s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 4: Mini-bar L / Row-1 col-1 / Input-2 ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="22;22;22;22;22;22;22"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.165s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="142;142;74;74;106;106;142"    keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.165s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="84;84;57;57;184;184;84"     keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.165s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="11;11;14;14;18;18;11"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.165s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 5: Mini-bar R / Row-1 col-2 / Label-3 ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="114;114;85;85;22;22;114"    keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.21s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="142;142;74;74;132;132;142"  keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.21s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="92;92;57;57;65;65;92"       keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.21s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="11;11;14;14;8;8;11"         keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.21s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 6: (hidden) / Row-1 col-3 / (hidden) ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="208;208;148;148;208;208;208" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.255s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="74;74;74;74;74;74;74"        keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.255s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.255s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.255s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 7: (hidden) / Row-2 col-1 / (hidden) ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="208;208;22;22;208;208;208"   keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.3s"   repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="94;94;94;94;94;94;94"        keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.3s"   repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.3s"   repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.3s"   repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 8: (hidden) / Row-2 col-2 / (hidden) ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="208;208;85;85;208;208;208"   keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.345s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="94;94;94;94;94;94;94"        keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.345s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.345s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.345s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 9: (hidden) / Row-2 col-3 / (hidden) ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="208;208;148;148;208;208;208" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.39s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="94;94;94;94;94;94;94"        keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.39s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.39s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.39s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 10: (hidden) / Row-3 col-1 / (hidden) ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="208;208;22;22;208;208;208"   keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.435s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="114;114;114;114;114;114;114" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.435s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.435s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.435s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 11: (hidden) / Row-3 col-2 / (hidden) ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="208;208;85;85;208;208;208"   keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.48s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="114;114;114;114;114;114;114" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.48s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.48s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.48s"  repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ── Block 12: (hidden) / Row-3 col-3 / (hidden) ── -->
-  <rect rx="2.707" fill="url(#shimmer)">
-    <animate attributeName="x"      values="208;208;148;148;208;208;208" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.525s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="y"      values="114;114;114;114;114;114;114" keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.525s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="width"  values="0;0;57;57;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.525s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-    <animate attributeName="height" values="0;0;14;14;0;0;0"             keyTimes="0;0.133;0.333;0.467;0.667;0.8;1" dur="5s" begin="0.525s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1;0.25 0.1 0.25 1"/>
-  </rect>
-
-  <!-- ─────────────────────────────────────── -->
-  <!-- SPARKLE BUTTON  (identical to original) -->
-  <!-- ─────────────────────────────────────── -->
-  <rect x="189.815" y="145.678" width="29.098" height="29.098" rx="14.549" fill="white"/>
-  <rect x="189.815" y="145.678" width="29.098" height="29.098" rx="14.549"
-        stroke="#E2E2F8" stroke-width="0.677"/>
-
-  <!-- Star 1: large -->
-  <path d="M202.342 154.554L203.152 156.886C203.509 157.913 204.317 158.721 205.345 159.078L207.676 159.888L205.345 160.698C204.317 161.055 203.509 161.863 203.152 162.891L202.342 165.222L201.532 162.891C201.175 161.863 200.367 161.055 199.34 160.698L197.008 159.888L199.34 159.078C200.367 158.721 201.175 157.913 201.532 156.886L202.342 154.554Z"
-        fill="#6E6EDB">
-    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite"/>
-  </path>
-
-  <!-- Star 2: small bottom-right -->
-  <path d="M208.619 161.771L208.728 162.084C209.085 163.112 209.892 163.92 210.92 164.277L211.234 164.385L210.92 164.494C209.892 164.851 209.085 165.659 208.728 166.687L208.619 167L208.51 166.687C208.153 165.659 207.345 164.851 206.317 164.494L206.004 164.385L206.317 164.277C207.345 163.92 208.153 163.112 208.51 162.084L208.619 161.771Z"
-        fill="#6E6EDB">
-    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" begin="0.33s" repeatCount="indefinite"/>
-  </path>
-
-  <!-- Star 3: tiny top-right -->
-  <path d="M207.573 153.928C207.794 154.565 208.295 155.066 208.932 155.287C208.295 155.509 207.794 156.01 207.573 156.647C207.351 156.01 206.85 155.509 206.213 155.287C206.85 155.066 207.351 154.565 207.573 153.928Z"
-        fill="#6E6EDB">
-    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" begin="0.67s" repeatCount="indefinite"/>
-  </path>
-
+<!-- SPARKLE -->
+<rect x="262.947" y="187.972" width="40.309" height="40.309" rx="20.154" fill="white"/>
+<rect x="262.947" y="187.972" width="40.309" height="40.309" rx="20.154" stroke="#E2E2F8" stroke-width=".938"/>
+<path d="M280.301 199.425L281.423 202.434C281.917 203.759 283.037 204.801 284.461 205.262L287.690 206.307L284.461 207.352C283.037 207.813 281.917 208.855 281.423 210.182L280.301 213.190L279.179 210.182C278.684 208.855 277.565 207.813 276.142 207.352L272.912 206.307L276.142 205.262C277.565 204.801 278.684 203.759 279.179 202.434L280.301 199.425Z" fill="#6E6EDB" opacity=".8"/>
+<path d="M288.996 208.737L289.147 209.141C289.642 210.467 290.759 211.510 292.184 211.970L292.619 212.110L292.184 212.250C290.759 212.711 289.642 213.754 289.147 215.080L288.996 215.484L288.845 215.080C288.350 213.754 287.231 212.711 285.807 212.250L285.374 212.110L285.807 211.970C287.231 211.510 288.350 210.467 288.845 209.141L288.996 208.737Z" fill="#6E6EDB" opacity=".8"/>
+<path d="M287.547 198.617C287.853 199.439 288.547 200.085 289.430 200.370C288.547 200.657 287.853 201.303 287.547 202.125C287.239 201.303 286.545 200.657 285.663 200.370C286.545 200.085 287.239 199.439 287.547 198.617Z" fill="#6E6EDB" opacity=".8"/>
 </svg>

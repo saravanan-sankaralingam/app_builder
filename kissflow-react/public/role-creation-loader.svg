@@ -2,10 +2,10 @@
 
   <defs>
     <linearGradient id="shimmer" x1="0" y1="0" x2="320" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#F5F5FD"/>
-      <stop offset="45%"  stop-color="#EAEAF9"/>
-      <stop offset="55%"  stop-color="#EAEAF9"/>
-      <stop offset="100%" stop-color="#F5F5FD"/>
+      <stop offset="0%"   stop-color="#E0E0F7"/>
+      <stop offset="45%"  stop-color="#D5D5F4"/>
+      <stop offset="55%"  stop-color="#D5D5F4"/>
+      <stop offset="100%" stop-color="#E0E0F7"/>
       <animateTransform attributeName="gradientTransform" type="translate"
         values="-640,0; 640,0" dur="2s" repeatCount="indefinite"/>
     </linearGradient>
@@ -19,7 +19,7 @@
 
   <!-- Container border -->
   <rect x="0.468" y="0.436" width="317.785" height="239.052" rx="16.155"
-        stroke="#CFCFF3" stroke-width="0.938"/>
+         fill="white" fill-opacity="0.5" stroke="#CFCFF3" stroke-width="0.938"/>
 
   <!-- ============================================================ -->
   <!-- ROLE 1 AVATAR                                                -->
@@ -179,8 +179,8 @@
   <!-- ============================================================ -->
   <!-- SPARKLE BUTTON                                               -->
   <!-- ============================================================ -->
-  <rect x="262.947" y="187.972" width="40.309" height="37.546" rx="20.154" fill="white"/>
-  <rect x="262.947" y="187.972" width="40.309" height="37.546" rx="20.154" stroke="#E2E2F8" stroke-width="0.938"/>
+  <rect x="262.947" y="187.972" width="40.309" height="40.309" rx="20.154" fill="white"/>
+  <rect x="262.947" y="187.972" width="40.309" height="40.309" rx="20.154" stroke="#E2E2F8" stroke-width="0.938"/>
 
   <path d="M280.301 199.425L281.423 202.434C281.917 203.759 283.037 204.801 284.461 205.262L287.690 206.307L284.461 207.352C283.037 207.813 281.917 208.855 281.423 210.182L280.301 213.190L279.179 210.182C278.684 208.855 277.565 207.813 276.142 207.352L272.912 206.307L276.142 205.262C277.565 204.801 278.684 203.759 279.179 202.434L280.301 199.425Z" fill="#6E6EDB">
     <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite"/>
