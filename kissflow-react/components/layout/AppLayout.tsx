@@ -10,7 +10,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="h-screen grid grid-rows-[3.5rem_1fr] grid-cols-[3.5rem_1fr] bg-gray-50">
+    <div className="h-screen grid grid-rows-[50px_1fr] grid-cols-[50px_1fr] bg-gray-50">
       {/* TopBar spans full width */}
       <header className="col-span-2">
         <TopBar />

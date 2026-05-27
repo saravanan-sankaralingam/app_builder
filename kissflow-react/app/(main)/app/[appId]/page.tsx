@@ -30,7 +30,7 @@ export default function AppPage({ params }: AppPageProps) {
   const Icon = app.icon
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)]">
+    <div className="min-h-[calc(100vh-50px)]">
       {/* App Header */}
       <div className="bg-white border-b">
         <div className="px-6 py-4">

@@ -1,5 +1,11 @@
 # Kissflow App Builder
 
+## Related Specs
+
+- `kissflow-react/docs/BUILDER_MODES.md` — what Play / Spec X / Spec Y / Build modes do (top-bar toggle in `BuilderTopBar.tsx`, layout switching in `BuilderLayout.tsx`)
+- `kissflow-react/ComponentsProperties.md` — styling spec for the builder property panel and utility bar
+- `kissflow-react/STYLE_BACKUPS.md` — pre-experiment style snapshots for quick revert
+
 ## Product Overview
 
 A low-code application development platform where users can create and build apps using a visual builder. The platform uses meta-based generation to define app structure and behavior.

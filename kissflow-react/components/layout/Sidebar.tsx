@@ -8,6 +8,7 @@ import {
   Compass,
   Plus,
   Store,
+  ShoppingBag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -32,6 +33,10 @@ const middleNavItems: NavItem[] = [
   { icon: Compass, label: 'Explorer', href: '/explorer' },
 ]
 
+const retailApps: NavItem[] = [
+  { icon: ShoppingBag, label: 'Retail One', href: '/app/retail-one' },
+]
+
 const bottomNavItems: NavItem[] = [
   { icon: Store, label: 'Marketplace', href: '/store' },
 ]
@@ -52,9 +57,9 @@ function NavButton({
           <Link
             href={item.href}
             className={cn(
-              'flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-150',
+              'flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-150',
               isActive
-                ? 'bg-blue-50 text-blue-600'
+                ? 'bg-blue-600 text-white'
                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/70'
             )}
           >
@@ -76,7 +81,7 @@ function AddButton() {
         <TooltipTrigger asChild>
           <Link
             href="/create"
-            className="flex items-center justify-center w-10 h-10 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/70 transition-all duration-150"
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/70 transition-all duration-150"
           >
             <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
           </Link>
@@ -118,6 +123,23 @@ export function Sidebar() {
           />
         ))}
       </nav>
+
+      {/* Visual spacer */}
+      <div className="my-3 w-6 h-px bg-gray-200/80" />
+
+      {/* Retail Apps */}
+      <nav className="flex flex-col items-center gap-1">
+        {retailApps.map((item) => (
+          <NavButton
+            key={item.href + item.label}
+            item={item}
+            isActive={pathname === item.href}
+          />
+        ))}
+      </nav>
+
+      {/* Visual spacer */}
+      <div className="my-3 w-6 h-px bg-gray-200/80" />
 
       {/* Bottom Navigation */}
       <nav className="flex flex-col items-center gap-1 mt-auto">

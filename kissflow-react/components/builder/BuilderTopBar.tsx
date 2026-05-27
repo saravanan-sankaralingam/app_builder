@@ -29,8 +29,8 @@ interface BuilderTopBarProps {
   recentApps?: RecentApp[]
   onAppSwitch?: (appId: string) => void
   onGoToExplorer?: () => void
-  isRunMode?: boolean
-  onRunModeToggle?: () => void
+  mode?: 'play' | 'spec-x' | 'spec-y' | 'build'
+  onModeChange?: (mode: 'play' | 'spec-x' | 'spec-y' | 'build') => void
 }
 
 function AppIcon({ name, className }: { name: string; className?: string }) {
@@ -77,7 +77,7 @@ const iconCategories = [
   }
 ]
 
-export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onColorChange, onNameChange, recentApps = [], onAppSwitch, onGoToExplorer, isRunMode = false, onRunModeToggle }: BuilderTopBarProps) {
+export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onColorChange, onNameChange, recentApps = [], onAppSwitch, onGoToExplorer, mode = 'build', onModeChange }: BuilderTopBarProps) {
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false)
   const [isAppSwitcherOpen, setIsAppSwitcherOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'icons' | 'custom'>('icons')
@@ -431,30 +431,52 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
           </Popover>
         </div>
 
-        {/* Center - Build/Play Toggle */}
+        {/* Center - Play/Spec X/Spec Y/Build Toggle */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
           <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
             <button
-              onClick={() => isRunMode && onRunModeToggle?.()}
+              onClick={() => onModeChange?.('play')}
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded-md transition-colors",
-                !isRunMode
-                  ? "bg-purple-600 text-white"
-                  : "text-gray-900 hover:bg-gray-200"
-              )}
-            >
-              Build
-            </button>
-            <button
-              onClick={() => !isRunMode && onRunModeToggle?.()}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
-                isRunMode
+                mode === 'play'
                   ? "bg-purple-600 text-white"
                   : "text-gray-900 hover:bg-gray-200"
               )}
             >
               Play
+            </button>
+            <button
+              onClick={() => onModeChange?.('spec-x')}
+              className={cn(
+                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                mode === 'spec-x'
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-900 hover:bg-gray-200"
+              )}
+            >
+              Spec X
+            </button>
+            <button
+              onClick={() => onModeChange?.('spec-y')}
+              className={cn(
+                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                mode === 'spec-y'
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-900 hover:bg-gray-200"
+              )}
+            >
+              Spec Y
+            </button>
+            <button
+              onClick={() => onModeChange?.('build')}
+              className={cn(
+                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                mode === 'build'
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-900 hover:bg-gray-200"
+              )}
+            >
+              Build
             </button>
           </div>
         </div>

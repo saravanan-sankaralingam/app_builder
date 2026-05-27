@@ -7,7 +7,7 @@ import { AppsGrid } from './AppsGrid'
 import { listApps, App, AppStatus } from '@/lib/api/apps'
 import { getIconByName } from '@/lib/icons'
 import { AppData } from '@/types/app'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ShoppingBag } from 'lucide-react'
 
 type FilterType = 'live' | 'managed' | 'others'
 type ViewMode = 'grid' | 'list'
@@ -43,6 +43,18 @@ export function ExplorerView() {
 
   // Transform API apps to AppData format and apply filters
   const filteredApps = useMemo(() => {
+    // Static apps that always appear
+    const staticApps: AppData[] = [
+      {
+        id: 'retail-one',
+        name: 'Retail One',
+        description: 'Comprehensive retail management application',
+        icon: ShoppingBag,
+        iconBg: '#DBEAFE',
+        createdBy: 'System',
+      },
+    ]
+
     // Transform API apps to AppData format
     let transformed: AppData[] = apps.map((app) => ({
       id: app.id,
@@ -69,6 +81,8 @@ export function ExplorerView() {
       // Show live apps - filter by status from original apps
       const liveAppIds = new Set(apps.filter(a => a.status === 'live').map(a => a.id))
       transformed = transformed.filter((app) => liveAppIds.has(app.id))
+      // Add static apps to live apps
+      transformed = [...staticApps, ...transformed]
     } else if (activeFilter === 'managed') {
       // Show apps managed by the current user (for now, show all draft apps)
       const draftAppIds = new Set(apps.filter(a => a.status === 'draft').map(a => a.id))
