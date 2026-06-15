@@ -1,20 +1,6 @@
 # Kissflow App Builder
 
-## Related Specs
-
-- `kissflow-react/docs/BUILDER_MODES.md` — what Play / Spec X / Spec Y / Build modes do (top-bar toggle in `BuilderTopBar.tsx`, layout switching in `BuilderLayout.tsx`)
-- `kissflow-react/ComponentsProperties.md` — styling spec for the builder property panel and utility bar
-- `kissflow-react/STYLE_BACKUPS.md` — pre-experiment style snapshots for quick revert
-
-## Product Overview
-
-A low-code application development platform where users can create and build apps using a visual builder. The platform uses meta-based generation to define app structure and behavior.
-
-**Key Concepts:**
-- **App Builder**: Visual low-code interface for creating applications
-- **Development Sandbox**: Apps are built and tested in a dev environment
-- **Production Deployment**: Once changes are finalized, apps are deployed to production
-- **Preview in Dev**: Apps can run in the development environment before deployment, allowing testing of undeployed changes
+A low-code application development platform. Users build apps in a visual builder, test in a dev sandbox, and deploy to production.
 
 ```
 ┌─────────────────┐      ┌─────────────────┐
@@ -23,190 +9,105 @@ A low-code application development platform where users can create and build app
 └─────────────────┘      └─────────────────┘
 ```
 
-## App Construction Layers
+## Where to look
 
-Apps are built using 5 main layers, each with sub-components:
+This is a monorepo with two halves. For code-level conventions, read the nested `CLAUDE.md`:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        APP LAYERS                           │
-├─────────────────────────────────────────────────────────────┤
-│  1. DATA LAYER (Foundation)                                 │
-│     ├── DataForm - Data without workflows                   │
-│     ├── Board - Data with unstructured workflow             │
-│     │           (items can move to any step freely)         │
-│     └── Process - Data with structured workflow             │
-│                   (items follow predefined step sequence)   │
-├─────────────────────────────────────────────────────────────┤
-│  2. INTERFACE LAYER                                         │
-│     ├── Views (Table, Kanban, Gallery, Calendar, etc.)      │
-│     ├── Forms (Create, Edit, View)                          │
-│     └── Pages                                               │
-├─────────────────────────────────────────────────────────────┤
-│  3. LOGIC LAYER                                             │
-│     ├── Automations                                         │
-│     ├── Validations                                         │
-│     └── Computed Fields / Formulas                          │
-├─────────────────────────────────────────────────────────────┤
-│  4. ROLES & PERMISSIONS LAYER                               │
-│     ├── Role Definitions                                    │
-│     ├── Field-level Permissions                             │
-│     └── Step-level Permissions (for workflows)              │
-├─────────────────────────────────────────────────────────────┤
-│  5. SETTINGS LAYER                                          │
-│     ├── App Configuration                                   │
-│     ├── Integrations                                        │
-│     └── Notifications                                       │
-└─────────────────────────────────────────────────────────────┘
+| You're working on | Read |
+|---|---|
+| Frontend (React/Next.js UI, builder, views) | [`kissflow-react/CLAUDE.md`](kissflow-react/CLAUDE.md) |
+| Backend (Fastify API, Prisma, auth) | [`backend/CLAUDE.md`](backend/CLAUDE.md) |
+| Builder modes (Play/Spec X/Spec Y/Build) | [`kissflow-react/docs/BUILDER_MODES.md`](kissflow-react/docs/BUILDER_MODES.md) |
+| Property panel + utility bar styling | [`kissflow-react/ComponentsProperties.md`](kissflow-react/ComponentsProperties.md) |
+| Page editor layout | [`kissflow-react/docs/PAGE_BUILDER.md`](kissflow-react/docs/PAGE_BUILDER.md) |
+| Color tokens | [`kissflow-react/docs/COLORS.md`](kissflow-react/docs/COLORS.md) |
+| Pre-experiment style snapshots | [`kissflow-react/STYLE_BACKUPS.md`](kissflow-react/STYLE_BACKUPS.md) |
+
+The rest of this file is the **product model** — what apps are made of. Read it once; the nested files have everything you need after that.
+
+## Quick start
+
+```bash
+# Frontend
+cd kissflow-react && npm run dev    # http://localhost:4001
+
+# Backend
+cd backend && npm run dev           # http://localhost:3000
+cd backend && npm run db:migrate    # apply migrations
+cd backend && npm run db:seed       # seed dev data
 ```
 
-### Data Layer Types
+The frontend reads `NEXT_PUBLIC_API_URL` from `kissflow-react/.env.local` to decide whether to talk to the local backend (`http://localhost:3000`) or the hosted Render backend. Toggle the comment in that file.
+
+## Product model: 5 app construction layers
+
+Apps are composed of 5 layers. The **Data layer** is the foundation; everything else builds on it.
+
+```
+1. DATA LAYER (Foundation)
+   ├── DataForm  — data without workflow
+   ├── Board     — data with unstructured workflow (item can move to any step)
+   └── Process   — data with structured workflow (predefined step sequence)
+
+2. INTERFACE LAYER
+   ├── Views   — Table, Kanban, Gallery, Calendar, Timeline, Sheet
+   ├── Forms   — Create, Edit, View
+   └── Pages   — custom drag-and-drop pages (see PAGE_BUILDER.md)
+
+3. LOGIC LAYER
+   ├── Automations
+   ├── Validations
+   └── Computed fields / formulas
+
+4. ROLES & PERMISSIONS LAYER
+   ├── Role definitions
+   ├── Field-level permissions
+   └── Step-level permissions (workflows only)
+
+5. SETTINGS LAYER
+   ├── App configuration
+   ├── Integrations
+   └── Notifications
+```
+
+### Data layer types
 
 | Type | Description | Workflow |
-|------|-------------|----------|
+|---|---|---|
 | **DataForm** | Simple data collection (like a database table) | None |
 | **Board** | Kanban-style tracking with flexible workflow | Unstructured (any step → any step) |
 | **Process** | Formal workflow with defined transitions | Structured (predefined step sequence) |
 
-### Data Layer Database Design
-
-Each app can have multiple data layers. Items are stored with dynamic JSON data:
+### Data layer DB shape
 
 ```
-App (1) ──── (N) DataLayer ──── (N) Field       # Schema definition
+App (1) ──── (N) DataLayer ──── (N) Field         # schema definition
                     │
-                    └──── (N) WorkflowStep     # For board/process
+                    ├──── (N) WorkflowStep         # board / process only
                     │
-                    └──── (N) DataItem         # Actual data records
+                    └──── (N) DataItem             # actual records (data: JSON)
 ```
 
-- **DataLayer**: Container for a form/board/process within an app
-- **Field**: Field definitions (name, type, options, validation)
-- **WorkflowStep**: Workflow steps with transitions (board allows all, process restricts)
-- **DataItem**: Actual data stored as JSON with reference to current step
+- **DataLayer** — container for a form/board/process within an app
+- **Field** — field definitions (name, type, options, validation)
+- **WorkflowStep** — workflow steps with transitions (board allows all; process restricts via `allowedNextSteps`)
+- **DataItem** — data stored as JSON with a reference to the current step
 
-## Quick Start
+Full schema lives in `backend/prisma/schema.prisma`. Backend-side conventions for adding/modifying models are in [`backend/CLAUDE.md`](backend/CLAUDE.md#database).
 
-```bash
-# Frontend
-cd kissflow-react
-npm run dev          # Start dev server on port 3001
+## Architecture at a glance
 
-# Backend
-cd backend
-npm run dev          # Start API server on port 3000
-npm run db:migrate   # Run Prisma migrations
-npm run db:seed      # Seed database
-npm run db:studio    # Open Prisma Studio
-```
+- **Frontend** (`kissflow-react/`) — Next.js 16 App Router, React 19, Tailwind v4, Radix/shadcn. Runs on `:4001`.
+- **Backend** (`backend/`) — Fastify 5, Prisma 6 + PostgreSQL, JWT auth (access + refresh). Runs on `:3000`.
 
-## Architecture
-
-### Frontend (kissflow-react/)
-- **Next.js 16** with App Router
-- **React 19** with TypeScript (strict mode)
-- **Tailwind CSS v4** for styling
-- **Radix UI** components (shadcn/ui pattern)
-
-### Backend (backend/)
-- **Fastify 5** REST API
-- **Prisma 6** with PostgreSQL
-- **JWT** authentication (access + refresh tokens)
-
-### Layout System
-CSS Grid layout in `kissflow-react/components/layout/AppLayout.tsx`:
+CSS Grid layout shell lives in `kissflow-react/components/layout/AppLayout.tsx`:
 ```
 ┌─────────────────────────────────────┐
-│ TopBar (3.5rem height, full width)  │
+│ TopBar (3.5rem, full width)         │
 ├──────────┬──────────────────────────┤
 │ Sidebar  │ Main Content             │
 │ (3.5rem) │ (scrolls independently)  │
 └──────────┴──────────────────────────┘
 ```
 
-## Project Structure
-
-```
-kissflow-react/           # Frontend
-├── app/                  # Next.js pages (App Router)
-│   ├── page.tsx         # Home page
-│   ├── explorer/        # App explorer
-│   ├── create/          # App creation flow
-│   ├── my-items/        # User's items
-│   └── store/           # Marketplace
-├── components/
-│   ├── layout/          # AppLayout, TopBar, Sidebar
-│   ├── ui/              # Radix UI components
-│   ├── explorer/        # Explorer page components
-│   ├── create/          # App creation components
-│   └── views/           # View type components
-└── lib/
-    ├── api/             # API client
-    ├── icons/           # Custom icons
-    └── utils.ts         # Utility functions (cn, etc.)
-
-backend/                  # Backend
-├── src/
-│   ├── modules/
-│   │   ├── app/         # App CRUD endpoints
-│   │   └── auth/        # Authentication endpoints
-│   ├── config/          # Environment config
-│   ├── middleware/      # Auth middleware
-│   └── utils/           # Utilities
-└── prisma/
-    └── schema.prisma    # Database schema
-```
-
-## Code Style
-
-- **TypeScript**: Strict mode, path alias `@/*` → `./`
-- **Components**: Client components use `'use client'` directive
-- **Styling**: Tailwind CSS utility classes, `cn()` for conditional classes
-- **State**: React hooks, URL search params for navigation state
-
-## Database Models
-
-```prisma
-# Core Models
-User           # id, email, name, password, role (admin/member/viewer)
-App            # id, name, slug, type (app/portal), status (draft/live/archived)
-RefreshToken   # JWT refresh token management
-
-# Data Layer Models
-DataLayer      # id, appId, name, slug, type (dataform/board/process)
-Field          # id, dataLayerId, name, slug, type, required, options, config, order
-WorkflowStep   # id, dataLayerId, name, slug, color, order, allowedNextSteps
-DataItem       # id, dataLayerId, data (JSON), currentStepId, createdById, updatedById
-```
-
-## Testing
-
-```bash
-# Frontend
-cd kissflow-react
-npm run lint         # ESLint
-npm run build        # Type check + build
-
-# Backend
-cd backend
-npm run lint
-npm run build
-```
-- # BuilderUtilityBar Buttons by Tab Type
-
-| Tab Type | Views | Reports | Share | Settings | Save | More |
-|----------|-------|---------|-------|----------|------|------|
-| DataForm | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Board | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Process | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| List | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Page | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ |
-| Navigation | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ |
-| Home | - | - | - | - | - | - |
-| Variables | - | - | - | - | - | - |
-| Resources | - | - | - | - | - | - |
-
-### Legend
-- ✓ = Button is visible
-- ✗ = Button is hidden
-- \- = No action bar shown"  can you update this content in this folder '/Users/saravanansankaralingam/Desktop/App Runtime Experience/kissflow-react/ComponentsProperties.md' and also add the component utility bar's as well
+The Builder route (`app/builder/[appId]/`) uses a different shell — see `kissflow-react/CLAUDE.md` and `docs/BUILDER_MODES.md`.
