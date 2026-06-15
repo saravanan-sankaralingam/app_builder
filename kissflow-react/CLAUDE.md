@@ -5,57 +5,89 @@
 ## Stack
 
 - **Next.js 16** (App Router, Turbopack)
-- **React 19** + **TypeScript** (strict mode, path alias `@/*` → `./`)
-- **Tailwind CSS v4** (`globals.css` defines tokens; see [`docs/COLORS.md`](docs/COLORS.md) for the full palette)
+- **React 19** + **TypeScript** (strict, path alias `@/*` → `./`)
+- **Tailwind CSS v4** (`globals.css` defines tokens; see [`docs/COLORS.md`](docs/COLORS.md))
 - **Radix UI** via shadcn/ui pattern (`components/ui/`)
 
 ## Run
 
 ```bash
-npm run dev          # http://localhost:4001 (Next.js)
+npm run dev          # http://localhost:4001
 npm run lint
 npm run build        # type-check + production build
 ```
 
-Frontend talks to the backend via `NEXT_PUBLIC_API_URL` (set in `.env.local`). Defaults to `http://localhost:3000` if unset. The Render-hosted backend URL is the alternative — toggle the comment in `.env.local`.
+Frontend talks to the backend via `NEXT_PUBLIC_API_URL` (set in `.env.local`). Defaults to `http://localhost:3000`. The Render-hosted backend URL is the alternative — toggle the comment in `.env.local`.
 
-## Directory map
+## Two categories: Platform and Builder
+
+The frontend has two distinct surfaces. **Runtime is not a third category** — it's a shared engine consumed by both.
+
+| Category | Routes | Components | Context file |
+|---|---|---|---|
+| **Platform** | `app/(main)/*` (home, explorer, create, my-items, store, **`app/[appId]` end-user runtime**) | `components/layout/` (shell), `components/explorer/`, `components/create/`, `components/my-items/` | [`app/(main)/CLAUDE.md`](app/(main)/CLAUDE.md) |
+| **Builder** | `app/builder/[appId]/` | `components/builder/*` (40 files) | [`components/builder/CLAUDE.md`](components/builder/CLAUDE.md) |
+| **Runtime engine** (shared) | — | `components/views/{table,kanban,gallery,calendar,timeline,sheet}`, `components/common/`, `components/app-view/`, `lib/api/`, `lib/schema/`, `lib/data-utils.ts` | this file, "Runtime engine" section below |
 
 ```
-app/                      # Next.js App Router
-├── (main)/               # Routes inside the main shell (TopBar + Sidebar)
-│   ├── page.tsx          # Home
-│   ├── explorer/         # App explorer
-│   ├── create/           # App creation flow
-│   ├── my-items/
-│   └── store/
-└── builder/[appId]/      # App Builder — the core authoring surface
-
-components/
-├── layout/               # AppLayout, TopBar, Sidebar — the main shell
-├── builder/              # ALL builder UI — see "Builder" section below
-├── views/                # Runtime view types (table, kanban, gallery, calendar, timeline, sheet)
-├── app-view/             # In-app runtime rendering
-├── create/               # App creation wizard
-├── explorer/             # Explorer page
-├── common/               # Cross-cutting UI
-├── icons/                # Custom SVG icons
-└── ui/                   # shadcn/Radix primitives (Button, Dialog, etc.)
-
-lib/
-├── api/                  # Backend client — one file per resource
-│   ├── client.ts         # fetch wrapper, ApiError, response handling
-│   ├── apps.ts           # /api/apps
-│   ├── data-layers.ts    # /api/data-layers
-│   ├── components.ts, views.ts, reports.ts, upload.ts
-├── config.ts             # API_BASE_URL export
-├── schema/               # Shared TS types mirroring backend Prisma models
-├── icons.ts, data-utils.ts, date-utils.ts, utils.ts (cn)
+                  ┌─────────────────────────────────────┐
+                  │       RUNTIME ENGINE                │
+                  │   views/, common/, app-view/        │
+                  │   lib/api/, lib/schema/             │
+                  └────────────┬────────────────────────┘
+                               │ consumed by both
+              ┌────────────────┴────────────────┐
+              │                                 │
+       ┌──────▼──────┐                  ┌───────▼──────┐
+       │  PLATFORM   │                  │   BUILDER    │
+       │ (end-user)  │                  │ (authoring)  │
+       │             │                  │              │
+       │ app/(main)/ │                  │ app/builder/ │
+       │ app/[appId] │                  │  Play mode → │
+       │             │                  │  AppRuntime  │
+       │             │                  │  Preview.tsx │
+       └─────────────┘                  └──────────────┘
 ```
 
-## Layout system
+When you edit:
+- anything under `app/(main)/` or `components/{layout,explorer,create,my-items}/` → load Platform context
+- anything under `components/builder/` or `app/builder/` → load Builder context
+- anything under `components/views/`, `components/common/`, `components/app-view/` → this file's "Runtime engine" section is the canonical doc
 
-CSS Grid shell in `components/layout/AppLayout.tsx`:
+## Runtime engine (shared)
+
+The runtime engine is the code that **renders a deployed app's UI** from its meta-config. Both the Platform end-user route (`app/(main)/app/[appId]/`) and the Builder's Play mode (`components/builder/AppRuntimePreview.tsx`) call into this engine. Changes here affect both surfaces.
+
+**Where it lives:**
+
+```
+components/views/                # View renderers — one folder per view type
+├── table/      TableView, EmployeeTable + Columns + Toolbar
+├── kanban/
+├── gallery/
+├── calendar/
+├── timeline/
+└── sheet/
+
+components/app-view/             # App-level runtime wrapper (currently empty — placeholder)
+components/common/               # Shared runtime UI (e.g. PlaceholderPage)
+
+lib/api/                         # Backend client per resource
+├── client.ts                    # fetch wrapper, ApiError
+├── apps.ts, data-layers.ts, views.ts, reports.ts, components.ts, upload.ts
+
+lib/schema/                      # Shared TS types mirroring backend Prisma models
+lib/data-utils.ts                # Data transform helpers used by views
+```
+
+**Conventions when adding to the engine:**
+- A new view type goes in `components/views/<type>/` following the table pattern (one `<Type>View.tsx` entry point + supporting files)
+- API calls always go through `lib/api/client.ts` — never call `fetch` directly
+- Don't import from `components/builder/` or `components/explorer/` here. The runtime engine must stay consumable by both surfaces.
+
+## Layout system (Platform shell)
+
+CSS Grid shell in `components/layout/AppLayout.tsx`, applied via `app/(main)/layout.tsx`:
 ```
 ┌─────────────────────────────────────┐
 │ TopBar (3.5rem, full width)         │
@@ -65,37 +97,19 @@ CSS Grid shell in `components/layout/AppLayout.tsx`:
 └──────────┴──────────────────────────┘
 ```
 
-The `app/builder/[appId]/` route renders a different shell — see Builder section.
-
-## Builder
-
-The App Builder is where users author apps. Key reading **before touching builder code**:
-
-- [`docs/BUILDER_MODES.md`](docs/BUILDER_MODES.md) — Play / Spec X / Spec Y / Build top-bar modes, layout switching, what each mode shows
-- [`ComponentsProperties.md`](ComponentsProperties.md) — property panel + utility bar styling spec, and which utility-bar buttons appear per tab type
-- [`docs/PAGE_BUILDER.md`](docs/PAGE_BUILDER.md) — Page editor (3-section drag-and-drop layout)
-- [`STYLE_BACKUPS.md`](STYLE_BACKUPS.md) — pre-experiment style snapshots for quick revert
-
-**Critical design rule** (from BUILDER_MODES): Spec X and Spec Y are *readable specification documents*, not configuration editors. Removing editor UI ≠ removing content — every editor field must map to a prose/table analogue in the spec.
-
-Entry points:
-- `components/builder/BuilderLayout.tsx` — top-level builder shell, mode switching
-- `components/builder/BuilderTopBar.tsx` — Play/Spec X/Spec Y/Build toggle
-- `components/builder/BuilderTabBar.tsx` — open-tab bar
-- `components/builder/BuilderUtilityBar.tsx` — per-tab action buttons (Views, Reports, Share, Settings, Save, More)
-- `components/builder/BuilderSidebar.tsx` — left tree of app artifacts
+The Builder route (`app/builder/[appId]/`) uses its own shell from `components/builder/BuilderLayout.tsx` — see Builder context.
 
 ## Code style
 
-- Client components must start with `'use client'`
+- Client components start with `'use client'`
 - Use `cn()` from `lib/utils.ts` for conditional Tailwind classes
 - State: React hooks; URL search params for navigation state — avoid global stores unless justified
-- Imports: prefer the `@/` alias over relative `../../`
+- Imports: prefer `@/` alias over relative `../../`
 - Strict TypeScript — no `any` unless explicitly justified in a comment
 
 ## Testing
 
 No test runner wired up yet. Validate with:
 1. `npm run lint`
-2. `npm run build` (type-check + production build catches most regressions)
-3. Manual smoke in the browser at `http://localhost:4001`
+2. `npm run build`
+3. Manual smoke at `http://localhost:4001`
