@@ -64,7 +64,23 @@ All three paths route to the Builder; what differs is the **initial state** of t
 
 ## Edit and publish
 
-> *TBD — to be filled in as we discuss what can be done inside the dev environment and what the Builder does.*
+### App identity vs metadata vs runtime data
+
+The App identity is **single**; metadata and runtime data are **dual** (dev + prod copies).
+
+| | App identity | Metadata (DataLayer, Field, etc.) | Runtime data |
+|---|---|---|---|
+| **Lives in** | Prod DB (single row) | Both dev DB *and* prod DB (independent copies) | Both dev DB (test data) *and* prod DB (real data), as dynamic tables |
+| **Edited from** | Platform (create/archive only) | Builder, in dev | Dev: by user testing in sandbox. Prod: by end-users at runtime. |
+| **On publish** | `status` may flip `draft → live` | Dev metadata is **copied to prod**, replacing the deployed snapshot | Prod runtime tables get DDL applied to match new metadata shape |
+
+> **Rule:** *"Editing in dev does not affect production. Publishing to production overrides production."* — applies to both metadata and runtime table shape, not to runtime data values (prod data is preserved across DDL where safe).
+
+See [`DATA_LAYER_ARCHITECTURE.md`](DATA_LAYER_ARCHITECTURE.md#dev-vs-prod-isolation-decided) for the full two-DB model.
+
+### What "running the app in dev" means
+
+The Builder's Play mode runs the app inside the dev sandbox. Any data the user enters while testing goes into the dev DB's runtime tables — **this is always test data**, regardless of how it looks. It is not visible to or shared with production.
 
 ## Archive and delete
 

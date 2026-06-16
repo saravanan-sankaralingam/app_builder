@@ -110,6 +110,8 @@ DataItem       # id, dataLayerId, data (JSON), currentStepId, createdById, updat
 
 > **Runtime data storage is in transition.** Today, records live in `DataItem.data` (JSON blob). The **target architecture is dynamic / physical schema** — each Data Layer gets its own physical table, generated from metadata via DDL on save. Read [`../docs/DATA_LAYER_ARCHITECTURE.md`](../docs/DATA_LAYER_ARCHITECTURE.md) before designing new data-layer backend work. Treat anything you build against `DataItem.data` today as **interim**.
 
+> **Dev vs Prod target: two physical databases** — `kissflow_dev_db` and `kissflow_prod_db`. App identity is a single row (in prod); metadata and dynamic runtime tables exist independently in both DBs. Publish copies dev metadata → prod and runs DDL on prod. Current single-DB setup is interim. See [`../docs/DATA_LAYER_ARCHITECTURE.md`](../docs/DATA_LAYER_ARCHITECTURE.md#dev-vs-prod-isolation-decided).
+
 ## CORS
 
 `app.ts:24-27` sets `origin: true, credentials: true` — allows any origin in dev. Tighten for production.
