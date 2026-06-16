@@ -75,11 +75,15 @@ Apps are composed of 5 layers. The **Data layer** is the foundation; everything 
 
 ### Data layer types
 
-| Type | Description | Workflow |
+All three share a **structured schema**; they differ only in workflow shape.
+
+| Type | Schema | Workflow |
 |---|---|---|
-| **DataForm** | Simple data collection (like a database table) | None |
-| **Board** | Kanban-style tracking with flexible workflow | Unstructured (any step → any step) |
-| **Process** | Formal workflow with defined transitions | Structured (predefined step sequence) |
+| **DataForm** | Structured | None |
+| **Board** | Structured | Unstructured (any step → any step; e.g. Kanban-style tracking) |
+| **Process** | Structured | Structured **approval** workflow (predefined step sequence with approval semantics) |
+
+See [`kissflow-react/docs/BUILDER_LAYERS.md`](kissflow-react/docs/BUILDER_LAYERS.md#1-data) for the verbatim definitions and Builder-UI details.
 
 ### Data layer DB shape
 

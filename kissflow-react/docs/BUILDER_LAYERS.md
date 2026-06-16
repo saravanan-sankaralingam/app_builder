@@ -22,13 +22,27 @@ Each Layer will be expanded in its own section below as we document the Builder 
 
 ### 1. Data
 
-Artifacts: **DataForm**, **Board**, **Process**.
+Artifacts in the Data Layer are differentiated by their **workflow shape**. All three share a **structured schema** (per the dynamic / physical schema architecture).
 
-The Data Layer manages app data via a **two-schema model** on the backend — metadata (definitions) and runtime data (records derived from those definitions). The target architecture is **dynamic / physical schema** (DDL executed on save), not JSON-blob.
+| Artifact | Schema | Workflow |
+|---|---|---|
+| **DataForm** | Structured | None |
+| **Board** | Structured | Unstructured |
+| **Process** | Structured | Structured **approval** workflow |
 
-See [`../../docs/DATA_LAYER_ARCHITECTURE.md`](../../docs/DATA_LAYER_ARCHITECTURE.md) for the full model, current-vs-target state, and open architectural questions.
+**Verbatim definitions:**
+- DataForm — *"a structured schema without any workflow"*
+- Board — *"a structured schema with unstructured workflow"*
+- Process — *"a structured schema with a structured approval workflow"*
 
-> Detail on what each artifact (DataForm / Board / Process) looks like in the Builder UI, what the Create dialogs ask for, and how the editor reads/writes metadata is TBD.
+The key differentiator is the workflow:
+- **None** — records are just rows; no concept of "current step"
+- **Unstructured** — records move between steps freely (any step → any step). Useful for Kanban-style tracking.
+- **Structured approval** — records follow a predefined step sequence with **approval semantics** at each transition. (Not just "ordered steps" — approvals are the defining property.)
+
+The Data Layer manages app data via the two-schema model on the backend — metadata (definitions) and runtime data (records). The target architecture is **dynamic / physical schema** (DDL executed on save), not JSON-blob. See [`../../docs/DATA_LAYER_ARCHITECTURE.md`](../../docs/DATA_LAYER_ARCHITECTURE.md) for the backend model.
+
+> Detail on what each artifact looks like in the **Builder UI**, what the **Create dialogs** ask for, and how the **editor reads/writes metadata** is TBD. Additional Data Layer artifacts beyond these three (e.g. Dataset, noted earlier as a separate entity) will be added here as documented.
 
 ### 2. Interface
 > *TBD — to be filled in.*
