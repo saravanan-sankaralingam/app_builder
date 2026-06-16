@@ -6,6 +6,7 @@ Builder is the authoring tool. App authors use it to define data layers, fields,
 
 ## Required reading before changes
 
+- [`../../docs/BUILDER_LAYERS.md`](../../docs/BUILDER_LAYERS.md) — the 5 Layers (Data, Interface, Logic, Roles & Permissions, Settings) that segregate the Builder UI
 - [`../../docs/BUILDER_MODES.md`](../../docs/BUILDER_MODES.md) — Play / Spec X / Spec Y / Build modes, layout switching, what each mode shows
 - [`../../ComponentsProperties.md`](../../ComponentsProperties.md) — property panel + utility bar styling spec, which utility-bar buttons appear per tab type
 - [`../../docs/PAGE_BUILDER.md`](../../docs/PAGE_BUILDER.md) — Page editor (3-section drag-and-drop layout)

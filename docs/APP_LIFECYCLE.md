@@ -58,7 +58,7 @@ Apps can only be created from the **Platform's New App** entry point. The user c
 |---|---|---|
 | **Build using AI** | Prompt or PRD document | Fully-functional app per the spec, with preview. *(Currently mocked; revisit later.)* |
 | **Use template** | Pick from App Template library (boilerplate apps, functional to some extent) | Pre-built app from template, ready to improvise |
-| **Create from scratch** | Nothing | Empty Builder — user assembles atomic elements from scratch |
+| **Create from scratch** | Nothing | Builder loaded with a **default Navigation and a default Page** — user assembles the rest of the app from there |
 
 All three paths route to the Builder; what differs is the **initial state** of the app the user lands on.
 

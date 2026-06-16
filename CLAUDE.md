@@ -18,6 +18,7 @@ This is a monorepo with two halves. For code-level conventions, read the nested 
 | App lifecycle (creation, dev/prod, publish, archive) | [`docs/APP_LIFECYCLE.md`](docs/APP_LIFECYCLE.md) |
 | Frontend (React/Next.js UI, builder, views) | [`kissflow-react/CLAUDE.md`](kissflow-react/CLAUDE.md) |
 | Backend (Fastify API, Prisma, auth) | [`backend/CLAUDE.md`](backend/CLAUDE.md) |
+| Builder structure (5 Layers: Data, Interface, Logic, Roles, Settings) | [`kissflow-react/docs/BUILDER_LAYERS.md`](kissflow-react/docs/BUILDER_LAYERS.md) |
 | Builder modes (Play/Spec X/Spec Y/Build) | [`kissflow-react/docs/BUILDER_MODES.md`](kissflow-react/docs/BUILDER_MODES.md) |
 | Property panel + utility bar styling | [`kissflow-react/ComponentsProperties.md`](kissflow-react/ComponentsProperties.md) |
 | Page editor layout | [`kissflow-react/docs/PAGE_BUILDER.md`](kissflow-react/docs/PAGE_BUILDER.md) |
