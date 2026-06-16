@@ -16,6 +16,7 @@ This is a monorepo with two halves. For code-level conventions, read the nested 
 | You're working on | Read |
 |---|---|
 | App lifecycle (creation, dev/prod, publish, archive) | [`docs/APP_LIFECYCLE.md`](docs/APP_LIFECYCLE.md) |
+| Data Layer architecture (metadata + dynamic runtime schemas) | [`docs/DATA_LAYER_ARCHITECTURE.md`](docs/DATA_LAYER_ARCHITECTURE.md) |
 | Frontend (React/Next.js UI, builder, views) | [`kissflow-react/CLAUDE.md`](kissflow-react/CLAUDE.md) |
 | Backend (Fastify API, Prisma, auth) | [`backend/CLAUDE.md`](backend/CLAUDE.md) |
 | Builder structure (5 Layers: Data, Interface, Logic, Roles, Settings) | [`kissflow-react/docs/BUILDER_LAYERS.md`](kissflow-react/docs/BUILDER_LAYERS.md) |

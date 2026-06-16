@@ -21,7 +21,14 @@ The Data Layer is the **foundation** — Interface, Logic, Roles, and Settings a
 Each Layer will be expanded in its own section below as we document the Builder iteratively.
 
 ### 1. Data
-> *TBD — to be filled in.*
+
+Artifacts: **DataForm**, **Board**, **Process**.
+
+The Data Layer manages app data via a **two-schema model** on the backend — metadata (definitions) and runtime data (records derived from those definitions). The target architecture is **dynamic / physical schema** (DDL executed on save), not JSON-blob.
+
+See [`../../docs/DATA_LAYER_ARCHITECTURE.md`](../../docs/DATA_LAYER_ARCHITECTURE.md) for the full model, current-vs-target state, and open architectural questions.
+
+> Detail on what each artifact (DataForm / Board / Process) looks like in the Builder UI, what the Create dialogs ask for, and how the editor reads/writes metadata is TBD.
 
 ### 2. Interface
 > *TBD — to be filled in.*

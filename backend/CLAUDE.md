@@ -108,6 +108,8 @@ DataItem       # id, dataLayerId, data (JSON), currentStepId, createdById, updat
 
 **Data layer types:** `dataform` (no workflow), `board` (any step → any step), `process` (predefined transitions only). See `../CLAUDE.md` for the conceptual model.
 
+> **Runtime data storage is in transition.** Today, records live in `DataItem.data` (JSON blob). The **target architecture is dynamic / physical schema** — each Data Layer gets its own physical table, generated from metadata via DDL on save. Read [`../docs/DATA_LAYER_ARCHITECTURE.md`](../docs/DATA_LAYER_ARCHITECTURE.md) before designing new data-layer backend work. Treat anything you build against `DataItem.data` today as **interim**.
+
 ## CORS
 
 `app.ts:24-27` sets `origin: true, credentials: true` — allows any origin in dev. Tighten for production.
