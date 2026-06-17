@@ -23,6 +23,8 @@ All Platform routes live under `app/(main)/` and share the main shell via `app/(
 
 Note: the Builder route (`app/builder/[appId]/`) does **not** use this shell — it has its own `BuilderLayout`. So changes to `AppLayout.tsx` affect Platform only.
 
+**UI spec for the shell** (top nav layout, profile dropdown items and order, left nav): [`../../docs/PLATFORM_SHELL.md`](../../docs/PLATFORM_SHELL.md). Always check this before changing `TopBar.tsx` or `Sidebar.tsx`.
+
 ## End-user app runtime (`/app/[appId]`)
 
 This route is where end-users actually use a deployed app. It loads the app's meta-config from the backend and hands off to the **runtime engine** (`components/views/`, `components/common/`, `lib/api/`) for rendering.
