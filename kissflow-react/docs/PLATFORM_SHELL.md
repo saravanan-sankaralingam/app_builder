@@ -6,18 +6,28 @@ UI specs for the Platform's chrome (top nav, left nav, anything else outside the
 
 ## Top nav
 
-**Layout:**
+**Layout (visual left → right):**
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ [Account logo]                                  [Profile photo]   │
-└──────────────────────────────────────────────────────────────────┘
-   left end                                          right end
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│ [Logo]              [Search]              [Help docs] [Agent help] [Notif] [Profile] │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+  left end             center                ──── right cluster ────       right end
 ```
 
 - **Left end:** account's logo
-- **Right end:** profile photo of the currently logged-in user
-- Center is intentionally empty for now
+- **Center:** Search (scope TBD — to be defined when search is built)
+- **Right cluster** (left → right): Help docs · Agent help · Notification · Profile photo
+- **Right end:** Profile photo of the currently logged-in user
+
+### Right cluster items
+
+| Position (L→R) | Item | Click behavior |
+|---|---|---|
+| 1 (leftmost of cluster) | Help docs | Navigates to `https://community.kissflow.com/` — **opens in a new tab** (`target="_blank"`) |
+| 2 | Agent help | Opens the **Agent chat window as a popover anchored to the bottom-right corner of the viewport** (not anchored to the icon). The chat window is **persistent across page navigation** until the user explicitly dismisses it. |
+| 3 | Notification | Opens a **popover callout** listing notifications. Same styling pattern as the profile dropdown. |
+| 4 (rightmost) | Profile photo | Opens the profile dropdown — see below |
 
 ## Profile dropdown (click profile photo)
 
