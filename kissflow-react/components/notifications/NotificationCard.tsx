@@ -26,11 +26,11 @@ export function NotificationCard({ notification, className }: NotificationCardPr
       </Avatar>
 
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-medium text-gray-500">{notification.appName}</div>
+        <div className="text-xs font-medium text-gray-700">{notification.appName}</div>
         <div className="text-sm text-gray-900 mt-0.5 leading-snug">
           {notification.message}
         </div>
-        <div className="text-xs text-gray-400 mt-1.5">{notification.time}</div>
+        <div className="text-xs text-gray-700 mt-1.5">{notification.time}</div>
       </div>
 
       {!notification.isRead && (

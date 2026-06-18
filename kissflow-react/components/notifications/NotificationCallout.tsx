@@ -19,29 +19,27 @@ export function NotificationCallout() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <h3 className="text-sm font-semibold text-gray-900">Notification</h3>
-        <button
-          onClick={() => {
-            /* TODO: open notification settings */
-          }}
-          aria-label="Notification settings"
-          className="h-7 w-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 focus:outline-none focus-visible:outline-none"
-        >
-          <Settings className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleMarkAllRead}
+            className="text-xs text-blue-600 hover:text-blue-700 hover:underline focus:outline-none"
+          >
+            Mark all as read
+          </button>
+          <button
+            onClick={() => {
+              /* TODO: open notification settings */
+            }}
+            aria-label="Notification settings"
+            className="h-7 w-7 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-600 focus:outline-none focus-visible:outline-none"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
-      {/* Mark all as read */}
-      <div className="px-4 py-2 border-b border-gray-100">
-        <button
-          onClick={handleMarkAllRead}
-          className="text-xs text-blue-600 hover:text-blue-700 hover:underline focus:outline-none"
-        >
-          Mark all as read
-        </button>
-      </div>
-
-      {/* Notification list (scrolls) */}
-      <ScrollArea className="max-h-[360px]">
+      {/* Notification list (scrolls — fixed height so cards stay inside) */}
+      <ScrollArea className="h-[360px]">
         <div className="flex flex-col gap-2 p-2">
           {notifications.map((n) => (
             <NotificationCard key={n.id} notification={n} />

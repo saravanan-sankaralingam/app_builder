@@ -15,6 +15,7 @@ All Platform routes live under `app/(main)/` and share the main shell via `app/(
 | `/create` | New app wizard | `components/create/*` |
 | `/my-items` | User's items (records they own / are assigned) | `components/my-items/*` (if exists) |
 | `/store` | App marketplace | — |
+| `/notifications` | Full Notification Center — opened from the Bell's "Show all" link | `components/notifications/*`. Layout & rules in [`../../docs/PLATFORM_SHELL.md`](../../docs/PLATFORM_SHELL.md#notification-center-full-page). |
 | `/app/[appId]` | **End-user app runtime** — renders a deployed app for end-users | calls into the runtime engine |
 
 ## Shell (TopBar + Sidebar)
