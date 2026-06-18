@@ -26,7 +26,7 @@ UI specs for the Platform's chrome (top nav, left nav, anything else outside the
 |---|---|---|
 | 1 (leftmost of cluster) | Help docs | Navigates to `https://community.kissflow.com/` — **opens in a new tab** (`target="_blank"`) |
 | 2 | Agent help | Opens the **Agent chat window as a popover anchored to the bottom-right corner of the viewport** (not anchored to the icon). The chat window is **persistent across page navigation** until the user explicitly dismisses it. |
-| 3 | Notification | Opens a **popover callout** listing notifications. Same styling pattern as the profile dropdown. |
+| 3 | Notification | Opens the **notification callout** (popover). See "Notification callout" section below. |
 | 4 (rightmost) | Profile photo | Opens the profile dropdown — see below |
 
 ## Profile dropdown (click profile photo)
@@ -67,6 +67,82 @@ A callout opens with menu items in this exact order. Each item has an icon (spec
 - **Every item has an icon** — no text-only items.
 - **Generous spacing between items** — directional rule; tighten to a token-based value once design tokens are defined.
 - Hover and active states follow the standard menu styling (TBD if not already covered by `components/ui/dropdown-menu.tsx`).
+
+## Notification callout
+
+Popover anchored to the Bell icon (`align="end"`, `sideOffset={8}`). Implementation: `components/notifications/NotificationCallout.tsx`.
+
+```
+┌──────────────────────────────────────┐
+│  Notification              [⚙]        │  ← title left, settings icon right
+├──────────────────────────────────────┤
+│  Mark all as read                     │  ← link
+├──────────────────────────────────────┤
+│  ┌────────────────────────────────┐  │
+│  │ [Avatar]  Sales App        ●   │  │  ← card (gray-50 bg)
+│  │           John assigned a deal │  │     • avatar (user)
+│  │           2 min ago            │  │     • app name (small, gray)
+│  └────────────────────────────────┘  │     • message
+│  ┌────────────────────────────────┐  │     • time
+│  │ … more cards …                  │  │     • blue dot = unread
+│  └────────────────────────────────┘  │
+│  (scrolls — max-h ~360px, shows ~3–4)│
+├──────────────────────────────────────┤
+│  Show all                             │  ← link → /notifications
+└──────────────────────────────────────┘
+```
+
+**Rules:**
+- Width: **380px** (callout)
+- Card background: **`bg-gray-50`**, hover `bg-gray-100`
+- Card height **varies with message length** (no fixed height)
+- Scrollable list capped at `max-h-[360px]` so ~3–4 cards are visible without scrolling
+- "Mark all as read" updates `isRead` on all visible notifications client-side (no backend yet)
+- "Show all" navigates to `/notifications`
+- Settings icon → currently stub (TBD where it routes)
+
+### Card anatomy (left to right)
+
+1. **User avatar** (initials, colored bg) — represents the user behind the notification
+2. **App name** (small, `text-gray-500`) — which app the notification is from
+3. **Message** (`text-gray-900`) — the notification text
+4. **Time** (small, `text-gray-400`) — relative time, e.g. "2 min ago"
+5. **Unread dot** (blue, top-right of card) — only when `isRead === false`
+
+Same card component (`NotificationCard.tsx`) is reused on the full Notification Center page. There it renders wider because the parent container is `max-w-3xl` instead of `380px`.
+
+## Notification Center (full page)
+
+Route: `/notifications` → `app/(main)/notifications/page.tsx`. Uses the Platform shell (top + left nav stay visible); **nothing is selected in the left nav**.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│   [←]  Notification                                          │  ← back arrow + title
+├─────────────────────────────────────────────────────────────┤
+│   All      Unread      Mentions                              │  ← tabs
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│           ┌──────────────────────────────────────┐          │
+│           │ [Avatar]  App name           ●        │          │
+│           │           Message …                   │          │  ← cards
+│           │           Time                        │          │     centered
+│           └──────────────────────────────────────┘          │     on the
+│           ┌──────────────────────────────────────┐          │     screen,
+│           │ …                                     │          │     broader
+│           └──────────────────────────────────────┘          │     than callout
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Rules:**
+- Content is centered with `max-w-3xl` (~768px) — broader than callout's 380px
+- Back arrow → `router.back()`
+- Tabs:
+  - **All** — show every notification
+  - **Unread** — filter `!isRead`
+  - **Mentions** — filter `isMention`
+- Active tab gets `border-b-2 border-blue-600 text-blue-600 font-medium`; inactive gets `text-gray-600`
+- Empty state: centered "No notifications" message
 
 ## Left nav
 
