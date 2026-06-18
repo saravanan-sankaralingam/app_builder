@@ -20,6 +20,18 @@ UI specs for the Platform's chrome (top nav, left nav, anything else outside the
 - **Right cluster** (left → right): Help docs · Agent help · Notification · Profile photo
 - **Right end:** Profile photo of the currently logged-in user
 
+### Container styling
+
+The `<header>` element uses a backdrop-blurred white background plus a soft drop shadow to visually lift the top nav off the page content beneath:
+
+```
+className: bg-white/80 backdrop-blur-sm border-b border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.04)]
+```
+
+- `bg-white/80 backdrop-blur-sm` — translucent white with blur (content beneath is faintly visible)
+- `border-b border-gray-100` — hairline divider at the bottom
+- `shadow-[0_4px_12px_rgba(0,0,0,0.04)]` — soft, diffuse drop shadow (4px down, 12px blur, 4% opacity). Tuned to be subtle — if it ever feels heavy, lower opacity to `0.02–0.03`; if you want it even softer/further, bump blur to `16–20px`.
+
 ### Right cluster styling rules
 
 - Each of the 3 icon buttons (Help docs, Agent help, Notification) is **`h-9 w-9`** with **`rounded-full`** (circular hover background).
