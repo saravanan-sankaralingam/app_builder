@@ -22,15 +22,16 @@ UI specs for the Platform's chrome (top nav, left nav, anything else outside the
 
 ### Container styling
 
-The `<header>` element uses a backdrop-blurred white background plus a soft drop shadow to visually lift the top nav off the page content beneath:
+The `<header>` element is **solid white** with a soft drop shadow and a positioned stacking context so it sits above the left nav (whose expanded overlay would otherwise hide the shadow):
 
 ```
-className: bg-white/80 backdrop-blur-sm border-b border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.04)]
+className: relative z-40 border-b border-gray-100 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.04)]
 ```
 
-- `bg-white/80 backdrop-blur-sm` — translucent white with blur (content beneath is faintly visible)
-- `border-b border-gray-100` — hairline divider at the bottom
-- `shadow-[0_4px_12px_rgba(0,0,0,0.04)]` — soft, diffuse drop shadow (4px down, 12px blur, 4% opacity). Tuned to be subtle — if it ever feels heavy, lower opacity to `0.02–0.03`; if you want it even softer/further, bump blur to `16–20px`.
+- `relative z-40` — explicit stacking context. Required because the left nav uses `absolute z-30` for its overlay; without `z-40` here, the left nav's expanded panel would render *over* the top nav and hide its drop shadow.
+- `bg-white` — **solid white only** (no `bg-white/80` translucency, no `backdrop-blur-sm`). Rule: the top nav stays opaque so its shadow reads cleanly against everything beneath.
+- `border-b border-gray-100` — hairline divider at the bottom.
+- `shadow-[0_4px_12px_rgba(0,0,0,0.04)]` — soft, diffuse drop shadow (4px down, 12px blur, 4% opacity). Falls onto the top edge of the left nav when expanded, reinforcing the "top nav is above" depth cue. Tuned to be subtle — if it ever feels heavy, lower opacity to `0.02–0.03`; if you want it softer/further, bump blur to `16–20px`.
 
 ### Right cluster styling rules
 
@@ -193,14 +194,127 @@ Route: `/notifications` → `app/(main)/notifications/page.tsx`. Uses the Platfo
 
 ## Left nav
 
-> *TBD — to be filled in when described.*
+The left navigation rail. Implementation: `components/layout/Sidebar.tsx`. Used by all `app/(main)/*` routes via the Platform shell (`AppLayout.tsx`).
+
+### Width and expand/collapse model
+
+- **Collapsed width:** `50px` (`w-[50px]`) — matches the AppLayout grid column.
+- **Expanded width:** `240px` (`w-60`).
+- **Trigger:** hover (`onMouseEnter` on the nav → expand; `onMouseLeave` → collapse).
+- **Also collapses:** when the user clicks any nav item (`onClick` handler → collapse).
+- **Width + shadow transition:** `transition-[width,box-shadow] duration-200`.
+- **Expanded shadow:** `shadow-[4px_0_24px_rgba(0,0,0,0.06)]` — soft right-side glow lifting it over the main content.
+
+### Overlay (not push)
+
+The expanded nav **overlays** the main content; the page does not reflow.
+
+Implementation:
+- Outer wrapper: `<div className="relative h-full">` — fills the 50px grid cell from `AppLayout`.
+- Inner `<nav>`: `absolute left-0 top-0 bottom-0 z-30 overflow-hidden`. Width animates between 50px and 240px. The extra 190px when expanded extends **over** the main content area; the grid still reserves only 50px so the main content doesn't shift.
+- z-index: nav at `z-30`, top nav at `z-40` (so the top nav's drop shadow falls onto the nav's top edge — not the other way around).
+
+### Item structure (`NavButton`)
+
+Each item is a `<Link>` styled as a row that's identical-shape across collapsed and expanded modes — only the visibility of the label changes.
+
+| Class | Why |
+|---|---|
+| `flex items-center h-8 rounded-lg` | 32px-tall row, rounded highlight |
+| `mx-[9px]` | horizontal gutter so the row is 32px wide in the 50px collapsed nav `(50 − 9 − 9 = 32)` and inset evenly when expanded |
+| `<div className="w-8 flex items-center justify-center flex-shrink-0">` | fixed-width icon column |
+| `<Icon className="h-[18px] w-[18px]" />` | 18px icon, centered in the 32px column |
+| `<span className="text-sm ... opacity-0/100">` | label, opacity-transitioned (150ms) on expand, `pointer-events-none` when hidden |
+
+**Icon X position is the same in both modes** — `mx-[9px]` + `w-8` icon container with `justify-center` puts the icon's center at `9 + 16 = 25px` from the nav's left edge whether the nav is 50px or 240px wide. **Do not change this without recomputing.**
+
+### Strokes and colors
+
+- **Stroke width:** `1.5` for unselected items, `2` for the active item.
+- **Default state:** `text-gray-700`. **Hover:** `text-gray-900` with `bg-gray-100/70`.
+- **Active state:** `bg-gradient-to-br from-purple-600 to-blue-400 text-white` — diagonal "twilight" gradient (purple-600 top-left → blue-400 bottom-right). Replaces the older flat `bg-blue-600`. White text reads on both ends (purple-600 ~4.4:1, blue-400 ~3.5:1).
+
+### Vertical structure (top → bottom)
+
+```
+Home
+My Items
+─── SectionDivider (label: "Pinned" if any, else "Recent") ───
+[Pinned section — only when hasPinned]   ← scrolls inside, max-h = calc(100% - 150px)
+[SectionDivider (label: "Recent") — only when hasPinned]
+[Recent section]                          ← flex-1, min-h-0, overflow-y-auto
+─── SectionDivider (no label) ───
+Explorer
+Create new
+─── SectionDivider (no label) ───
+Marketplace
+[Kissflow brand mark]                     ← public/kissflow-logo.svg, h-5 w-5
+```
+
+- Items use `gap-2` on the nav's flex container (8px between rows).
+- Bottom group has its own flex container so the brand mark sits below Marketplace.
+
+### Pinned vs Recent rules
+
+| Rule | Detail |
+|---|---|
+| Pinned section is hidden when empty | When `pinnedApps.length === 0`, no header, no items, no separator before it. The Recent section's "Recent" pill takes the first divider's slot instead. |
+| Recent always visible | At least 3 items fit; if Recent has fewer (e.g., just Retail One today), the section still occupies its natural height inside the middle area. |
+| Pinned can grow until it would shrink Recent below 3 items | Constraint expressed as `style={{ maxHeight: 'calc(100% - 150px)' }}` on the Pinned scroll container. 150px ≈ 3 items + section divider. |
+| Beyond Pinned's max | Pinned **scrolls inside itself** (`overflow-y-auto`). Users can keep pinning. |
+| Recent overflow | Recent itself is `flex-1 overflow-y-auto` — scrolls if its content is taller than the remaining space. |
+
+### `SectionDivider` (line ↔ pill, fixed-height slot)
+
+Fixed `h-5 my-1` (28px outer height) container that swaps content between collapsed and expanded states **without changing its own footprint** — so hovering the nav doesn't shift any items above or below it.
+
+| Mode | Renders |
+|---|---|
+| Collapsed | Centered thin line (`mx-auto w-6 h-px bg-gray-200/80`) — 24px wide, gray-200/80 |
+| Expanded **without** a label | Full-width line (`mx-3 flex-1 h-px bg-gray-200/80`) |
+| Expanded **with** a label | `[pill] ─────────` — the label pill (`rounded-full bg-gray-100 text-[10px] font-semibold text-gray-500 uppercase tracking-wider leading-3`) followed by an 8px gap, then the line filling the rest of the row |
+
+**Rule (no jump):** the divider's outer height is the same in all three states. The line ↔ pill swap is done **inside** the same fixed slot, so neighbouring items stay anchored when the nav expands or collapses.
+
+### Section labels
+
+- Shown **only when expanded**. Hidden in collapsed mode (no DOM presence; `SectionDivider` falls back to the line form).
+- Style: pill — `rounded-full bg-gray-100 text-[10px] font-semibold text-gray-500 uppercase tracking-wider`.
+- Used for: **"Pinned"** and **"Recent"** sections (the labels appear in the dividers above each section, not as separate rows).
+
+### Mock data (current state)
+
+`Sidebar.tsx` holds two arrays as in-file constants:
+- `pinnedApps: NavItem[] = []` — empty (the pin/unpin feature is **not yet built** and will be implemented in a follow-up).
+- `recentApps: NavItem[]` — currently `[Retail One]`. Will grow as the pin/unpin feature ships and we test more states.
+
+When the pin/unpin feature lands, these will move to component state (or a store) and update dynamically.
+
+### Brand mark
+
+Sits at the very bottom of the nav, below Marketplace:
+```tsx
+<div className="mt-3 mx-[9px] w-8 flex items-center justify-center">
+  <img src="/kissflow-logo.svg" alt="Kissflow" className="h-5 w-5" />
+</div>
+```
+- Same `mx-[9px] w-8` column treatment as nav items, so the logo X position matches Home/Marketplace/etc. (~25px from nav left edge).
+- Doesn't change size or position between collapsed and expanded modes.
+- Source SVG is 20×20; the wrapper holds it at h-5 w-5.
+
+### What's intentionally NOT implemented yet
+
+- **Pin/unpin actions on each app card** — the design is decided (pinning moves an app into the Pinned section, unpinning removes it) but the interactive controls are deferred to the next thread.
+- **Section heading pills in collapsed mode** — only the line form shows when collapsed. Labels appear only on expand.
 
 ## Where this is implemented
 
 - `components/layout/TopBar.tsx` — top nav including logo, search, right cluster icon buttons, profile dropdown
-- `components/layout/Sidebar.tsx` — left nav (current shell)
+- `components/layout/Sidebar.tsx` — left nav (overlay rail, hover-to-expand, Pinned/Recent sections, brand mark)
 - `components/layout/AppLayout.tsx` — CSS grid shell that combines TopBar + Sidebar + main content
 - `components/notifications/NotificationCard.tsx` — card UI used by both callout and Center page
 - `components/notifications/NotificationCallout.tsx` — popover content for the Bell
 - `app/(main)/notifications/page.tsx` — full Notification Center page
 - `lib/mock/notifications.ts` — hardcoded notification data (10 entries, mock)
+- `public/Logo.svg` — account logo, rendered in the TopBar left end
+- `public/kissflow-logo.svg` — Kissflow brand mark, rendered at the bottom of the left nav

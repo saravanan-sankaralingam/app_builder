@@ -1,22 +1,17 @@
 'use client'
 
+import { useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   Home,
-  Folder,
-  Compass,
+  ClipboardList,
+  LayoutGrid,
   Plus,
   Store,
   ShoppingBag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 
 interface NavItem {
   icon: React.ElementType
@@ -24,138 +19,224 @@ interface NavItem {
   href: string
 }
 
-const topNavItems: NavItem[] = [
+const topItems: NavItem[] = [
   { icon: Home, label: 'Home', href: '/' },
-  { icon: Folder, label: 'My Items', href: '/my-items' },
+  { icon: ClipboardList, label: 'My Items', href: '/my-items' },
 ]
 
-const middleNavItems: NavItem[] = [
-  { icon: Compass, label: 'Explorer', href: '/explorer' },
-]
-
-const retailApps: NavItem[] = [
+// Pin/unpin behavior will be wired in the next thread.
+// For now: Pinned is empty; only Retail One sits in Recent.
+const pinnedApps: NavItem[] = []
+const recentApps: NavItem[] = [
   { icon: ShoppingBag, label: 'Retail One', href: '/app/retail-one' },
 ]
 
-const bottomNavItems: NavItem[] = [
-  { icon: Store, label: 'Marketplace', href: '/store' },
+const exploreItems: NavItem[] = [
+  { icon: LayoutGrid, label: 'Explorer', href: '/explorer' },
 ]
+
+const createItem: NavItem = { icon: Plus, label: 'Create new', href: '/create' }
+const marketplaceItem: NavItem = { icon: Store, label: 'Marketplace', href: '/store' }
 
 function NavButton({
   item,
   isActive,
+  isExpanded,
+  onItemClick,
 }: {
   item: NavItem
   isActive: boolean
+  isExpanded: boolean
+  onItemClick: () => void
 }) {
   const Icon = item.icon
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Link
-            href={item.href}
-            className={cn(
-              'flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-150',
-              isActive
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/70'
-            )}
-          >
-            <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.5 : 2} />
-          </Link>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="bg-gray-900 text-white text-xs px-2 py-1">
-          {item.label}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Link
+      href={item.href}
+      onClick={onItemClick}
+      className={cn(
+        'flex items-center h-8 rounded-lg mx-[9px] transition-colors',
+        isActive
+          ? 'bg-gradient-to-br from-purple-600 to-blue-400 text-white'
+          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/70'
+      )}
+    >
+      {/* Icon container — fixed 32px so icon X stays put across collapsed/expanded */}
+      <div className="w-8 flex items-center justify-center flex-shrink-0">
+        <Icon
+          className="h-[18px] w-[18px]"
+          strokeWidth={isActive ? 2 : 1.5}
+        />
+      </div>
+      <span
+        className={cn(
+          'text-sm whitespace-nowrap transition-opacity duration-150',
+          isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+      >
+        {item.label}
+      </span>
+    </Link>
   )
 }
 
-function AddButton() {
+/**
+ * Section divider — fixed-height slot that hosts EITHER a thin line OR a
+ * section label pill. Same total height in both collapsed and expanded
+ * states so swapping line ↔ pill on hover doesn't shift items around.
+ */
+function SectionDivider({
+  label,
+  isExpanded,
+}: {
+  label?: string
+  isExpanded: boolean
+}) {
   return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Link
-            href="/create"
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/70 transition-all duration-150"
-          >
-            <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
-          </Link>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="bg-gray-900 text-white text-xs px-2 py-1">
-          Create new
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div className="h-5 my-1 flex items-center flex-shrink-0">
+      {isExpanded && label ? (
+        <div className="mx-3 flex items-center gap-2 flex-1">
+          <span className="inline-block px-2 py-0.5 rounded-full bg-gray-100 text-[10px] font-semibold text-gray-500 uppercase tracking-wider leading-3">
+            {label}
+          </span>
+          <div className="h-px bg-gray-200/80 flex-1" />
+        </div>
+      ) : (
+        <div
+          className={cn(
+            'h-px bg-gray-200/80 transition-all duration-200',
+            isExpanded ? 'mx-3 flex-1' : 'mx-auto w-6'
+          )}
+        />
+      )}
+    </div>
   )
 }
 
 export function Sidebar() {
   const pathname = usePathname()
+  const [isExpanded, setIsExpanded] = useState(false)
+  const collapse = useCallback(() => setIsExpanded(false), [])
+
+  const hasPinned = pinnedApps.length > 0
 
   return (
-    <aside className="h-full bg-white border-r border-gray-100 flex flex-col items-center py-3">
-      {/* Top Navigation */}
-      <nav className="flex flex-col items-center gap-1">
-        {topNavItems.map((item) => (
+    <div className="relative h-full">
+      <nav
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+        className={cn(
+          'absolute left-0 top-0 bottom-0 z-30 flex flex-col gap-2 py-3 bg-white border-r border-gray-100 overflow-hidden transition-[width,box-shadow] duration-200',
+          isExpanded
+            ? 'w-60 shadow-[4px_0_24px_rgba(0,0,0,0.06)]'
+            : 'w-[50px]'
+        )}
+      >
+        {/* Home, My Items */}
+        {topItems.map((item) => (
           <NavButton
-            key={item.href + item.label}
+            key={item.href}
             item={item}
             isActive={pathname === item.href}
+            isExpanded={isExpanded}
+            onItemClick={collapse}
           />
         ))}
-      </nav>
 
-      {/* Visual spacer instead of harsh separator */}
-      <div className="my-3 w-6 h-px bg-gray-200/80" />
+        {/*
+          First divider: in collapsed → thin line. In expanded → "PINNED" pill
+          if Pinned has items, otherwise "RECENT" pill (because Recent is the
+          first section when Pinned is empty).
+        */}
+        <SectionDivider
+          label={hasPinned ? 'Pinned' : 'Recent'}
+          isExpanded={isExpanded}
+        />
 
-      {/* Middle Navigation */}
-      <nav className="flex flex-col items-center gap-1">
-        {middleNavItems.map((item) => (
+        {/*
+          Middle area: Pinned (conditional) + Recent (always).
+          flex-1 + min-h-0 lets these two share the remaining vertical space.
+          - Pinned has max-height so Recent always keeps room for ~3 items (~150px).
+            If Pinned has more content than fits, it scrolls within itself.
+          - Recent takes the remaining space (flex-1) and scrolls if it has more
+            items than fit.
+        */}
+        <div className="flex-1 flex flex-col gap-2 min-h-0">
+          {hasPinned && (
+            <>
+              <div
+                className="flex flex-col gap-2 overflow-y-auto"
+                style={{ maxHeight: 'calc(100% - 150px)' }}
+              >
+                {pinnedApps.map((item) => (
+                  <NavButton
+                    key={item.href}
+                    item={item}
+                    isActive={pathname === item.href}
+                    isExpanded={isExpanded}
+                    onItemClick={collapse}
+                  />
+                ))}
+              </div>
+              {/* Divider between Pinned and Recent — "RECENT" pill when expanded */}
+              <SectionDivider label="Recent" isExpanded={isExpanded} />
+            </>
+          )}
+
+          <div className="flex-1 flex flex-col gap-2 overflow-y-auto min-h-0">
+            {recentApps.map((item) => (
+              <NavButton
+                key={item.href}
+                item={item}
+                isActive={pathname === item.href}
+                isExpanded={isExpanded}
+                onItemClick={collapse}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Divider between Recent and Explorer — plain line */}
+        <SectionDivider isExpanded={isExpanded} />
+
+        {/* Explorer */}
+        {exploreItems.map((item) => (
           <NavButton
-            key={item.href + item.label}
+            key={item.href}
             item={item}
             isActive={pathname === item.href}
+            isExpanded={isExpanded}
+            onItemClick={collapse}
           />
         ))}
-      </nav>
 
-      {/* Visual spacer */}
-      <div className="my-3 w-6 h-px bg-gray-200/80" />
-
-      {/* Retail Apps */}
-      <nav className="flex flex-col items-center gap-1">
-        {retailApps.map((item) => (
+        {/* Bottom: Create new + Marketplace + brand mark */}
+        <div className="flex flex-col">
           <NavButton
-            key={item.href + item.label}
-            item={item}
-            isActive={pathname === item.href}
+            item={createItem}
+            isActive={pathname === createItem.href}
+            isExpanded={isExpanded}
+            onItemClick={collapse}
           />
-        ))}
-      </nav>
-
-      {/* Visual spacer */}
-      <div className="my-3 w-6 h-px bg-gray-200/80" />
-
-      {/* Bottom Navigation */}
-      <nav className="flex flex-col items-center gap-1 mt-auto">
-        <AddButton />
-
-        {/* Visual spacer */}
-        <div className="my-1 w-6 h-px bg-gray-200/80" />
-
-        {bottomNavItems.map((item) => (
+          <SectionDivider isExpanded={isExpanded} />
           <NavButton
-            key={item.href + item.label}
-            item={item}
-            isActive={pathname === item.href}
+            item={marketplaceItem}
+            isActive={pathname === marketplaceItem.href}
+            isExpanded={isExpanded}
+            onItemClick={collapse}
           />
-        ))}
+
+          {/* Brand mark — centered in the icon column so X position matches the nav items above */}
+          <div className="mt-3 mx-[9px] w-8 flex items-center justify-center">
+            <img
+              src="/kissflow-logo.svg"
+              alt="Kissflow"
+              className="h-5 w-5"
+            />
+          </div>
+        </div>
       </nav>
-    </aside>
+    </div>
   )
 }

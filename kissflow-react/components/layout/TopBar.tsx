@@ -31,7 +31,7 @@ import Link from 'next/link'
 
 export function TopBar() {
   return (
-    <header className="h-full border-b border-gray-100 bg-white/80 backdrop-blur-sm shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+    <header className="relative z-40 h-full border-b border-gray-100 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
       <div className="flex h-[50px] items-center justify-between pl-3 pr-4">
         {/* Logo - Left */}
         <div className="flex items-center min-w-[180px]">
