@@ -22,6 +22,8 @@ interface NavItem {
 const topItems: NavItem[] = [
   { icon: Home, label: 'Home', href: '/' },
   { icon: ClipboardList, label: 'My Items', href: '/my-items' },
+  { icon: Store, label: 'Marketplace', href: '/store' },
+  { icon: LayoutGrid, label: 'Explorer', href: '/explorer' },
 ]
 
 // Pin/unpin behavior will be wired in the next thread.
@@ -31,12 +33,7 @@ const recentApps: NavItem[] = [
   { icon: ShoppingBag, label: 'Retail One', href: '/app/retail-one' },
 ]
 
-const exploreItems: NavItem[] = [
-  { icon: LayoutGrid, label: 'Explorer', href: '/explorer' },
-]
-
 const createItem: NavItem = { icon: Plus, label: 'Create new', href: '/create' }
-const marketplaceItem: NavItem = { icon: Store, label: 'Marketplace', href: '/store' }
 
 function NavButton({
   item,
@@ -197,32 +194,14 @@ export function Sidebar() {
           </div>
         </div>
 
-        {/* Divider between Recent and Explorer — plain line */}
+        {/* Divider between Recent and Create new — plain line */}
         <SectionDivider isExpanded={isExpanded} />
 
-        {/* Explorer */}
-        {exploreItems.map((item) => (
-          <NavButton
-            key={item.href}
-            item={item}
-            isActive={pathname === item.href}
-            isExpanded={isExpanded}
-            onItemClick={collapse}
-          />
-        ))}
-
-        {/* Bottom: Create new + Marketplace + brand mark */}
+        {/* Bottom: Create new + brand mark */}
         <div className="flex flex-col">
           <NavButton
             item={createItem}
             isActive={pathname === createItem.href}
-            isExpanded={isExpanded}
-            onItemClick={collapse}
-          />
-          <SectionDivider isExpanded={isExpanded} />
-          <NavButton
-            item={marketplaceItem}
-            isActive={pathname === marketplaceItem.href}
             isExpanded={isExpanded}
             onItemClick={collapse}
           />

@@ -239,20 +239,21 @@ Each item is a `<Link>` styled as a row that's identical-shape across collapsed 
 ```
 Home
 My Items
+Marketplace                               ← moved up: lives next to nav items, not at the bottom
+Explorer                                  ← moved up: sits with the other top-level destinations
 ─── SectionDivider (label: "Pinned" if any, else "Recent") ───
 [Pinned section — only when hasPinned]   ← scrolls inside, max-h = calc(100% - 150px)
 [SectionDivider (label: "Recent") — only when hasPinned]
 [Recent section]                          ← flex-1, min-h-0, overflow-y-auto
 ─── SectionDivider (no label) ───
-Explorer
-Create new
-─── SectionDivider (no label) ───
-Marketplace
+Create new                                ← only nav item that remains in the bottom group
 [Kissflow brand mark]                     ← public/kissflow-logo.svg, h-5 w-5
 ```
 
 - Items use `gap-2` on the nav's flex container (8px between rows).
-- Bottom group has its own flex container so the brand mark sits below Marketplace.
+- **Top group** (Home, My Items, Marketplace, Explorer) is the discovery / navigation set — top-level destinations the user can always reach.
+- **Middle** (Pinned + Recent) is the workspace — the user's actual apps.
+- **Bottom group** holds Create new + the brand mark; Marketplace is no longer here.
 
 ### Pinned vs Recent rules
 
