@@ -10,7 +10,7 @@ All Platform routes live under `app/(main)/` and share the main shell via `app/(
 
 | Route | Purpose | Components |
 |---|---|---|
-| `/` | Home | `components/explorer/`, etc. (see `page.tsx`) |
+| `/` | Home — Platform landing surface | `app/(main)/page.tsx` (currently a placeholder). Spec lives in [`../../docs/PLATFORM_HOME.md`](../../docs/PLATFORM_HOME.md); future feature components will live in `components/home/`. |
 | `/explorer` | App explorer — browse apps | `components/explorer/*` |
 | `/create` | New app wizard | `components/create/*` |
 | `/my-items` | User's items (records they own / are assigned) | `components/my-items/*` (if exists) |
