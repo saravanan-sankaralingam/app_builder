@@ -1,5 +1,17 @@
 # Color Variables Reference
 
+## How the palette is wired
+
+- **Source of truth:** `kissflow-react/app/globals.css`. The `:root` block defines `--gray-{n}`, `--primary-{n}`, etc. as design-system tokens.
+- **Tailwind utilities** (`bg-gray-100`, `text-primary-500`, …) resolve through the `@theme inline` block in the same file, which contains `--color-gray-{n}: var(--gray-{n})` mappings. **If a tier is not mapped there, Tailwind falls back to its built-in default palette** (e.g. before today, `bg-gray-50` was silently using Tailwind's `#F9FAFB` because `--color-gray-50` wasn't wired).
+- **When updating this doc, also update `app/globals.css`** — and vice versa. They are expected to match.
+
+### Dark-mode caveat
+
+The `.dark` block in `globals.css` ships an **inverted gray scale that only covers `100–999` (10 tiers).** Lighter tiers like `gray-50` are **not** redefined for dark mode, so `var(--gray-50)` cascades from `:root` (the light value) inside `.dark`. This is fine while dark mode isn't actively exercised, but needs a dark-mode counterpart when it is.
+
+---
+
 ## Primary Colors
 
 | Variable | Hex Code | CSS Variable |
