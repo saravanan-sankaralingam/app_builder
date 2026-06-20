@@ -19,7 +19,8 @@
 
 | Variable | Hex Code | CSS Variable |
 |----------|----------|--------------|
-| `Color.Gray.100` | `#F8FAFD` | `--kf-color-gray-100` |
+| `Color.Gray.50`  | `#F7FAFF` | `--kf-color-gray-50` |
+| `Color.Gray.100` | `#F1F5FB` | `--kf-color-gray-100` |
 | `Color.Gray.200` | `#F3F4F8` | `--kf-color-gray-200` |
 | `Color.Gray.300` | `#E5E7ED` | `--kf-color-gray-300` |
 | `Color.Gray.400` | `#D9DCE5` | `--kf-color-gray-400` |

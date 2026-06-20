@@ -124,8 +124,9 @@
   --rust-700: #733413;
   --rust-800: #522711;
 
-  /* Gray (100-999, 10 shades) */
-  --gray-100: #F8FAFD;
+  /* Gray (50-999, 11 shades) */
+  --gray-50: #F7FAFF;
+  --gray-100: #F1F5FB;
   --gray-200: #F3F4F8;
   --gray-300: #E5E7ED;
   --gray-400: #D9DCE5;
@@ -599,7 +600,8 @@
   --color-rust-700: var(--rust-700);
   --color-rust-800: var(--rust-800);
 
-  /* Gray (100-999, 10 shades) */
+  /* Gray (50-999, 11 shades) */
+  --color-gray-50: var(--gray-50);
   --color-gray-100: var(--gray-100);
   --color-gray-200: var(--gray-200);
   --color-gray-300: var(--gray-300);
