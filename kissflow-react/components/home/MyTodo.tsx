@@ -9,7 +9,7 @@ export function MyTodo() {
     return (
       <HomeCard className="flex flex-col">
         <HomeCardHeader title="My to-do" count={todoTotalCount} />
-        <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
+        <div className="h-[434px] flex flex-col items-center justify-center text-center">
           {/* Illustration placeholder — replace with the polished asset when ready. */}
           <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center mb-3">
             <Sparkles className="h-8 w-8 text-amber-500" />

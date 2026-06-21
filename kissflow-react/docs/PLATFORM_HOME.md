@@ -1,5 +1,16 @@
 # Platform Home
 
+> ⚠️ **Current state: visual placeholder only.** Everything on this page —
+> all six widgets, all the icon colors, the fixed heights, the row-card
+> styling, the count badges, the "you're in the clear" empty state — is
+> stand-in. The structure and look are decided enough that an engineer
+> can build against it, but **none of the data, click destinations, or
+> interactions are real yet.** A proper implementation (real auth,
+> real backend queries, real navigation, real empty / loading / error
+> states, a working Customize panel, polished illustrations) is planned
+> as a follow-up. Treat anything below as "what we've sketched so the
+> route isn't empty" — not as the final design.
+
 The Home page is the **landing surface** of the Platform — what users see when they hit `/` after sign-in. It sits inside the Platform shell (top nav + left nav, see [`PLATFORM_SHELL.md`](PLATFORM_SHELL.md)), so this doc only covers the **content area** of `/`.
 
 Route: `/` → `app/(main)/page.tsx`. Left nav selection: **Home** (`topItems[0]` in `Sidebar.tsx`).
@@ -91,12 +102,18 @@ The `(N)` suffix in each header is the **total** for the category, not just the 
 
 ## What's intentionally NOT implemented yet
 
-- **Customize panel** — button renders, action is a stub.
-- **Real data wiring** — all six widgets read from `lib/mock/home.ts`. No backend calls.
-- **Click destinations** — row clicks don't navigate; replace the `/* TODO */` stubs as routes / record viewers come online.
-- **Empty states for non-todo widgets** — only `MyTodo` has a designed empty state. The others assume content.
-- **Polished illustration for the to-do empty state** — currently a Sparkles icon in an amber disc as a placeholder. Replace with the real "in the clear" artwork when ready.
-- **User context** — `userName` is hard-coded in the page (`"Saravanan Sankaralingam"`). Swap for the real auth context when wired.
+This widgets-shaped scaffold ships **only** the visual rhythm. Every item below is deliberately deferred — when you pick this back up, plan to address all of them as part of the "real Home" milestone.
+
+- **Customize panel** — button renders, action is a stub. Whatever it ends up doing (widget add/remove, layout, theming?) is undefined.
+- **Real data wiring** — all six widgets read from `lib/mock/home.ts`. No API hooks, no auth, no permissions, no cross-app aggregation. The data shapes in `lib/mock/home.ts` are placeholders too; the eventual API responses will probably look different.
+- **Click destinations** — row clicks (queue rows, created-items, comments, app cards) are all `/* TODO */` stubs that do nothing. None navigate.
+- **Loading + error states** — none designed. The widgets assume the data is just there.
+- **Empty states for non-todo widgets** — only `MyTodo` has a designed empty state, and even that uses a Sparkles icon as a stand-in for the real illustration. Queue / Created / Tagged / Recent assume content and will look broken with empty arrays.
+- **Sizing constants are hardcoded** — `max-h-[400px]` on the queue rows, `h-[400px]` on Created/Tagged inner areas, `h-[434px]` on the to-do empty area. These were chosen so the cards line up visually today; if the surrounding cards' chrome changes (header padding, separator, etc.) they'll need to be re-tuned. There's no shared constant.
+- **Icon colors are static decoration** — every queue/created row was assigned a hand-picked color in `lib/mock/home.ts`. These do not reflect status, category, or any real attribute — just visual variety.
+- **User context** — `userName` is hard-coded in `app/(main)/page.tsx` as `"Saravanan Sankaralingam"`. Swap for the real auth context when wired.
+- **No tests** — no unit, no smoke, no a11y audit on the widgets yet.
+- **Mobile / responsiveness** — the right-side column is squeezed below `lg` and the queue table only fits comfortably at `lg+`. Nothing optimised for narrow viewports beyond `grid-cols-1` fallbacks.
 
 ## Where this is implemented
 

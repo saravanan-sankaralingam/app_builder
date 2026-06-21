@@ -14,7 +14,7 @@ export function HomeCard({
   return (
     <section
       className={cn(
-        'bg-white rounded-xl border border-gray-200 p-5',
+        'bg-white rounded-xl border border-gray-200 px-5 py-4',
         className
       )}
     >
@@ -33,7 +33,7 @@ export function HomeCardHeader({
   action?: React.ReactNode
 }) {
   return (
-    <header className="flex items-center justify-between mb-4">
+    <header className="flex items-center justify-between -mx-5 px-5 pb-4 mb-4 border-b border-gray-200">
       <h2 className="text-sm font-semibold text-gray-900">
         {title}
         {count !== undefined && (

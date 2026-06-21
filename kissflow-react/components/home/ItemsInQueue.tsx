@@ -20,8 +20,8 @@ export function ItemsInQueue() {
         <div>Due by</div>
       </div>
 
-      {/* Rows */}
-      <div className="flex flex-col">
+      {/* Rows — scrolls inside the card when content exceeds the cap */}
+      <div className="flex flex-col max-h-[400px] overflow-y-auto">
         {queueItems.map((row) => {
           const Icon = row.icon
           return (
@@ -31,7 +31,7 @@ export function ItemsInQueue() {
               onClick={() => {
                 /* TODO: navigate to record */
               }}
-              className="grid grid-cols-[1.5fr_1fr_1fr_1fr_0.8fr] gap-3 px-2 py-2.5 items-center text-left text-sm border-b border-gray-50 hover:bg-gray-50/70 transition-colors rounded-md"
+              className="grid grid-cols-[1.5fr_1fr_1fr_1fr_0.8fr] gap-3 px-2 py-3.5 items-center text-left text-sm border-b border-gray-50 hover:bg-gray-50/70 transition-colors rounded-md"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <Icon className={cn('h-4 w-4 flex-shrink-0', row.iconColor)} />

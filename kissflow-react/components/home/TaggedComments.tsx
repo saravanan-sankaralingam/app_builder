@@ -9,7 +9,7 @@ export function TaggedComments() {
   return (
     <HomeCard>
       <HomeCardHeader title="Tagged comments" />
-      <ul className="flex flex-col">
+      <ul className="flex flex-col h-[400px] overflow-y-auto pr-1">
         {taggedComments.map((c) => (
           <li
             key={c.id}
