@@ -14,7 +14,7 @@ All Platform routes live under `app/(main)/` and share the main shell via `app/(
 | `/explorer` | App explorer — browse apps | `components/explorer/*` |
 | `/create` | New app wizard | `components/create/*` |
 | `/my-items` | User's items aggregated across apps — Assigned to me, Created by me, Watchlist tabs | `components/my-items/*`. Spec lives in [`../../docs/PLATFORM_MY_ITEMS.md`](../../docs/PLATFORM_MY_ITEMS.md). |
-| `/store` | App marketplace | — |
+| `/store` | App marketplace | `components/marketplace/*`. Spec lives in [`../../docs/PLATFORM_MARKETPLACE.md`](../../docs/PLATFORM_MARKETPLACE.md). |
 | `/notifications` | Full Notification Center — opened from the Bell's "Show all" link | `components/notifications/*`. Layout & rules in [`../../docs/PLATFORM_SHELL.md`](../../docs/PLATFORM_SHELL.md#notification-center-full-page). |
 | `/app/[appId]` | **End-user app runtime** — renders a deployed app for end-users | calls into the runtime engine |
 
