@@ -25,7 +25,7 @@ The frontend has two distinct surfaces. **Runtime is not a third category** — 
 
 | Category | Routes | Components | Context file |
 |---|---|---|---|
-| **Platform** | `app/(main)/*` (home, explorer, create, my-items, store, **`app/[appId]` end-user runtime**) | `components/layout/` (shell), `components/explorer/`, `components/create/`, `components/my-items/` | [`app/(main)/CLAUDE.md`](app/(main)/CLAUDE.md) |
+| **Platform** | `app/(main)/*` (home, explorer, create, my-items, store, **`app/[appId]` end-user runtime**) | `components/layout/` (shell), `components/explorer/`, `components/create/`, `components/my-items/`, `components/marketplace/`, `components/home/` | [`app/(main)/CLAUDE.md`](app/(main)/CLAUDE.md) |
 | **Builder** | `app/builder/[appId]/` | `components/builder/*` (40 files) | [`components/builder/CLAUDE.md`](components/builder/CLAUDE.md) |
 | **Runtime engine** (shared) | — | `components/views/{table,kanban,gallery,calendar,timeline,sheet}`, `components/common/`, `components/app-view/`, `lib/api/`, `lib/schema/`, `lib/data-utils.ts` | this file, "Runtime engine" section below |
 
@@ -50,7 +50,7 @@ The frontend has two distinct surfaces. **Runtime is not a third category** — 
 ```
 
 When you edit:
-- anything under `app/(main)/` or `components/{layout,explorer,create,my-items}/` → load Platform context
+- anything under `app/(main)/` or `components/{layout,explorer,create,my-items,marketplace,home}/` → load Platform context
 - anything under `components/builder/` or `app/builder/` → load Builder context
 - anything under `components/views/`, `components/common/`, `components/app-view/` → this file's "Runtime engine" section is the canonical doc
 
