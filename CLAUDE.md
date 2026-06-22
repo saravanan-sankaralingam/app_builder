@@ -21,6 +21,7 @@ This is a monorepo with two halves. For code-level conventions, read the nested 
 | Backend (Fastify API, Prisma, auth) | [`backend/CLAUDE.md`](backend/CLAUDE.md) |
 | Platform shell (top nav, profile dropdown, left nav) | [`kissflow-react/docs/PLATFORM_SHELL.md`](kissflow-react/docs/PLATFORM_SHELL.md) |
 | Platform Home (`/` landing page content) | [`kissflow-react/docs/PLATFORM_HOME.md`](kissflow-react/docs/PLATFORM_HOME.md) |
+| Platform My Items (`/my-items` page content) | [`kissflow-react/docs/PLATFORM_MY_ITEMS.md`](kissflow-react/docs/PLATFORM_MY_ITEMS.md) |
 | Builder structure (5 Layers: Data, Interface, Logic, Roles, Settings) | [`kissflow-react/docs/BUILDER_LAYERS.md`](kissflow-react/docs/BUILDER_LAYERS.md) |
 | Builder modes (Play/Spec X/Spec Y/Build) | [`kissflow-react/docs/BUILDER_MODES.md`](kissflow-react/docs/BUILDER_MODES.md) |
 | Property panel + utility bar styling | [`kissflow-react/ComponentsProperties.md`](kissflow-react/ComponentsProperties.md) |

@@ -1,18 +1,99 @@
 'use client'
 
-import { PlaceholderPage } from '@/components/common/PlaceholderPage'
-import { Folder } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import {
+  assignedItems,
+  createdItems,
+  tabCounts,
+} from '@/lib/mock/my-items'
+import {
+  MyItemsHeader,
+  type MyItemsTab,
+  type CreatedStatus,
+  type WatchlistStatus,
+} from '@/components/my-items/MyItemsHeader'
+import { MyItemsSidebar } from '@/components/my-items/MyItemsSidebar'
+import { AssignedItemCard } from '@/components/my-items/AssignedItemCard'
+import { CreatedItemCard } from '@/components/my-items/CreatedItemCard'
+import { WatchlistEmpty } from '@/components/my-items/WatchlistEmpty'
 
 export default function MyItemsPage() {
+  const [activeTab, setActiveTab] = useState<MyItemsTab>('assigned')
+  const [selectedAppId, setSelectedAppId] = useState<string | null>(null)
+  const [createdStatus, setCreatedStatus] =
+    useState<CreatedStatus>('in-progress')
+  const [watchlistStatus, setWatchlistStatus] =
+    useState<WatchlistStatus>('in-progress')
+
+  // Reset selected app when switching tabs (otherwise an app pinned for one
+  // tab may not exist or look stale in the other).
+  const handleTabChange = (t: MyItemsTab) => {
+    setActiveTab(t)
+    setSelectedAppId(null)
+  }
+
+  const countKey = activeTab === 'created' ? 'createdCount' : 'assignedCount'
+  const totalCount =
+    activeTab === 'assigned'
+      ? tabCounts.assigned
+      : activeTab === 'created'
+        ? tabCounts.created
+        : tabCounts.watchlist
+
+  const filteredAssigned = useMemo(
+    () =>
+      selectedAppId
+        ? assignedItems.filter((i) => i.appId === selectedAppId)
+        : assignedItems,
+    [selectedAppId]
+  )
+  const filteredCreated = useMemo(
+    () =>
+      selectedAppId
+        ? createdItems.filter((i) => i.appId === selectedAppId)
+        : createdItems,
+    [selectedAppId]
+  )
+
   return (
-    <PlaceholderPage
-      icon={Folder}
-      iconBg="#FEF3C7"
-      iconColor="#D97706"
-      title="My Items"
-      description="Your personal items, drafts, and favorites will appear here. This feature is coming soon."
-      ctaLabel="Explore Apps"
-      ctaHref="/explorer"
-    />
+    <div className="min-h-full bg-gray-50 p-6">
+      <MyItemsHeader
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        createdStatus={createdStatus}
+        onCreatedStatusChange={setCreatedStatus}
+        watchlistStatus={watchlistStatus}
+        onWatchlistStatusChange={setWatchlistStatus}
+      />
+
+      <div className="grid grid-cols-[260px_1fr] gap-4">
+        <MyItemsSidebar
+          selectedAppId={selectedAppId}
+          onSelect={setSelectedAppId}
+          countKey={countKey}
+          totalCount={totalCount}
+        />
+
+        <main>
+          {activeTab === 'assigned' && (
+            <div className="flex flex-col gap-3">
+              {filteredAssigned.map((item) => (
+                <AssignedItemCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'created' && (
+            <div className="flex flex-col gap-3">
+              {filteredCreated.map((item) => (
+                <CreatedItemCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'watchlist' && <WatchlistEmpty />}
+        </main>
+      </div>
+    </div>
   )
 }
