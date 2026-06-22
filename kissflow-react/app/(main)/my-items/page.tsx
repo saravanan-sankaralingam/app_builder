@@ -56,7 +56,7 @@ export default function MyItemsPage() {
   )
 
   return (
-    <div className="min-h-full bg-gray-50 p-6">
+    <div className="h-full bg-gray-50 p-6 flex flex-col">
       <MyItemsHeader
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -66,7 +66,13 @@ export default function MyItemsPage() {
         onWatchlistStatusChange={setWatchlistStatus}
       />
 
-      <div className="grid grid-cols-[260px_1fr] gap-4">
+      {/*
+        Grid stretches to fill remaining vertical space so the sidebar and
+        the main panel hold a stable full height regardless of how many
+        items are currently visible (one item, many items, or the
+        watchlist empty state).
+      */}
+      <div className="grid grid-cols-[260px_1fr] gap-4 flex-1 min-h-0">
         <MyItemsSidebar
           selectedAppId={selectedAppId}
           onSelect={setSelectedAppId}
@@ -74,7 +80,7 @@ export default function MyItemsPage() {
           totalCount={totalCount}
         />
 
-        <main>
+        <main className="overflow-y-auto pr-1">
           {activeTab === 'assigned' && (
             <div className="flex flex-col gap-3">
               {filteredAssigned.map((item) => (
@@ -91,7 +97,11 @@ export default function MyItemsPage() {
             </div>
           )}
 
-          {activeTab === 'watchlist' && <WatchlistEmpty />}
+          {activeTab === 'watchlist' && (
+            <div className="h-full flex items-center justify-center">
+              <WatchlistEmpty />
+            </div>
+          )}
         </main>
       </div>
     </div>

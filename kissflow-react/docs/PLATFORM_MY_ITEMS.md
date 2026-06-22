@@ -43,15 +43,21 @@ The `Assigned to me` tab is the default landing state.
 ```
 
 - Page background: `bg-gray-50` (matches Home).
-- Sidebar fixed width: `260px`. Sidebar is `bg-white` rounded card with selected item using `bg-blue-50 text-blue-700`.
-- Main content area: vertical stack of row cards (`flex flex-col gap-3`).
+- **Page wrapper:** `h-full flex flex-col` — pinned to exactly the available height of the Platform `<main>` slot. The header takes natural height; the grid below gets `flex-1 min-h-0` so it always fills the remaining vertical space. **This is what keeps the left pane height constant regardless of which app is selected** — earlier the wrapper was `min-h-full`, which let the page grow with item count and made the left pane stretch / shrink with the main content.
+- Sidebar fixed width: `260px`. Sidebar is `bg-white` rounded card with selected item using `bg-blue-50 text-blue-700`. `h-full` makes it stretch to fill the grid cell.
+- **Main pane:** no enclosing card surface. The `<main>` is just `overflow-y-auto pr-1` — the items themselves are individually-bordered cards (`bg-white rounded-xl`), so they sit directly on the page's gray-50 background. The `pr-1` keeps a 4px gap between the cards and the scrollbar. Long lists scroll **inside** the pane's fixed height; the rest of the layout doesn't move.
+- Items are a vertical stack of row cards (`flex flex-col gap-3`).
 
 ## Cards
 
 Both list cards share the same outer shell:
 ```
-bg-white border border-gray-200 rounded-xl px-5 py-4 hover:border-gray-300 hover:shadow-sm
+bg-white border border-gray-200 rounded-xl px-5 py-4
+  hover:border-gray-300 hover:shadow-[0_2px_6px_rgba(0,0,0,0.03)]
+  transition-all
 ```
+
+The hover shadow is intentionally **very soft** — `0 2px 6px rgba(0,0,0,0.03)`. Tailwind's `shadow-sm` felt too heavy against the gray-50 page bg.
 
 ### Assigned-to-me card (4-column meta row)
 
@@ -80,7 +86,7 @@ The counts shown in the sidebar swap between `assignedCount` and `createdCount` 
 
 ## Watchlist empty state
 
-When the Watchlist tab is active (and it is, by default since the watchlist is empty in this scaffold):
+When the Watchlist tab is active, the empty state is wrapped in `h-full flex items-center justify-center` so the illustration centers vertically in the full main-pane height (no card surface around it; it sits on the gray-50 bg).
 
 ```
                     [ illustration ]

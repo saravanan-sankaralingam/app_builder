@@ -14,7 +14,7 @@ export function AssignedItemCard({ item }: { item: AssignedItem }) {
       onClick={() => {
         /* TODO: navigate to record */
       }}
-      className="w-full text-left bg-white border border-gray-200 rounded-xl px-5 py-4 hover:border-gray-300 hover:shadow-sm transition-all"
+      className="w-full text-left bg-white border border-gray-200 rounded-xl px-5 py-4 hover:border-gray-300 hover:shadow-[0_2px_6px_rgba(0,0,0,0.03)] transition-all"
     >
       {/* Title row */}
       <div className="flex items-center gap-2 mb-3">
