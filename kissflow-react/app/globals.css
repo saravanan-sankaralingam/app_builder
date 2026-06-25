@@ -988,3 +988,103 @@
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
+
+/* ============================================
+   AI-AT-WORK ANIMATIONS
+   Used by components/new-app/AIScanningDialog.tsx variants.
+   Namespaced with `ai-` so they don't collide with other motion utilities.
+   ============================================ */
+@keyframes ai-breathe {
+  0%, 100% { transform: scale(0.88); opacity: 0.7; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+.ai-breathe { animation: ai-breathe 2.2s ease-in-out infinite; }
+
+@keyframes ai-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.ai-gradient {
+  background-image: linear-gradient(135deg,
+    var(--magenta-500),
+    var(--purple-500),
+    var(--blue-500),
+    var(--magenta-500));
+  background-size: 300% 300%;
+  animation: ai-gradient-shift 4s ease-in-out infinite;
+}
+
+@keyframes ai-liquid-morph {
+  0%, 100% { border-radius: 62% 38% 50% 50% / 50% 50% 40% 60%; }
+  25%      { border-radius: 38% 62% 60% 40% / 55% 45% 55% 45%; }
+  50%      { border-radius: 50% 50% 38% 62% / 60% 40% 50% 50%; }
+  75%      { border-radius: 55% 45% 50% 50% / 45% 55% 45% 55%; }
+}
+.ai-liquid { animation: ai-liquid-morph 5s ease-in-out infinite; }
+
+@keyframes ai-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(222, 31, 142, 0.45); }
+  50%      { box-shadow: 0 0 0 10px rgba(222, 31, 142, 0); }
+}
+.ai-pulse-glow { animation: ai-pulse-glow 1.6s ease-out infinite; }
+
+@keyframes ai-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ai-fade-up { animation: ai-fade-up 0.5s ease-out both; }
+
+@keyframes ai-cursor-blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.ai-cursor { animation: ai-cursor-blink 0.9s steps(2) infinite; }
+
+@keyframes ai-dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+.ai-dash-flow { animation: ai-dash-flow 1.5s linear infinite; }
+
+@keyframes ai-orbit-rotate {
+  to { transform: rotate(360deg); }
+}
+.ai-orbit-slow { animation: ai-orbit-rotate 22s linear infinite; }
+.ai-orbit-reverse { animation: ai-orbit-rotate 30s linear infinite reverse; }
+
+/* ============================================
+   NEW APP — AI CARD GRADIENT BORDER
+   Two-layer background trick: white fill clipped to padding-box, gradient
+   clipped to border-box, with border-color transparent. Hover swaps the
+   border-box gradient to the darker -400 pair.
+   ============================================ */
+.new-app-ai-border {
+  border-color: transparent;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(246.77deg, var(--purple-200) 0%, var(--magenta-200) 100%) border-box;
+}
+
+.new-app-ai-border:hover {
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(246.77deg, var(--purple-400) 0%, var(--magenta-400) 100%) border-box;
+}
+
+/* ============================================
+   NEW APP — SCRATCH CARD GRADIENT BORDER
+   Same two-layer trick as the AI card; blue-200→blue-300 normal,
+   blue-300→blue-400 on hover.
+   ============================================ */
+.new-app-scratch-border {
+  border-color: transparent;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(246.77deg, var(--blue-300) 0%, var(--blue-200) 100%) border-box;
+}
+
+.new-app-scratch-border:hover {
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(246.77deg, var(--blue-400) 0%, var(--blue-300) 100%) border-box;
+}

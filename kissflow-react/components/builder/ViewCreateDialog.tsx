@@ -96,7 +96,7 @@ export function ViewCreateDialog({
         <form onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
           {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="view-name" className="text-sm text-gray-600">
+            <Label htmlFor="view-name">
               Name
             </Label>
             <Input
@@ -119,7 +119,7 @@ export function ViewCreateDialog({
 
           {/* View Type Section */}
           <div>
-            <Label className="text-sm text-gray-600">
+            <Label>
               View type
             </Label>
             <div className="grid grid-cols-3 gap-3 mt-2">

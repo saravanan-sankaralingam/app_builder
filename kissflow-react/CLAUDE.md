@@ -17,7 +17,7 @@ npm run lint
 npm run build        # type-check + production build
 ```
 
-Frontend talks to the backend via `NEXT_PUBLIC_API_URL` (set in `.env.local`). Defaults to `http://localhost:3000`. The Render-hosted backend URL is the alternative — toggle the comment in `.env.local`.
+Frontend talks to the backend via `NEXT_PUBLIC_API_URL` (set in `.env.local`). Defaults to `http://localhost:4000`. The Render-hosted backend URL is the alternative — toggle the comment in `.env.local`.
 
 ## Two categories: Platform and Builder
 

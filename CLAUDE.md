@@ -22,12 +22,16 @@ This is a monorepo with two halves. For code-level conventions, read the nested 
 | Platform shell (top nav, profile dropdown, left nav) | [`kissflow-react/docs/PLATFORM_SHELL.md`](kissflow-react/docs/PLATFORM_SHELL.md) |
 | Platform Home (`/` landing page content) | [`kissflow-react/docs/PLATFORM_HOME.md`](kissflow-react/docs/PLATFORM_HOME.md) |
 | Platform My Items (`/my-items` page content) | [`kissflow-react/docs/PLATFORM_MY_ITEMS.md`](kissflow-react/docs/PLATFORM_MY_ITEMS.md) |
+| Platform Explorer (`/explorer` page content) | [`kissflow-react/docs/PLATFORM_EXPLORER.md`](kissflow-react/docs/PLATFORM_EXPLORER.md) |
 | Platform Marketplace (`/store` page content) | [`kissflow-react/docs/PLATFORM_MARKETPLACE.md`](kissflow-react/docs/PLATFORM_MARKETPLACE.md) |
+| Platform Create (`/create` + `/create/app` flow) | [`kissflow-react/docs/PLATFORM_CREATE.md`](kissflow-react/docs/PLATFORM_CREATE.md) |
+| Platform New App (`/new/app` flow — left-nav Create > App) | [`kissflow-react/docs/PLATFORM_NEW_APP.md`](kissflow-react/docs/PLATFORM_NEW_APP.md) |
 | Builder structure (5 Layers: Data, Interface, Logic, Roles, Settings) | [`kissflow-react/docs/BUILDER_LAYERS.md`](kissflow-react/docs/BUILDER_LAYERS.md) |
 | Builder modes (Play/Spec X/Spec Y/Build) | [`kissflow-react/docs/BUILDER_MODES.md`](kissflow-react/docs/BUILDER_MODES.md) |
 | Property panel + utility bar styling | [`kissflow-react/ComponentsProperties.md`](kissflow-react/ComponentsProperties.md) |
 | Page editor layout | [`kissflow-react/docs/PAGE_BUILDER.md`](kissflow-react/docs/PAGE_BUILDER.md) |
 | Color tokens | [`kissflow-react/docs/COLORS.md`](kissflow-react/docs/COLORS.md) |
+| Form-field standards (label/value typography, gaps) | [`kissflow-react/docs/FORM_STANDARDS.md`](kissflow-react/docs/FORM_STANDARDS.md) |
 | Pre-experiment style snapshots | [`kissflow-react/STYLE_BACKUPS.md`](kissflow-react/STYLE_BACKUPS.md) |
 
 The rest of this file is the **product model** — what apps are made of. Read it once; the nested files have everything you need after that.
@@ -39,12 +43,12 @@ The rest of this file is the **product model** — what apps are made of. Read i
 cd kissflow-react && npm run dev    # http://localhost:4001
 
 # Backend
-cd backend && npm run dev           # http://localhost:3000
+cd backend && npm run dev           # http://localhost:4000
 cd backend && npm run db:migrate    # apply migrations
 cd backend && npm run db:seed       # seed dev data
 ```
 
-The frontend reads `NEXT_PUBLIC_API_URL` from `kissflow-react/.env.local` to decide whether to talk to the local backend (`http://localhost:3000`) or the hosted Render backend. Toggle the comment in that file.
+The frontend reads `NEXT_PUBLIC_API_URL` from `kissflow-react/.env.local` to decide whether to talk to the local backend (`http://localhost:4000`) or the hosted Render backend. Toggle the comment in that file.
 
 ## Product model: 5 app construction layers
 
@@ -109,7 +113,7 @@ Full schema lives in `backend/prisma/schema.prisma`. Backend-side conventions fo
 ## Architecture at a glance
 
 - **Frontend** (`kissflow-react/`) — Next.js 16 App Router, React 19, Tailwind v4, Radix/shadcn. Runs on `:4001`.
-- **Backend** (`backend/`) — Fastify 5, Prisma 6 + PostgreSQL, JWT auth (access + refresh). Runs on `:3000`.
+- **Backend** (`backend/`) — Fastify 5, Prisma 6 + PostgreSQL, JWT auth (access + refresh). Runs on `:4000`.
 
 CSS Grid layout shell lives in `kissflow-react/components/layout/AppLayout.tsx`:
 ```

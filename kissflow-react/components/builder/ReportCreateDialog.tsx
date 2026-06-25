@@ -104,7 +104,7 @@ export function ReportCreateDialog({
         <form onSubmit={handleSubmit} className="space-y-5 px-6 py-5">
           {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="report-name" className="text-sm text-gray-600">
+            <Label htmlFor="report-name">
               Name
             </Label>
             <Input
@@ -127,7 +127,7 @@ export function ReportCreateDialog({
 
           {/* Report Type Section */}
           <div>
-            <Label className="text-sm text-gray-600">
+            <Label>
               Report type
             </Label>
             <div className="grid grid-cols-4 gap-3 mt-2">

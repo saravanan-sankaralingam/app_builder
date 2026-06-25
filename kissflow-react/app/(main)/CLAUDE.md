@@ -11,8 +11,9 @@ All Platform routes live under `app/(main)/` and share the main shell via `app/(
 | Route | Purpose | Components |
 |---|---|---|
 | `/` | Home — Platform landing surface | `app/(main)/page.tsx` (currently a placeholder). Spec lives in [`../../docs/PLATFORM_HOME.md`](../../docs/PLATFORM_HOME.md); future feature components will live in `components/home/`. |
-| `/explorer` | App explorer — browse apps | `components/explorer/*` |
-| `/create` | New app wizard | `components/create/*` |
+| `/explorer` | App explorer — browse apps | `components/explorer/*`. Spec lives in [`../../docs/PLATFORM_EXPLORER.md`](../../docs/PLATFORM_EXPLORER.md). |
+| `/create` + `/create/app` | New app wizard — pick type, then pick method (scratch / AI / loader demo) | `components/create/*`. Spec lives in [`../../docs/PLATFORM_CREATE.md`](../../docs/PLATFORM_CREATE.md). |
+| `/new/app` | **Left-nav-driven** create flow being iterated on (method selection → AI prompt → scanning → review → building). Will eventually replace `/create/app`. | `components/new-app/*`. Spec lives in [`../../docs/PLATFORM_NEW_APP.md`](../../docs/PLATFORM_NEW_APP.md). |
 | `/my-items` | User's items aggregated across apps — Assigned to me, Created by me, Watchlist tabs | `components/my-items/*`. Spec lives in [`../../docs/PLATFORM_MY_ITEMS.md`](../../docs/PLATFORM_MY_ITEMS.md). |
 | `/store` | App marketplace | `components/marketplace/*`. Spec lives in [`../../docs/PLATFORM_MARKETPLACE.md`](../../docs/PLATFORM_MARKETPLACE.md). |
 | `/notifications` | Full Notification Center — opened from the Bell's "Show all" link | `components/notifications/*`. Layout & rules in [`../../docs/PLATFORM_SHELL.md`](../../docs/PLATFORM_SHELL.md#notification-center-full-page). |

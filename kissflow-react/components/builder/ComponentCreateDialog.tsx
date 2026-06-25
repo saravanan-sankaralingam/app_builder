@@ -181,7 +181,7 @@ export function ComponentCreateDialog({
           <form onSubmit={handleSubmit} className="space-y-5 mt-4">
             {/* Component Type Selection (for both methods) */}
             <div className="space-y-1">
-              <Label className="text-sm text-gray-600">Component Type</Label>
+              <Label>Component Type</Label>
               <div className="flex gap-3">
                 {componentTypes.map((type) => {
                   const Icon = type.icon
@@ -218,7 +218,7 @@ export function ComponentCreateDialog({
 
             {/* Name */}
             <div className="space-y-1">
-              <Label htmlFor="component-name" className="text-sm text-gray-600">
+              <Label htmlFor="component-name">
                 Name
               </Label>
               <Input
@@ -243,7 +243,7 @@ export function ComponentCreateDialog({
             {/* Description (for scratch method) */}
             {selectedMethod === 'scratch' && (
               <div className="space-y-1">
-                <Label htmlFor="component-description" className="text-sm text-gray-600">
+                <Label htmlFor="component-description">
                   Description <span className="text-gray-400 font-normal">(optional)</span>
                 </Label>
                 <Textarea
@@ -261,7 +261,7 @@ export function ComponentCreateDialog({
             {/* Prompt (for AI method) */}
             {selectedMethod === 'ai' && (
               <div className="space-y-1">
-                <Label htmlFor="component-prompt" className="text-sm text-gray-600">
+                <Label htmlFor="component-prompt">
                   Describe the process you want to create
                 </Label>
                 <Textarea

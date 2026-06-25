@@ -144,7 +144,7 @@ export function BoardCreateDialog({
           <form onSubmit={handleSubmit} className="space-y-5 mt-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="board-name" className="text-sm text-gray-600">
+              <Label htmlFor="board-name">
                 Name
               </Label>
               <Input
@@ -167,7 +167,7 @@ export function BoardCreateDialog({
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="board-description" className="text-sm text-gray-600">
+              <Label htmlFor="board-description">
                 Description <span className="text-gray-400 font-normal">(optional)</span>
               </Label>
               <Textarea

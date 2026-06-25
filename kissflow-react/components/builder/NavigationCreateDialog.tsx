@@ -134,7 +134,7 @@ export function NavigationCreateDialog({
           <form onSubmit={handleSubmit} className="space-y-5 mt-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="navigation-name" className="text-sm text-gray-600">
+              <Label htmlFor="navigation-name">
                 Name
               </Label>
               <Input
@@ -157,7 +157,7 @@ export function NavigationCreateDialog({
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="navigation-description" className="text-sm text-gray-600">
+              <Label htmlFor="navigation-description">
                 Description <span className="text-gray-400 font-normal">(optional)</span>
               </Label>
               <Textarea

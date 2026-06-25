@@ -13,7 +13,7 @@
 ## Run
 
 ```bash
-npm run dev          # http://localhost:3000 (tsx watch)
+npm run dev          # http://localhost:4000 (tsx watch)
 npm run build        # prisma generate + tsc
 npm run start        # production: node dist/server.js
 

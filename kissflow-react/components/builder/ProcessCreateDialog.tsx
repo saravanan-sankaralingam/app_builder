@@ -144,7 +144,7 @@ export function ProcessCreateDialog({
           <form onSubmit={handleSubmit} className="space-y-5 mt-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="process-name" className="text-sm text-gray-600">
+              <Label htmlFor="process-name">
                 Name
               </Label>
               <Input
@@ -167,7 +167,7 @@ export function ProcessCreateDialog({
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="process-description" className="text-sm text-gray-600">
+              <Label htmlFor="process-description">
                 Description <span className="text-gray-400 font-normal">(optional)</span>
               </Label>
               <Textarea

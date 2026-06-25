@@ -544,7 +544,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
-                  <Label className="text-xs font-medium text-gray-700 mb-1.5 block pr-6">
+                  <Label className="pr-6">
                     {param.name}
                   </Label>
                   {param.type === 'string' && (
@@ -565,7 +565,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                   )}
                   {param.type === 'static_dropdown' && (
                     <Select defaultValue={param.defaultValue}>
-                      <SelectTrigger className="h-8 w-full text-xs bg-white">
+                      <SelectTrigger className="h-8 w-full bg-white">
                         <SelectValue placeholder={`Select ${param.name.toLowerCase()}`} />
                       </SelectTrigger>
                       <SelectContent>
@@ -599,7 +599,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                 </div>
                 <div className="p-4 space-y-4">
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-700">
+                    <Label>
                       Parameter name <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -610,7 +610,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-700">
+                    <Label>
                       ID <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -621,7 +621,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-700">
+                    <Label>
                       Parameter type <span className="text-red-500">*</span>
                     </Label>
                     <Select value={paramType} onValueChange={(val) => setParamType(val as typeof paramType)}>
@@ -636,7 +636,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-700">Default value</Label>
+                    <Label>Default value</Label>
                     <Input
                       placeholder="Enter default value"
                       value={defaultValue}
@@ -703,7 +703,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                 </div>
                 <div className="p-4 space-y-4">
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-700">
+                    <Label>
                       Parameter name <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -714,7 +714,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-700">
+                    <Label>
                       ID <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -725,7 +725,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-700">
+                    <Label>
                       Parameter type <span className="text-red-500">*</span>
                     </Label>
                     <Select value={paramType} onValueChange={(val) => setParamType(val as typeof paramType)}>
@@ -740,7 +740,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-700">Default value</Label>
+                    <Label>Default value</Label>
                     <Input
                       placeholder="Enter default value"
                       value={defaultValue}
@@ -802,7 +802,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
           {/* Content */}
           <div className="flex-1 px-5 py-4">
             {/* Section Title */}
-            <p className="text-xs font-medium text-gray-700 mb-2">Source code / Bundle file</p>
+            <p className="mb-2">Source code / Bundle file</p>
 
             {/* File Card */}
             <div className="group border border-gray-300 rounded-lg flex items-center gap-3 relative hover:bg-gray-200 hover:border-gray-400 transition-colors">
@@ -961,7 +961,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
 
                 {/* State Dropdown */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-700">State</span>
+                  <span>State</span>
                   <select
                     defaultValue="editable"
                     className="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer"
@@ -1132,7 +1132,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
                 </button>
 
                 {/* Parameter Label */}
-                <Label className="text-xs font-medium text-gray-700 mb-1.5 block pr-6">
+                <Label className="pr-6">
                   {param.name}
                 </Label>
 
@@ -1157,7 +1157,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
 
                 {param.type === 'static_dropdown' && (
                   <Select defaultValue={param.defaultValue}>
-                    <SelectTrigger className="h-8 w-full text-xs bg-white">
+                    <SelectTrigger className="h-8 w-full bg-white">
                       <SelectValue placeholder={`Select ${param.name.toLowerCase()}`} />
                     </SelectTrigger>
                     <SelectContent>
@@ -1198,7 +1198,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
               <div className="p-4 space-y-4">
                 {/* Parameter Name */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-700">
+                  <Label>
                     Parameter name <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -1211,7 +1211,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
 
                 {/* ID */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-700">
+                  <Label>
                     ID <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -1224,7 +1224,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
 
                 {/* Parameter Type */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-700">
+                  <Label>
                     Parameter type <span className="text-red-500">*</span>
                   </Label>
                   <Select value={paramType} onValueChange={(val) => setParamType(val as typeof paramType)}>
@@ -1241,7 +1241,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
 
                 {/* Default Value */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-700">Default value</Label>
+                  <Label>Default value</Label>
                   <Input
                     placeholder="Enter default value"
                     value={defaultValue}
@@ -1321,7 +1321,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
               <div className="p-4 space-y-4">
                 {/* Parameter Name */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-700">
+                  <Label>
                     Parameter name <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -1334,7 +1334,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
 
                 {/* ID */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-700">
+                  <Label>
                     ID <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -1347,7 +1347,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
 
                 {/* Parameter Type */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-700">
+                  <Label>
                     Parameter type <span className="text-red-500">*</span>
                   </Label>
                   <Select value={paramType} onValueChange={(val) => setParamType(val as typeof paramType)}>
@@ -1364,7 +1364,7 @@ export function ComponentEditor({ component, appId, isNewlyCreated = false }: Co
 
                 {/* Default Value */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-700">Default value</Label>
+                  <Label>Default value</Label>
                   <Input
                     placeholder="Enter default value"
                     value={defaultValue}

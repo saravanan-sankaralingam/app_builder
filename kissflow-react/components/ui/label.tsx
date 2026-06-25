@@ -6,8 +6,11 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+// Form-field label standard: 12px, gray-700, medium weight, 8px gap to the field below.
+// If a consumer overrides text-* / text-gray-* / mb-* in className, twMerge will
+// keep that override — sweep call sites to clean up redundant overrides.
 const labelVariants = cva(
-  "block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+  "block text-xs font-medium text-gray-700 leading-none mb-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 )
 
 const Label = React.forwardRef<

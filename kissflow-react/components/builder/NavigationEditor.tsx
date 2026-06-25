@@ -295,7 +295,7 @@ export function NavigationEditor({ navigationId, navigationName }: NavigationEdi
 
                 {/* Name */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="menu-name" className="text-sm text-gray-600">
+                  <Label htmlFor="menu-name">
                     Name
                   </Label>
                   <Input
@@ -308,7 +308,7 @@ export function NavigationEditor({ navigationId, navigationName }: NavigationEdi
 
                 {/* Navigate to */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="navigate-to" className="text-sm text-gray-600">
+                  <Label htmlFor="navigate-to">
                     Navigate to
                   </Label>
                   <Select
@@ -336,7 +336,7 @@ export function NavigationEditor({ navigationId, navigationName }: NavigationEdi
 
                 {/* Select roles */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="menu-roles" className="text-sm text-gray-600">
+                  <Label htmlFor="menu-roles">
                     Select roles to display menu
                   </Label>
                   <Select>

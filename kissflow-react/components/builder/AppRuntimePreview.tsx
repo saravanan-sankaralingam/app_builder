@@ -219,7 +219,7 @@ export function AppRuntimePreview({ appName, appIcon, appIconBg, onAddNavItem, o
           {/* Right side: Viewing as dropdown */}
           <div className="flex items-center">
             <Select value={selectedRole} onValueChange={(value: UserRole) => setSelectedRole(value)}>
-              <SelectTrigger className="w-[200px] !h-8 !min-h-0 text-xs border-gray-300 bg-white px-2 gap-1">
+              <SelectTrigger className="w-[200px] !h-8 !min-h-0 border-gray-300 bg-white px-2 gap-1">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <span className="text-gray-500 flex-shrink-0">Viewing as</span>
                   <span className="font-medium text-gray-900 truncate">{ROLE_LABELS[selectedRole]}</span>

@@ -89,7 +89,7 @@ export function DuplicateDialog({
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="duplicate-name" className="text-sm text-gray-600">
+            <Label htmlFor="duplicate-name">
               Name <span className="text-red-500">*</span>
             </Label>
             <Input

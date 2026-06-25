@@ -9,7 +9,7 @@ npm install
 npm run dev     # http://localhost:4001
 ```
 
-The frontend expects the backend at `http://localhost:3000` by default. Configure via `NEXT_PUBLIC_API_URL` in `.env.local`.
+The frontend expects the backend at `http://localhost:4000` by default. Configure via `NEXT_PUBLIC_API_URL` in `.env.local`.
 
 ## Where to read next
 

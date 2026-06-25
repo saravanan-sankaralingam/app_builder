@@ -227,7 +227,7 @@ export function AppReviewDialog({
 
         {/* App name field */}
         <div className="mb-4">
-          <Label className="block text-sm font-medium text-gray-700 mb-1">
+          <Label>
             App name <span className="text-red-500">*</span>
           </Label>
           <Input
@@ -241,7 +241,7 @@ export function AppReviewDialog({
 
         {/* Description field */}
         <div className="mb-6">
-          <Label className="block text-sm font-medium text-gray-700 mb-1">
+          <Label>
             Description
           </Label>
           <Textarea

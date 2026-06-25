@@ -4,14 +4,25 @@ import { useState, useMemo, useEffect } from 'react'
 import { ExplorerHeader } from './ExplorerHeader'
 import { ExplorerToolbar } from './ExplorerToolbar'
 import { AppsGrid } from './AppsGrid'
+import { AppsGroupedByType } from './AppsGroupedByType'
 import { listApps, App, AppStatus } from '@/lib/api/apps'
 import { getIconByName } from '@/lib/icons'
-import { AppData } from '@/types/app'
+import { AppData, AppGroupType, APP_GROUP_TYPES } from '@/types/app'
 import { Loader2, ShoppingBag } from 'lucide-react'
 
 type FilterType = 'live' | 'managed' | 'others'
 type ViewMode = 'grid' | 'list'
-type SortOption = 'recent' | 'name' | 'created'
+type SortOption = 'recent' | 'name' | 'type' | 'created' | 'published' | 'modified'
+
+// Deterministic hash → bucket the app into one of the 5 type categories.
+// Stable per app id so the grouping doesn't shuffle between renders.
+function deriveAppType(id: string): AppGroupType {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0
+  }
+  return APP_GROUP_TYPES[Math.abs(hash) % APP_GROUP_TYPES.length]
+}
 
 export function ExplorerView() {
   const [apps, setApps] = useState<App[]>([])
@@ -52,6 +63,7 @@ export function ExplorerView() {
         icon: ShoppingBag,
         iconBg: '#DBEAFE',
         createdBy: 'System',
+        type: 'Application',
       },
     ]
 
@@ -63,6 +75,7 @@ export function ExplorerView() {
       icon: getIconByName(app.icon),
       iconBg: app.iconBg,
       createdBy: app.createdBy.name,
+      type: deriveAppType(app.id),
     }))
 
     // Apply search filter
@@ -95,14 +108,19 @@ export function ExplorerView() {
     transformed.sort((a, b) => {
       switch (sortBy) {
         case 'name':
+        case 'type':
+          // Type sort still alphabetises within each type — the accordion handles the grouping.
           return a.name.localeCompare(b.name)
         case 'created': {
           const aDate = appsSortData.get(a.id)?.createdAt || ''
           const bDate = appsSortData.get(b.id)?.createdAt || ''
           return new Date(bDate).getTime() - new Date(aDate).getTime()
         }
+        case 'published':
+        case 'modified':
         case 'recent':
         default: {
+          // No separate publishedAt today — all three fall back to updatedAt.
           const aDate = appsSortData.get(a.id)?.updatedAt || ''
           const bDate = appsSortData.get(b.id)?.updatedAt || ''
           return new Date(bDate).getTime() - new Date(aDate).getTime()
@@ -115,7 +133,7 @@ export function ExplorerView() {
 
   if (isLoading) {
     return (
-      <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           <p className="text-sm text-gray-500">Loading apps...</p>
@@ -126,7 +144,7 @@ export function ExplorerView() {
 
   if (error) {
     return (
-      <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <p className="text-red-600 mb-2">{error}</p>
           <button
@@ -141,32 +159,39 @@ export function ExplorerView() {
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
-      {/* Header with title and filters */}
-      <ExplorerHeader
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-      />
+    <div className="min-h-[calc(100vh-50px)] bg-gray-200">
+      {/* Header card wrapper — matches Retail One outer header padding */}
+      <div className="px-5 py-3">
+        <ExplorerHeader
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+      </div>
 
-      {/* Toolbar with search, sort, view toggle */}
-      <ExplorerToolbar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-      />
+      {/* Content area — 12px top so header→toolbar gap totals 24px (header's py-3 + this pt-3) */}
+      <div className="px-6 pb-6 pt-3 space-y-6">
+        {/* Toolbar with search, sort, view toggle */}
+        <ExplorerToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
 
-      {/* Apps grid/list */}
-      <div className="pt-1">
-        {filteredApps.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No apps found</p>
-          </div>
-        ) : (
-          <AppsGrid apps={filteredApps} viewMode={viewMode} />
-        )}
+        {/* Apps grid/list — accordion-by-type when sortBy is 'type' */}
+        <div>
+          {filteredApps.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No apps found</p>
+            </div>
+          ) : sortBy === 'type' ? (
+            <AppsGroupedByType apps={filteredApps} viewMode={viewMode} />
+          ) : (
+            <AppsGrid apps={filteredApps} viewMode={viewMode} />
+          )}
+        </div>
       </div>
     </div>
   )

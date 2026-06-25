@@ -122,7 +122,7 @@ export function AppNameForm({ open, onOpenChange, onSubmit, isLoading = false }:
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
           {/* 1. Icon Selector with Popover */}
           <div className="space-y-2">
-            <Label className="text-sm text-gray-600">App icon</Label>
+            <Label>App icon</Label>
             <Popover open={iconPickerOpen} onOpenChange={setIconPickerOpen}>
               <PopoverTrigger asChild>
                 <button
@@ -231,7 +231,7 @@ export function AppNameForm({ open, onOpenChange, onSubmit, isLoading = false }:
 
           {/* 2. App Name */}
           <div className="space-y-2">
-            <Label htmlFor="app-name" className="text-sm text-gray-600">
+            <Label htmlFor="app-name">
               App name
             </Label>
             <Input
@@ -253,7 +253,7 @@ export function AppNameForm({ open, onOpenChange, onSubmit, isLoading = false }:
 
           {/* 3. Description */}
           <div className="space-y-2">
-            <Label htmlFor="app-description" className="text-sm text-gray-600">
+            <Label htmlFor="app-description">
               Description <span className="text-gray-400 font-normal">(optional)</span>
             </Label>
             <Textarea

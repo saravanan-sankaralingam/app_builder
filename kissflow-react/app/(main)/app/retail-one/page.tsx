@@ -51,7 +51,7 @@ export default function RetailOnePage() {
   ]
 
   return (
-    <div className="min-h-[calc(100vh-50px)] bg-gray-200">
+    <div className="min-h-[calc(100vh-50px)] bg-gray-100">
       {/* App Header */}
       <div className="px-5 py-3">
         <div className="bg-white rounded-lg h-[86px] px-5 py-3 flex flex-col justify-between">

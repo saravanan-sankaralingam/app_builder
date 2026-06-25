@@ -481,7 +481,7 @@ export function PageEditor({ pageId, pageName }: PageEditorProps) {
                 <div className="space-y-2">
                   <label className="text-[11px] font-medium text-gray-500">Background type</label>
                   <Select value={backgroundType} onValueChange={(value) => setBackgroundType(value as BackgroundType)}>
-                    <SelectTrigger size="sm" className="w-full text-xs">
+                    <SelectTrigger size="sm" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1294,7 +1294,7 @@ export function PageEditor({ pageId, pageName }: PageEditorProps) {
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-medium text-gray-500">Border style</label>
                   <Select value={borderStyle} onValueChange={(value) => setBorderStyle(value as BorderStyle)}>
-                    <SelectTrigger size="sm" className="w-full text-xs">
+                    <SelectTrigger size="sm" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

@@ -6,7 +6,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('15m'),
   REFRESH_TOKEN_EXPIRES_IN: z.string().default('7d'),
-  PORT: z.string().default('3000'),
+  PORT: z.string().default('4000'),
   SYSTEM_BOT_USER_ID: z.string().uuid().optional(),
 });
 

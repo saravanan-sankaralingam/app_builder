@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Home,
@@ -74,6 +74,7 @@ const createOptions = [
 ] as const
 
 function CreateOptionsList({ onSelect }: { onSelect: () => void }) {
+  const router = useRouter()
   return (
     <div className="w-[160px] py-1 space-y-1">
       {createOptions.map((opt) => {
@@ -83,7 +84,11 @@ function CreateOptionsList({ onSelect }: { onSelect: () => void }) {
             key={opt.key}
             type="button"
             onClick={() => {
-              /* TODO: wire each create option's action */
+              // App routes to the new left-nav-driven create flow;
+              // other types are still TODO stubs.
+              if (opt.key === 'app') {
+                router.push('/new/app')
+              }
               onSelect()
             }}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 rounded-md transition-colors"

@@ -89,7 +89,7 @@ export function RenameDialog({
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="rename-name" className="text-sm text-gray-600">
+              <Label htmlFor="rename-name">
                 Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -113,7 +113,7 @@ export function RenameDialog({
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="rename-description" className="text-sm text-gray-600">
+              <Label htmlFor="rename-description">
                 Description <span className="text-gray-400 font-normal">(optional)</span>
               </Label>
               <Textarea

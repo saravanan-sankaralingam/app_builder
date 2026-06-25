@@ -72,7 +72,7 @@ export function ListCreateDialog({
         <form onSubmit={handleSubmit} className="space-y-5 mt-4">
           {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="list-name" className="text-sm text-gray-600">
+            <Label htmlFor="list-name">
               Name
             </Label>
             <Input
@@ -95,7 +95,7 @@ export function ListCreateDialog({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="list-description" className="text-sm text-gray-600">
+            <Label htmlFor="list-description">
               Description <span className="text-gray-400 font-normal">(optional)</span>
             </Label>
             <Textarea
