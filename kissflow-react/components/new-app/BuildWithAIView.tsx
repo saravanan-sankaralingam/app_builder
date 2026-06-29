@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Paperclip, X, Sparkles, LayoutGrid, Check } from 'lucide-react'
-import { AIScanningDialog } from './AIScanningDialog'
+import { AgentScanningView } from './AgentScanningView'
 import { AppReviewDialog } from './AppReviewDialog'
 import { AppCreatingView } from './AppCreatingView'
 
@@ -130,10 +130,8 @@ export function BuildWithAIView({ onBack }: BuildWithAIViewProps) {
   }
 
   const handleScanningComplete = useCallback(() => {
-    setShowScanningDialog(false)
-    // MOCK: ignore the actual prompt/files for the demo — always surface the
-    // polished Vendor Onboarding values so the review dialog and the App spec
-    // identity read crisp and consistent.
+    // Keep showScanningDialog true so AgentScanningView stays as the background
+    // behind the review modal. We only close it when the user confirms or cancels.
     setGeneratedAppName(MOCK_APP_NAME)
     setGeneratedAppDescription(MOCK_APP_DESCRIPTION)
     setShowReviewDialog(true)
@@ -145,12 +143,14 @@ export function BuildWithAIView({ onBack }: BuildWithAIViewProps) {
 
   const handleReviewCancel = () => {
     setShowReviewDialog(false)
+    setShowScanningDialog(false)
   }
 
   // Mock: no backend write. AppCreatingView owns its own duration and calls
   // onComplete when its agent sequence finishes — we then surface the success screen.
   const handleCreateApp = async (data: { name: string; description: string }) => {
     setShowReviewDialog(false)
+    setShowScanningDialog(false)
     setCreatedAppName(data.name)
     setCreatedAppDescription(data.description)
     setShowCreatingScreen(true)
@@ -186,6 +186,27 @@ export function BuildWithAIView({ onBack }: BuildWithAIViewProps) {
         onBack={onBack}
         onComplete={handleCreatingComplete}
       />
+    )
+  }
+
+  // Pre-review "AI at work" screen — centred agent timeline. The review
+  // dialog opens as a modal on top of this view once scanning completes.
+  if (showScanningDialog) {
+    return (
+      <>
+        <AgentScanningView
+          onComplete={handleScanningComplete}
+          onAbort={handleScanningAbort}
+        />
+        <AppReviewDialog
+          open={showReviewDialog}
+          onClose={() => setShowReviewDialog(false)}
+          onCancel={handleReviewCancel}
+          onCreateApp={handleCreateApp}
+          suggestedName={generatedAppName}
+          suggestedDescription={generatedAppDescription}
+        />
+      </>
     )
   }
 
@@ -376,21 +397,6 @@ export function BuildWithAIView({ onBack }: BuildWithAIViewProps) {
         </div>
       </div>
 
-      <AIScanningDialog
-        open={showScanningDialog}
-        onClose={() => setShowScanningDialog(false)}
-        onComplete={handleScanningComplete}
-        onAbort={handleScanningAbort}
-      />
-
-      <AppReviewDialog
-        open={showReviewDialog}
-        onClose={() => setShowReviewDialog(false)}
-        onCancel={handleReviewCancel}
-        onCreateApp={handleCreateApp}
-        suggestedName={generatedAppName}
-        suggestedDescription={generatedAppDescription}
-      />
     </div>
   )
 }

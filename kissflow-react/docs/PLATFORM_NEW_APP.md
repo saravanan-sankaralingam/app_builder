@@ -3,10 +3,11 @@
 > ⚠️ **Current state: design-only mock flow, no backend writes.** This is the
 > left-nav-driven app-creation flow we are actively iterating on. Everything
 > the user types or uploads is ignored — the demo always presents the same
-> "Vendor Onboarding and Management" content downstream. The agent timeline,
-> hex animation, and section skeletons are timed mocks, not real AI work.
-> No `createApp()` call is made. Once the design and copy are signed off,
-> this flow will replace the Explorer's `/create` + `/create/app` flow (see
+> "Vendor Onboarding and Management" content downstream. The agent timelines
+> on both the pre-review and post-review screens, and the section
+> skeletons, are timed mocks — not real AI work. No `createApp()` call is
+> made. Once the design and copy are signed off, this flow will replace the
+> Explorer's `/create` + `/create/app` flow (see
 > [`PLATFORM_CREATE.md`](PLATFORM_CREATE.md)) and only then get wired to the
 > backend.
 
@@ -30,11 +31,11 @@ left-nav Create > App
    │
    ├── Build with AI ───►  BuildWithAIView (prompt + uploads)
    │                          submit
-   │                       ├──►  AIScanningDialog  (hex animation, 5s)
+   │                       ├──►  AgentScanningView (6-agent timeline, ~29s)
    │                       │       complete
    │                       ├──►  AppReviewDialog   (name + description)
    │                       │       Create app
-   │                       └──►  AppCreatingView   (agents build the spec)
+   │                       └──►  AppCreatingView   (5-agent timeline + spec)
    │
    └── Create from scratch  ─►  TODO stub
 ```
@@ -80,33 +81,53 @@ So the user can type anything (or nothing meaningful) and the downstream surface
 
 The 10-second hardcoded timer that used to flip to a success screen has been removed; `AppCreatingView` now owns its own duration and calls back on completion. Success-screen behaviour is currently a stub no-op (`handleCreatingComplete`) since we don't want it surfacing during design iteration.
 
-## 3 — AI scanning popover (`AIScanningDialog`)
+## 3 — AI scanning screen (`AgentScanningView`)
 
-`components/new-app/AIScanningDialog.tsx`. Forked from `components/create/AIScanningDialog.tsx`.
+`components/new-app/AgentScanningView.tsx`. Full-screen pre-review surface (not a dialog). Replaces the previous hex-centric `AIScanningDialog` (which is still in the folder for reference but is no longer used in the flow).
 
-- **Frame**: `w-[550px] h-[420px] p-7 rounded-xl bg-white` with a soft drop shadow over a `bg-black/50` overlay
-- **Title**: `AI at work` — 24px semibold with the magenta-500 → purple-500 265° gradient (text)
-- **Centrepiece**: a **rounded-corner SVG hexagon** (radius 80, corner radius 16, perimeter ≈ 388.5)
-  - **Fill**: static `linearGradient` magenta-500 → purple-500 → blue-500 (135°)
-  - **Stroke**: 3px gradient stroke (magenta-300 → white → blue-300) with `stroke-dasharray="80 ${HEX_PERIMETER - 80}"` — only one bright "comet" is visible at a time, traversing the perimeter every 3 seconds
-  - **Halo**: container has a CSS `filter` with two stacked `drop-shadow()` calls cycling magenta → purple → blue every 4.5s — gives the hex a colour-morphing aura
-  - **Agent icon overlay**: a 48×48 lucide glyph centred over the hex, white with a 1px drop-shadow, fades in/out as the cycling agent changes
-- **Agent rotation**: seven mock agents in the `AGENTS` array (Document parser, Rule extractor, Role identifier, Data Modeler, Role Designer, Workflow Architect, UI Composer). The dialog runs for a total of `TOTAL_DURATION = 5_000` ms (5 seconds), with each agent visible for ~714ms (`STEP_DURATION = TOTAL_DURATION / AGENTS.length`). The labels rotate purely for narrative effect during scanning.
-- **Below the hex**: an agent name row (`{name} working…` with blinking-cursor ellipsis) and a description line (`text-sm text-gray-600`). Both re-key on agent change to re-fire the `ai-fade-up` (8px slide + opacity) animation.
-- **Abort button** at the bottom, ghost variant in red.
+The view reuses **the exact same `LeftPane` component** as `AppCreatingView` — title + Sparkles hero + the gradient-ringed agent timeline — but with a different roster, different copy, and faster phase timing. This shared layout means the user lands on a visually consistent screen before and after the review dialog (the popup opens on top of this view, not in place of it).
 
-Keyframes are inlined inside the dialog via a `<style>` element (`InlineKeyframes`) — failsafe in case `globals.css` is cached.
+**Frame**:
+- `h-[calc(100vh-3.5rem)]` (full viewport minus the topbar) with `bg-[#FDF8FC]`, `BackgroundAtmosphere` orbs, and the same back button (top-left, `top-6 left-6 z-20`).
+- Content area: `flex items-start justify-center overflow-y-auto pt-6` — **top-aligned** so the title pins to the top and the agent timeline grows downward as new rows appear. (Earlier `items-center` made the whole stack re-centre and push the title up — fixed.)
+- Renders `<InlineKeyframes />` itself (exported from `AppCreatingView`) so the shared sub-item animations (`ai-fade-up`, `dot-pulse`, `mat-spin-*`, `ai-pulse-ping`) actually load on this screen — earlier they didn't, which made the sub-item style read differently between the two screens.
+
+**Title + description** (passed into `LeftPane` as props):
+- Title: `Decoding your requirements` — same magenta-500 → purple-500 265° gradient as the post-review title.
+- Description: `Six agents are reading your prompt and translating it into the roles, fields, pages, and entities for your app.`
+
+**6 pre-review agents** (`SCANNING_AGENTS` in `AgentScanningView.tsx`). All names carry the trailing "agent" word for consistency with the post-review timeline:
+
+| # | Agent | Color | Glyph | Done line |
+|---|---|---|---|---|
+| 1 | Requirement Validator agent | magenta | `ClipboardCheck` | has validated the requirements |
+| 2 | Blueprint drafter agent | purple | `Layers` | has outlined the app architecture |
+| 3 | App role definer agent | blue | `Users` | has defined the user roles |
+| 4 | Field architect agent | cyan | `Database` | has architected the data fields |
+| 5 | Page designer agent | green | `FileText` | has designed the page layouts |
+| 6 | Entity enricher agent | magenta | `Wand2` | has enriched the entities |
+
+Each has 4 rotating phase phrases (e.g. "is reading through your prompt", "is identifying the core use case", "is validating the scope", "is checking for missing details") that drive the active-row checklist box.
+
+**Timing**:
+- `SCANNING_PHASE_DURATION_MS = 1_200` — 1.2s per phase (compressed compared to AppCreatingView's 4s).
+- `SCANNING_TOTAL_TICKS = 6 × 4 = 24` ticks.
+- `SCANNING_TOTAL_DURATION_MS = 24 × 1200 + 200` ≈ **29 seconds**. The trailing 200ms buffer is just enough for the last agent's double-tick to render before `onComplete` fires.
+- `onComplete` opens the `AppReviewDialog` on top of this view (the view stays mounted as the background of the modal).
+
+**Abort**: the back button calls `onAbort`, which returns to the prompt screen.
 
 ## 4 — Review dialog (`AppReviewDialog`)
 
 `components/new-app/AppReviewDialog.tsx`. Forked from `components/create/AppReviewDialog.tsx` with three deliberate differences:
 
-- **Same frame as scanning** (`w-[550px] h-[420px]`) so the dialog doesn't jump between the two beats
+- **Frame** is `w-[550px] h-[460px] p-8` — a fixed-height modal that pops over `AgentScanningView` once the 6th agent completes, so the dialog opens on a deliberately quiet background instead of replacing the screen.
 - **Icon picker entirely removed** — the original component had a 20-icon grid + color swatches. Gone. The `onCreateApp` callback signature was trimmed to `(data: { name: string; description: string })` to match.
-- **Title gradient** uses the brand tokens directly: `linear-gradient(265deg, var(--magenta-500), var(--purple-500))` — same 265° magenta→purple read as the AI scanning dialog and the building screen, all three on one chord.
-- **Title size** is 24px (`text-2xl`), the description below it is 12px regular gray-700 with a tight 4px gap above (`mb-1` on the title block, `mb-6` below the subtitle).
+- **Title gradient** uses the brand tokens directly: `linear-gradient(265deg, var(--magenta-500), var(--purple-500))` — same 265° magenta→purple read as the post-review AppCreatingView title; the two heads echo each other across the dialog boundary.
+- **Title text**: `Review the app details` — 24px (`text-2xl`) semibold gradient-clipped.
+- **Sub-line**: `Almost there. Just review the app details before proceeding` — 12px regular gray-700, `mb-6`.
 - Form fields (`App name`, `Description`) use the app-wide standards baked into `components/ui/label.tsx`, `input.tsx`, and `textarea.tsx` — see [`FORM_STANDARDS.md`](FORM_STANDARDS.md).
-- Action row pinned to the bottom of the 420px frame via `mt-auto`. Primary `Create app` button uses `bg-blue-500 hover:bg-blue-600` (brand primary).
+- Action row pinned to the bottom of the 460px frame via `mt-auto`. Primary `Create app` button uses `bg-blue-500 hover:bg-blue-600` (brand primary).
 
 ## 5 — Building screen (`AppCreatingView`) — the centrepiece
 
@@ -123,122 +144,138 @@ Keyframes are inlined inside the dialog via a `<style>` element (`InlineKeyframe
 
 ### Left pane — narrative
 
-Content is pinned to the top of the pane (`justify-start`); the timeline below it flows naturally to fill the remaining height. The previous BUILDING chip and the central liquid-morph animation have both been removed — the screen now reads as a quieter, type-and-list composition.
+`LeftPane` is now **shared between `AgentScanningView` (pre-review) and `AppCreatingView` (post-review)**. It takes `agents`, `title`, `description`, `phaseIdx`, `currentIdx`, and an optional `completedAction` prop. Both screens render the same shell — title block → standalone Sparkles glyph → gradient-ringed timeline — and differ only in their inputs.
 
-The whole left-pane content column is wrapped in `w-full max-w-[480px]` so the title block + AI hero icon get the wider canvas. The **agent timeline** inside has its own `max-w-[400px] mx-auto` so it stays narrower (the agent rows would feel sparse at 480px), centered under the title.
+**Container sizing** (after the recent widening):
+- Outer wrapper column: `w-full max-w-[540px]` (was 480px).
+- Title block + hero icon span the full 540px.
+- Timeline gradient ring: `max-w-[520px] mx-auto` (was 400px). Outer 1.5px ring → inner `p-9`.
+- The agent list inside the timeline (`<ol>`) is constrained to `max-w-[360px] mx-auto` so individual rows stay narrow even though the ringed box around them is wider — the user can read each agent line at a comfortable measure while the master container reads as a generous canvas.
+- Outer wrapper padding: `py-10 px-8`, with `overflow-y-auto` if content overflows.
 
-**Title block** (centred, `mb-8` below):
-- Title `Your app is being crafted, layer by layer` — **24px semibold**, magenta-500 → purple-500 265° gradient (same gradient as the Review dialog title). "Layer by layer" ties to the 5-agent timeline and the 5-layer architecture (Data / Interface / Logic / Roles / Settings).
-- Description `Our AI agents are collaborating in real time to bring your {appName} app to life — defining roles, modeling data, and composing pages along the way.` — **13px gray-900**, `leading-relaxed`, `max-w-[440px]` (slightly narrower than the 480px wrapper for visual rhythm). The app name is highlighted via `font-semibold` inline. The em-dash list mirrors three of the five agents in the timeline below. Wired through from `AppCreatingView` via an `appName` prop on `LeftPane`.
+**Title block** (centred, `mb-8` below): the `title` and `description` props drive the heading and the line below it. Title uses the magenta-500 → purple-500 265° gradient; description renders as 13px gray-900, `leading-relaxed`, `max-w-[440px]`. On AppCreatingView the title is `Your app is being crafted, layer by layer` and the description names the app inline.
 
-**AI hero icon** (centred, `mb-8` below the title block):
-- Standalone lucide `Sparkles` glyph, **80×80** (`w-20 h-20`), colour `var(--purple-500)`, `strokeWidth={1.25}` for an airy look.
-- No squircle container behind it — the glyph reads on its own.
+**AI hero glyph** (centred, `mb-8` below the title block):
+- Standalone lucide `<Sparkles />` glyph at **48×48** (`w-12 h-12`), `var(--purple-500)`, `strokeWidth={1.5}`. The same icon used in the Start Building button, just larger.
+- The earlier liquid-morph blob (`.flat-liquid` + `ai-liquid-i` border-radius keyframe) was removed in favour of just the glyph. The class and keyframe stay in `globals.css` / `InlineKeyframes` but are unused — revivable.
 
-**Agent timeline** — enclosed in a glassy container:
-- Outer ring: `linear-gradient(246.77deg, var(--purple-200), var(--magenta-200))` at 1.5px (the AI-gradient border)
-- Inner surface: **`color-mix(in srgb, var(--white) 75%, transparent)`** (75% of the `--white` token; the page wash + atmosphere orbs bleed through subtly), `rounded-[10.5px]` (12 − 1.5 = 10.5 so corners stay concentric with the outer)
-- **36px interior padding** (`p-9`)
-- Implemented as **two nested divs** rather than the linear-gradient(white,white) padding-box trick — outer div carries the gradient, inner div carries the translucent fill.
+**Agent timeline** — gradient-ringed container:
+- Outer ring: `linear-gradient(246.77deg, var(--purple-200), var(--magenta-200))` at 1.5px (`rounded-[24px]`).
+- Inner surface: `color-mix(in srgb, var(--white) 90%, transparent)` — slightly translucent so the page wash + atmosphere orbs bleed through. `rounded-[22.5px]` (24 − 1.5) so corners stay concentric.
+- `p-9` interior padding.
+- The inner `<ol>` carries a faded vertical connector line (`absolute left-[16px] top-3 bottom-3`, `linear-gradient(to bottom, transparent, var(--gray-300), transparent)`) and `space-y-4` rhythm between rows.
 
-Inside the container, 5 sequential rows with a faded vertical connector line (`left-[16px] top-3 bottom-3`, **inline** `linear-gradient(to bottom, transparent, var(--gray-300), transparent)` — uses the project's `--gray-300` token, not Tailwind's `gray-200`). Rows are flat (no card backgrounds) and separated by `space-y-4` (16px gap).
+**Progressive reveal** — queued agents are **not rendered** until their turn (`if (state === 'queued') return null` inside `LeftPane`'s `.map()`). So the timeline grows downward as each agent activates, and the title above stays pinned to the top. For the previous "always-visible roster" behaviour, see [`LEFT_PANE_ALL_AGENTS_VISIBLE_SNAPSHOT.md`](LEFT_PANE_ALL_AGENTS_VISIBLE_SNAPSHOT.md).
 
-**Agent avatar** (the new visual identity):
-- Shape: **rounded-corner squircle octagon** — imported as `AVATAR_PATH_D` constant from `/Downloads/shape_octogan.svg`, rendered via SVG `<path>` with `viewBox="0 0 198 198"` so it scales cleanly into any container size
-- Size: **32×32** (`w-[32px] h-[32px]`)
-- Centred glyph: white lucide icon at 16×16 (`w-4 h-4`), `strokeWidth={2.25}` for crisp small-size legibility
-- The five colour assignments form a warm-to-cool progression so the list reads at a glance:
+**Agent avatar**:
+- Shape: **rounded-corner square** — `AVATAR_PATH_D` is `'M 12 0 H 20 A 12 12 0 0 1 32 12 V 20 A 12 12 0 0 1 20 32 H 12 A 12 12 0 0 1 0 20 V 12 A 12 12 0 0 1 12 0 Z'` rendered with `viewBox="0 0 32 32"`. (Earlier this was an octagon-squircle from `/Downloads/shape_octogan.svg`; the rounded square is the current shape.)
+- Size: **32×32** with a white **16×16** lucide glyph centred.
+- Same 5-color warm-to-cool progression on the post-review screen (magenta / purple / blue / cyan / green) — see the per-agent table in the "Mock data summary" section.
 
-  | # | Agent | Colour | Glyph | Why this glyph |
-  |---|---|---|---|---|
-  | 1 | Role creator agent | **magenta** | `Users` | people / permissions |
-  | 2 | Flow creator agent | **purple** | `Workflow` | sequencing / workflow |
-  | 3 | Entity creator agent | **blue** | `Database` | data models |
-  | 4 | Page creator agent | **cyan** | `LayoutGrid` | UI layouts |
-  | 5 | Navigation creator agent | **green** | `Compass` | wayfinding |
+**Per-state avatar treatment**:
 
-**Per-state avatar treatment** (state differentiation is now wired in — `AgentStatus` branches on `state`):
-
-| State | Avatar component | Visual |
+| State | Component | Visual |
 |---|---|---|
-| **Active** | `<ActiveGradientShiftAvatar>` | Bold avatar whose fill gradient **rotates 360°** via inline SVG `<animateTransform>`. Three-stop gradient `var(--{color}-300) → var(--{color}-600) → var(--{color}-300)`, `gradientTransform` rotates `0 0.5 0.5 → 360 0.5 0.5`, `dur="4.5s" repeatCount="indefinite"`. Colours appear to flow through the squircle. |
-| **Queued** | `<StaticBoldAvatar>` wrapped in `<div style={{ opacity: 0.35 }}>` | Bold static `-400 → -500` linear-gradient avatar + white glyph, dimmed to 35% opacity. Reads as a "pending peer" to the active row. Chosen from a 4-variant swatch exploration — see [`AGENT_ACTIVE_VARIANTS.md`](AGENT_ACTIVE_VARIANTS.md#queued-state-explorations-archived). |
-| **Done** | `<StaticBoldAvatar>` | Bold static `-400 → -500` linear-gradient avatar + white glyph, full opacity. The row itself adds `opacity-90` as a subtle "settled" cue. |
+| **Queued** | _Not rendered_ | Removed from the DOM entirely until promotion to active. |
+| **Active** | `<ActiveGradientShiftAvatar>` | Three-stop gradient `var(--{color}-300) → var(--{color}-600) → var(--{color}-300)` whose `gradientTransform` rotates 0° → 360° over 4.5s via SVG `<animateTransform>`. Colours flow through the shape. |
+| **Done** | `<StaticBoldAvatar>` | Bold static `-400 → -500` linear-gradient avatar + white glyph, full opacity. Row carries `opacity-90` as a subtle "settled" cue. |
 
-Other active-state avatar variants we explored (`pulse-halo`, `orbit-border`, `pulse-glow`, `dashed-ring-spin`) are archived in [`AGENT_ACTIVE_VARIANTS.md`](AGENT_ACTIVE_VARIANTS.md) with copy-paste recipes.
+Other active-state avatar variants we explored (`pulse-halo`, `orbit-border`, `pulse-glow`, `dashed-ring-spin`) are archived in [`AGENT_ACTIVE_VARIANTS.md`](AGENT_ACTIVE_VARIANTS.md).
 
-**Name + description treatment by state** (font sizes: name **14px**, description **12px**):
+**Row content by state** (13px name + sub-task box; the text-shimmer single-sentence treatment was replaced by a checklist box):
 
-| State | Name | Description |
-|---|---|---|
-| **Queued** | `<SkeletonBar width="60%" height="14px" shimmering />` (the existing right-pane helper, reused) | `<SkeletonBar width="85%" height="10px" shimmering />`. Both bars use the right-pane shimmer language so the left timeline and the right spec sections share one "not yet generated" vocabulary. Wrapped in `space-y-2.5 pt-1` to mirror `SectionSkeleton`. |
-| **Active** | `text-[14px] text-gray-900 font-semibold tracking-tight` — the previous `…` magenta cursor was removed | `<div class="text-[12px] mt-0.5 leading-snug">` containing two siblings: (1) `<span class="text-shimmer">` with `background-image: linear-gradient(90deg, var(--gray-600) ... var(--{color}-500) @50% ... var(--gray-600))` and `background-clip: text` — a coloured highlight band sweeps across the gray letters; (2) **three 4×4 dots** in `var(--{color}-500)` with staggered `dot-pulse-i` animation (200ms delays, opacity 0.25 ↔ 1, scale 0.85 ↔ 1.1, 1.4s loop) — the loading-trail. Dots sit on the text baseline via `inline-flex align-middle gap-3px`. |
-| **Done** | `text-[14px] text-gray-900 font-medium` (no cursor, no shimmer) + row-level `opacity-90` | Plain `<p class="text-[12px] mt-0.5 text-gray-600 leading-snug">` |
+| State | Content |
+|---|---|
+| **Active** | Title line: `{Agent name}` in `font-semibold gray-900` + `working on it` in `gray-600` + a `<DotTrail color={accentColor}>` (three pulsing dots using `dot-pulse-i`). Below the title, a `mt-2 rounded-md p-2.5 space-y-1.5` checklist box (`bg: var(--gray-50)`, `border: 1px solid var(--gray-100)`) showing the agent's **past + current** phase rows. Past = green `<Check>` + faded `gray-500` text. Current = blue radar ping (a 10×10 ring expanding via `ai-pulse-ping` around a solid `var(--blue-500)` dot) + bold `gray-900` text. Future phases are **not rendered** until promoted to current — the box grows as the agent progresses. |
+| **Done** | Single line: `<span class="font-semibold gray-900">{name}</span> {agent.successPhrase} ✓✓`. Each agent now owns its full done sentence via the `successPhrase` field (e.g. `has completed generating roles`), rather than a global "has completed generating {section}" template. The `<CheckCheck>` glyph is `var(--green-500)`, `strokeWidth={2.5}`. |
+
+**Completion CTA** — the `LeftPane` accepts an optional `completedAction: React.ReactNode` slot rendered below the agent timeline with `mt-16` (64px breathing room) and an `ai-fade-up` entrance. On `AppCreatingView`, this slot is populated only once `currentIdx >= AGENTS.length` (i.e. the Navigation agent has finished). The block reads:
+
+- **Line 1** — a 24×24 solid `var(--green-500)` circle containing a white `<CheckCheck>` (no card chrome around it) + "App generated successfully" in `text-[15px] font-medium gray-900`.
+- **Line 2** — "Open app →" as an outlined button: `bg-white`, `border: var(--purple-300)`, `text: var(--purple-600)`, `rounded-lg`, `px-4 py-1.5`, gray-50 hover. Clicking it fires the `onComplete` prop (the parent `BuildWithAIView` decides where to route — currently a no-op stub).
+
+`AgentScanningView` does **not** pass `completedAction`, so nothing appears there — the review dialog opens on top instead.
 
 ### Right pane — spec artifact
 
 A **glassmorphic card** (`bg-white/75 backdrop-blur-2xl rounded-3xl border border-white/90 shadow-...`) split into two vertical zones.
 
-**Pinned header** (`px-9 py-7 flex-shrink-0`) holds the **`AppIdentity` card**:
-- Outlined container: `bg-gray-50 border border-gray-200 rounded-xl p-4`
-- **No app icon** (icon was removed in design iteration — the container itself reads as the identity surface)
-- App name — 16px semibold gray-900, `leading-snug`
-- Description — 13px regular gray-600, `leading-relaxed`, falls back to a polished 2-line default (`FALLBACK_DESCRIPTION`) if the prop description is shorter than 60 characters
+**Pinned identity header** holds the `AppIdentity` card — name (16px semibold gray-900) + description (13px gray-600 with a `FALLBACK_DESCRIPTION` for short props) — sitting on a `purple-100 → magenta-100` gradient tile.
 
-**Scrollable content** (`flex-1 overflow-y-auto px-9 py-7 space-y-7`) renders one `SpecSection` per agent that has activated:
-- Section icon tile — flat `bg-[var(--magenta-100)]` square (32×32, `rounded-lg`) with the agent's lucide glyph in `text-magenta-600` (no gradient, no inset shadow)
-- Section title — 13px semibold gray-900
-- Status pill (right-aligned):
-  - **Generating** — magenta-50 pill with pulsing magenta-500 dot
-  - **Done** — green-50 pill with check
-- Content below the header row (indented `pl-[44px]` to align with the title) — **skeleton placeholder**: 1 title-style bar (14px tall, 48% wide) + 3 description-style bars (10px tall, decreasing widths)
-- **Skeleton uses neutral gray, not magenta** — base is `rgba(34,42,59,0.05) → 0.10 → 0.05`; the shimmer overlay is `rgba(255,255,255,0.65)` (a white highlight band sweeping every 1.8s)
+**Scrollable content** (`flex-1 overflow-y-auto px-10 py-7 space-y-9`) renders one `<Section>` per agent that has activated. Each section has a title, subtitle, count chip, an accent colour, and a status pill (Generating / Done). Sections render their loader (`SingleItemSkeleton` — icon + title bar + description bars) until the driving agent's status flips to `done`, then they reveal the resolved content.
+
+| # | Section | Agent drives | Resolved content |
+|---|---|---|---|
+| 1 | Roles | Role creator | `<RoleList>` — one card per role: `Users` icon + role name + bulleted responsibilities |
+| 2 | Data entities | Flow + Entity creators | `<EntityTable>` per entity — name + description + field rows (id / name / type / required) + per-role `PermissionChip` row |
+| 3 | Pages | Page creator | `<PageList>` — one card per page: `FileText` icon + page name + description |
+| 4 | Navigation | Navigation creator | `<NavSitemap>` — one card **per navigation** (see below) |
+
+**Navigation model** — the spec now supports **multiple navigations**, each describing a tailored menu for a specific group of roles. Shape:
+
+```ts
+interface NavigationSpec {
+  title: string             // e.g. "Buyer Navigation"
+  sharedWith: string[]      // role names this nav is exposed to
+  menu: NavMenuItem[]       // top-level + sub-menu items with page mappings
+}
+```
+
+Two mock navigations: **Buyer Navigation** (shared with Vendor Manager, Procurement Lead) and **Compliance Navigation** (shared with Compliance Officer). Each `<NavSitemap>` card mirrors the Roles/Pages layout:
+
+- `Compass` icon top-left (`purple-500`), `gray-200` border + white background card, indented content column to the right.
+- **Title** in `text-[14px] font-semibold gray-900`.
+- **Shared with** — plain comma-separated text (no chips): `<span class="text-gray-500">Shared with: </span>Vendor Manager, Procurement Lead`.
+- **Menu tree** — top-level rows with small `w-1 h-1 gray-500` dots; children indented under a vertical `border-l gray-200` connector with the same small gray dots. Each leaf shows `label → page` via an `<ArrowRight>` separator (`gray-400`).
+- Loader uses the standard `<SingleItemSkeleton icon={Compass} color="var(--purple-500)" />` (matching Roles / Data / Pages skeleton style) — the previous custom `NavSkeleton` (tree-shaped placeholder) is kept in the file but is no longer rendered.
 
 ### Timing
 
-- `AGENT_DURATION = 6_000` ms per agent
-- `HOLD_AFTER_LAST = 1_500` ms — extra hold before `onComplete` fires
-- `TOTAL_DURATION = AGENT_DURATION * AGENTS.length + HOLD_AFTER_LAST` = 31.5s total
-
-**Currently HELD at the first agent (Role creator)** for design iteration — the interval and the completion timer are commented out in the `useEffect` of `AppCreatingView` (clearly marked `HOLD:`). Uncomment that block to resume the sequence.
+- `PHASE_DURATION = 4_000` ms per phase, `PHASES_PER_AGENT = 4` → **16s per agent**.
+- 5 agents × 16s = **80 seconds** total, then the timeline freezes at the post-completion tick. There is no separate "hold after last" timer in `AppCreatingView` — `onComplete` is only fired when the user clicks the **Open app** button in the completion CTA.
+- The sequence runs end-to-end; nothing is held mid-flight.
 
 ## Mock data summary
 
 | Value | Defined in | Used by |
 |---|---|---|
-| `MOCK_APP_NAME = 'Vendor Onboarding and Management'` | `BuildWithAIView.tsx:31` | Review dialog → AppCreatingView's AppIdentity |
-| `MOCK_APP_DESCRIPTION` (250-char polished 2-line summary) | `BuildWithAIView.tsx:32` | Same path |
+| `MOCK_APP_NAME = 'Vendor Onboarding and Management'` | `BuildWithAIView.tsx` | Review dialog → AppCreatingView's AppIdentity |
+| `MOCK_APP_DESCRIPTION` (250-char polished 2-line summary) | `BuildWithAIView.tsx` | Same path |
 | `FALLBACK_DESCRIPTION` (safety net if appDescription < 60 chars) | `AppCreatingView.tsx` | AppIdentity description slot |
-| `AGENTS` array (7 entries) | `AIScanningDialog.tsx` | The scanning popover's rotating label |
-| `AGENTS` array (5 entries: Role, Flow, Entity, Page, Navigation) — each carries `id`, `name`, `description`, `sectionTitle`, `icon` (lucide), and **`color`** (typed as `'magenta' \| 'purple' \| 'blue' \| 'cyan' \| 'green'`) | `AppCreatingView.tsx` | Left-pane timeline avatars + right-pane spec sections |
-| `AVATAR_PATH_D` — SVG path for the rounded squircle-octagon agent avatar, 198×198 coords (source: `/Downloads/shape_octogan.svg`) | `AppCreatingView.tsx` | Every agent avatar in the left-pane timeline |
-| `FALLBACK_DESCRIPTION` (safety net if appDescription < 60 chars) — already listed above | `AppCreatingView.tsx` | AppIdentity description slot |
+| `SCANNING_AGENTS` array (6 entries: Requirement Validator, Blueprint drafter, App role definer, Field architect, Page designer, Entity enricher — all with the "agent" suffix) — each carries `id`, `name`, `sectionTitle`, `icon`, `color`, `phases` (4 rotating phrases), `successPhrase` | `AgentScanningView.tsx` | Pre-review LeftPane timeline (no right pane on this screen) |
+| `AGENTS` array (5 entries: Role creator, Flow creator, Entity creator, Page creator, Navigation creator — all with the "agent" suffix) | `AppCreatingView.tsx` | Post-review LeftPane timeline + RightPane spec sections |
+| `AVATAR_PATH_D` — rounded square path (`'M 12 0 H 20 A 12 12 0 0 1 32 12 V 20 A 12 12 0 0 1 20 32 H 12 A 12 12 0 0 1 0 20 V 12 A 12 12 0 0 1 12 0 Z'`), 32×32 coords. Replaced the earlier octagon-squircle path. | `AppCreatingView.tsx` | Every agent avatar (active + done) |
+| `MOCK_ROLES` (3 roles: Vendor Manager, Procurement Lead, Compliance Officer) | `AppCreatingView.tsx` | RightPane Roles section |
+| `MOCK_ENTITIES` (3 entities: Vendor, Contract, Document) | `AppCreatingView.tsx` | RightPane Data entities section |
+| `MOCK_PAGES` (4 pages: Vendor Dashboard, Vendor Profile, Renewal Tracker, Reports) | `AppCreatingView.tsx` | RightPane Pages section |
+| `MOCK_NAV` — `NavigationSpec[]` with 2 entries (Buyer Navigation, Compliance Navigation), each containing `title`, `sharedWith: string[]`, `menu: NavMenuItem[]` | `AppCreatingView.tsx` | RightPane Navigation section |
 
 ## Animation primitives
 
-All keyframes are inlined inside `<InlineKeyframes>` components in `AIScanningDialog.tsx` and `AppCreatingView.tsx` — failsafe against `globals.css` cache misses. The cards on `NewAppView` use the gradient-border classes from `globals.css` (`.new-app-ai-border`, `.new-app-scratch-border`).
+All keyframes are inlined inside the `<InlineKeyframes>` component in `AppCreatingView.tsx` (exported and re-rendered by `AgentScanningView` so both screens share the same animation block). The cards on `NewAppView` use the gradient-border classes from `globals.css` (`.new-app-ai-border`, `.new-app-scratch-border`).
 
 | Animation | Where | What it does |
 |---|---|---|
-| `ai-fade-up` | AppIdentity, every `SpecSection`, agent name/description rotations | 8px slide + opacity from 0 — 0.55s out-expo easing |
-| `ai-cursor` | Defined but **no longer used in `AppCreatingView`** — was the `…` cursor next to the active agent name; removed in favour of the 3-dot pulse trail at the end of the description. Still wired in `AIScanningDialog`. | Step-2 cursor blink — 0.9s loop |
-| `hex-stroke-flow` | AIScanningDialog hex border | `stroke-dashoffset` march around the rounded-hex perimeter — 3s |
-| `hex-halo` | AIScanningDialog hex container | Multi-`drop-shadow` colour cycle magenta → purple → blue → magenta — 4.5s |
-| `skeleton-shimmer-i` | `SkeletonBar` overlay — right-pane `SectionSkeleton`s **and** left-pane queued agent name + description bars | White highlight band sweep across each bar — 1.8s |
-| `text-shimmer-i` | The active agent description text (a coloured band sweeps through the letters via `background-clip: text`) | `background-position: 200% 0% → -200% 0%` — 4.5s linear |
-| `dot-pulse-i` | The three loading-trail dots at the end of the active description | Opacity 0.25 ↔ 1 + scale 0.85 ↔ 1.1 — 1.4s, staggered 0 / 200 / 400ms across the three dots |
-| `ai-pulse-ping` | Defined in `InlineKeyframes` but **not used** by the current `gradient-shift` avatar treatment. Available for revival via the archive doc. | scale 1 → 2.2 + opacity 1 → 0 — 3.2s loop |
+| `ai-fade-up` | AppIdentity, every spec `<Section>`, every agent `<li>` row, the completion CTA block, the active-row checklist box | 8px slide + opacity from 0 — 0.55s out-expo easing |
+| `skeleton-shimmer-i` | `SkeletonBar` overlay in the right-pane skeleton loaders | White highlight band sweep across each bar — 1.8s |
+| `text-shimmer-i` | Available; not currently used (previously drove the active-row single-sentence shimmer that was replaced by the checklist box). | `background-position: 200% 0% → -200% 0%` — 4.5s linear |
+| `dot-pulse-i` | The three dots after `working on it` on the active row's title line (`<DotTrail>`) | Opacity 0.25 ↔ 1 + scale 0.85 ↔ 1.1 — 1.4s, staggered 0 / 200 / 400ms across the three dots |
+| `ai-pulse-ping` | The blue radar ring around the **current** sub-item dot in the active-row checklist box | scale 1 → 2.2 + opacity 1 → 0 — 3.2s loop |
+| `mat-spin-rotate-i` / `mat-spin-dash-i` | Material-style indeterminate spinner — defined but **not currently used** since the current sub-item state now renders the radar ping instead. Kept for revival. | Rotation + dash-array pulse — 2.2s |
+| `ai-liquid-i` | The `.flat-liquid` class for the (removed) liquid blob hero. Class + keyframe stay in place but are unused now that the hero is just a standalone Sparkles glyph. | Border-radius morph — 6s |
 
-**SVG `<animateTransform>` (not a CSS keyframe):** the active-state avatar's `<linearGradient>` declares `<animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="360 0.5 0.5" dur="4.5s" repeatCount="indefinite" />` inline, rotating the gradient inside the squircle. Pure SVG SMIL — needs no CSS keyframe and doesn't appear in `InlineKeyframes`.
+**SVG `<animateTransform>` (not a CSS keyframe):** the active-state avatar's `<linearGradient>` declares `<animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="360 0.5 0.5" dur="4.5s" repeatCount="indefinite" />` inline, rotating the gradient inside the rounded-square shape.
 
-**Avatar gradients are inline per-agent.** Each agent avatar uses a unique SVG `<linearGradient id="agent-grad-{color}">` defined inside the avatar's `<svg>` — magenta / purple / blue / cyan / green. Active uses a 3-stop rotating gradient (`-300 → -600 → -300`); queued/done use the static 2-stop (`-400 → -500`).
+**Avatar gradients are inline per-agent.** Each avatar's `<svg>` declares its own `<linearGradient id="agent-grad-{color}">` — magenta / purple / blue / cyan / green. Active uses a 3-stop rotating gradient (`-300 → -600 → -300`); done uses the static 2-stop (`-400 → -500`).
 
 **Removed in recent iterations**:
-- `ai-liquid` keyframe + `.ai-liquid` class — the central liquid-morph blob in the left pane was deleted; the `LiquidCentrepiece` function is gone.
-- `.ai-gradient` class — the old animating multi-stop magenta background. Replaced by per-agent inline SVG gradients.
-- The Building chip (uppercase `BUILDING` pill above the title) — gone with its pulsing dot.
-- The magenta `…` cursor next to the active agent name — replaced by the 3-dot pulse trail at the end of the description.
-- `orbit-stroke-i`, `glow-pulse-i`, `spin-slow-i` keyframes — added briefly to support the active-state variant exploration; removed when `gradient-shift` was chosen. Their recipes live in [`AGENT_ACTIVE_VARIANTS.md`](AGENT_ACTIVE_VARIANTS.md).
+- The previous **hex-centric scanning popover** (`AIScanningDialog`) and its `hex-stroke-flow` + `hex-halo` keyframes are no longer wired into the flow. The file remains as historical context but is not rendered.
+- The central **liquid-morph blob** (`.flat-liquid` div with `ai-liquid-i` border-radius morph + Sparkles overlay) — replaced by a standalone lucide `<Sparkles />` glyph in `purple-500`.
+- The **always-visible 5-agent roster** — queued agents now render `null` so the timeline grows progressively. The previous behaviour is documented in [`LEFT_PANE_ALL_AGENTS_VISIBLE_SNAPSHOT.md`](LEFT_PANE_ALL_AGENTS_VISIBLE_SNAPSHOT.md).
+- The **single-sentence text-shimmer** treatment for active agents — replaced by `{name} working on it ●●●` + a `gray-50` checklist box showing past + current sub-items only. `text-shimmer-i` remains but is no longer rendered.
+- The **`ai-cursor` blinking-ellipsis** keyframe — gone with the AIScanningDialog.
+- Per-row "Building" chip and the magenta cursor are gone (already removed in earlier iterations; called out here only because the previous doc still listed them).
+- `orbit-stroke-i`, `glow-pulse-i`, `spin-slow-i` keyframes — added briefly to support the active-state variant exploration; removed when `gradient-shift` was chosen. Recipes live in [`AGENT_ACTIVE_VARIANTS.md`](AGENT_ACTIVE_VARIANTS.md).
 
 ## Forked vs shared (vs `/create` flow)
 
@@ -246,9 +283,10 @@ All keyframes are inlined inside `<InlineKeyframes>` components in `AIScanningDi
 |---|---|---|
 | `NewAppView.tsx` | new | (no origin) — built fresh for this flow |
 | `BuildWithAIView.tsx` | `components/create/AIPromptViewNew.tsx` | Stubbed `createApp()`, mock app name/description override, `bg-blue-500` primary instead of magenta gradient, success-screen no-op |
-| `AIScanningDialog.tsx` | `components/create/AIScanningDialog.tsx` | Hex centrepiece, agent rotation, 5s total runtime, sized to match review dialog |
-| `AppReviewDialog.tsx` | `components/create/AppReviewDialog.tsx` | Icon picker removed, gradient title at 24px, callback signature trimmed to `{name, description}`, sized to match scanning dialog |
-| `AppCreatingView.tsx` | new | Two-pane (5:7) layout with agent timeline + spec artifact — does not exist in the `/create` flow |
+| `AgentScanningView.tsx` | new | Pre-review screen reusing `AppCreatingView`'s `LeftPane`. Replaces the hex-centric scanning popover. 6-agent roster (Requirement Validator → Entity enricher), 1.2s phase duration, ~29s total. |
+| `AIScanningDialog.tsx` | `components/create/AIScanningDialog.tsx` | **No longer rendered in this flow** (replaced by `AgentScanningView`). File kept for reference. |
+| `AppReviewDialog.tsx` | `components/create/AppReviewDialog.tsx` | Icon picker removed, gradient title at 24px, callback signature trimmed to `{name, description}`, sized to `w-[550px] h-[460px] p-8` |
+| `AppCreatingView.tsx` | new | Two-pane (5:7) layout with agent timeline + spec artifact. Exports `LeftPane`, `BackgroundAtmosphere`, `InlineKeyframes`, `PHASES_PER_AGENT`, and the `Agent` interface so `AgentScanningView` can compose the same shell. |
 
 The Explorer's `components/create/*` flow is **untouched** while this flow iterates. When the design here is signed off, the plan is to retire `/create` and `/create/app` and route the left-nav AND the Explorer's Create button through `/new/app`.
 
@@ -264,7 +302,7 @@ The Explorer's `components/create/*` flow is **untouched** while this flow itera
 
 - **No `createApp()` call** anywhere in the flow — `BuildWithAIView.handleCreateApp` stops after setting `showCreatingScreen=true`; `AppCreatingView`'s completion is a no-op stub.
 - **No real AI** — the scanning dialog and the building screen are timed animations with mock content. Switch to real LLM calls when ready.
-- **Sequence held at first agent** — `AppCreatingView` is currently parked on the Role creator agent (interval and completion timer commented out in `useEffect`). Uncomment that block to resume the agent sequence end-to-end.
+- **Open app routing is a no-op** — the completion CTA on `AppCreatingView` (`✓ App generated successfully` + `Open app` outlined button) calls `onComplete`, which `BuildWithAIView`'s `handleCreatingComplete` currently stubs out (no navigation, no real app to open). This needs design + a target route once the rest of the flow is wired up.
 - **Success screen** — exists as state in `BuildWithAIView` but is not designed yet; will be redesigned after the building screen settles.
 - **Create from scratch** path — UI card exists; click handler is a `console.log` stub.
 - **Other item types** (Process / Board / Portal / Dataset / Integration) — dead clicks in the Sidebar's Create popover.
@@ -277,10 +315,11 @@ The Explorer's `components/create/*` flow is **untouched** while this flow itera
 - `app/(main)/new/app/page.tsx` — thin route entry
 - `components/new-app/NewAppView.tsx` — method-selection screen + sub-mode state machine
 - `components/new-app/BuildWithAIView.tsx` — prompt + uploads + orchestrator for scanning → review → creating
-- `components/new-app/AIScanningDialog.tsx` — AI-at-work popover (hex animation)
-- `components/new-app/AppReviewDialog.tsx` — review name/description before commit
-- `components/new-app/AppCreatingView.tsx` — two-pane building screen with agent timeline + spec artifact
-- `components/layout/Sidebar.tsx:67-98` (`createOptions` + `CreateOptionsList`) — left-nav Create popover; only the App entry routes here today
+- `components/new-app/AgentScanningView.tsx` — pre-review AI-at-work screen (6-agent timeline)
+- `components/new-app/AIScanningDialog.tsx` — old hex-animation scanning popover (no longer rendered; kept for reference)
+- `components/new-app/AppReviewDialog.tsx` — review name/description modal that opens on top of `AgentScanningView`
+- `components/new-app/AppCreatingView.tsx` — two-pane building screen + the shared `LeftPane`, `BackgroundAtmosphere`, `InlineKeyframes`, `Agent` exports consumed by `AgentScanningView`
+- `components/layout/Sidebar.tsx` (`createOptions` + `CreateOptionsList`) — left-nav Create popover; only the App entry routes here today
 - `app/globals.css` — `.new-app-ai-border` and `.new-app-scratch-border` gradient-border classes used by `NewAppView`'s method cards
 - `lib/schema/types.ts` — `APP_COLORS`, `AppIconName`, `AppColor` (kept; not used by this flow's components currently)
 

@@ -4,13 +4,17 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   ArrowLeft,
+  ArrowRight,
   Users,
   Workflow,
   Database,
-  LayoutGrid,
+  FileText,
   Compass,
   Check,
+  CheckCheck,
+  Circle,
   Handshake,
+  Loader2,
   Sparkles,
   type LucideIcon,
 } from 'lucide-react'
@@ -34,62 +38,100 @@ interface AppCreatingViewProps {
   onComplete: () => void
 }
 
-interface Agent {
+export interface Agent {
   id: string
   name: string
-  description: string
   sectionTitle: string
   icon: LucideIcon
   // Brand colour family used for the agent's avatar gradient (-400 → -500)
   color: 'magenta' | 'purple' | 'blue' | 'cyan' | 'green'
+  // Four rotating verb phrases displayed after the agent name during active
+  // state (3s per phrase). The agent name + phrase reads as one sentence.
+  phases: [string, string, string, string]
+  // Success verb phrase shown alongside the green double-tick when the agent
+  // transitions to Done (or during the final 3s of its active window).
+  successPhrase: string
 }
 
 const AGENTS: Agent[] = [
   {
     id: 'roles',
     name: 'Role creator agent',
-    description: 'Defining who can do what across your app',
     sectionTitle: 'Roles',
     icon: Users,
     color: 'magenta',
+    phases: [
+      'is creating roles for your team',
+      'is drafting descriptions for each role',
+      'is mapping permissions to actions',
+      'is fine-tuning the role boundaries',
+    ],
+    successPhrase: 'has completed generating roles',
   },
   {
     id: 'flow',
     name: 'Flow creator agent',
-    description: 'Plotting the approval flow and step transitions',
     sectionTitle: 'Flow',
     icon: Workflow,
     color: 'purple',
+    phases: [
+      'is plotting the approval flow',
+      'is mapping step-by-step transitions',
+      'is connecting the workflow stages',
+      'is finalizing the approval routing',
+    ],
+    successPhrase: 'has completed generating flow',
   },
   {
     id: 'entity',
     name: 'Entity creator agent',
-    description: 'Modeling your data, fields, and relationships',
     sectionTitle: 'Entities',
     icon: Database,
     color: 'blue',
+    phases: [
+      'is modeling your data structure',
+      'is defining fields and their types',
+      'is mapping relationships between entities',
+      'is setting up validation rules',
+    ],
+    successPhrase: 'has completed generating entities',
   },
   {
     id: 'page',
     name: 'Page creator agent',
-    description: 'Composing forms, dashboards, and detail pages',
     sectionTitle: 'Pages',
-    icon: LayoutGrid,
+    icon: FileText,
     color: 'cyan',
+    phases: [
+      'is composing the page layouts',
+      'is assembling forms and dashboards',
+      'is wiring up the detail views',
+      'is polishing the layout and spacing',
+    ],
+    successPhrase: 'has completed generating pages',
   },
   {
     id: 'navigation',
     name: 'Navigation creator agent',
-    description: 'Laying out the menu and routing between pages',
     sectionTitle: 'Navigation',
     icon: Compass,
     color: 'green',
+    phases: [
+      'is laying out the menu structure',
+      'is wiring routes between every page',
+      'is organizing the sidebar items',
+      'is configuring the navigation paths',
+    ],
+    successPhrase: 'has completed generating navigation',
   },
 ]
 
-const AGENT_DURATION = 6_000
-const HOLD_AFTER_LAST = 1_500
-const TOTAL_DURATION = AGENT_DURATION * AGENTS.length + HOLD_AFTER_LAST
+// Timing: each agent gets 4 ticks of 4s = 16s total — all rotating phases.
+// There is no dedicated success tick: the moment the 4th phase ends, the
+// previous agent transitions to 'done' (showing the success line + check) and
+// the next agent simultaneously starts at phase 0.
+export const PHASE_DURATION = 4_000
+export const PHASES_PER_AGENT = 4
 
 type AgentState = 'queued' | 'active' | 'done'
 
@@ -105,30 +147,37 @@ export function AppCreatingView({
   onBack,
   onComplete,
 }: AppCreatingViewProps) {
-  const [currentIdx, setCurrentIdx] = useState(0)
+  // Single counter — `tickCount` advances every PHASE_DURATION (3s). Both the
+  // current agent and the current phase within that agent derive from it.
+  const [tickCount, setTickCount] = useState(0)
 
   useEffect(() => {
-    setCurrentIdx(0)
-    // HOLD: parked on the first agent (Role creator) while we enhance that step.
-    // Re-enable the advancement interval + completion timer (commented below) to
-    // resume the sequence and let the screen hand off to the success view.
-    //
-    // const interval = setInterval(() => {
-    //   setCurrentIdx((i) => {
-    //     const next = i + 1
-    //     if (next >= AGENTS.length) clearInterval(interval)
-    //     return next
-    //   })
-    // }, AGENT_DURATION)
-    // const complete = setTimeout(onComplete, TOTAL_DURATION)
-    // return () => {
-    //   clearInterval(interval)
-    //   clearTimeout(complete)
-    // }
+    setTickCount(0)
+    const interval = setInterval(() => {
+      setTickCount((t) => {
+        const next = t + 1
+        // Allow one extra tick after the last agent's last rotating phase so
+        // the last agent can transition to 'done' (success line + check).
+        // Freeze beyond that.
+        if (next > AGENTS.length * PHASES_PER_AGENT) {
+          clearInterval(interval)
+          return t
+        }
+        return next
+      })
+    }, PHASE_DURATION)
+    return () => clearInterval(interval)
   }, [onComplete])
 
+  const currentIdx = Math.min(
+    Math.floor(tickCount / PHASES_PER_AGENT),
+    AGENTS.length,
+  )
+  const phaseIdx = tickCount % PHASES_PER_AGENT
+  const allAgentsDone = currentIdx >= AGENTS.length
+
   return (
-    <div className="relative min-h-[calc(100vh-3.5rem)] bg-[#FDF8FC] overflow-hidden flex flex-col">
+    <div className="relative h-[calc(100vh-3.5rem)] bg-[#FDF8FC] overflow-hidden flex flex-col">
       <InlineKeyframes />
 
       {/* Atmospheric background — soft colour fields behind everything */}
@@ -149,9 +198,52 @@ export function AppCreatingView({
 
       {/* Asymmetric split — left 5fr (narrative), right 7fr (artifact). 24px around, 24px gap. */}
       <div className="relative z-10 flex-1 grid grid-cols-[5fr_7fr] gap-6 p-6 min-h-0">
-        <LeftPane currentIdx={currentIdx} appName={appName} />
+        <LeftPane
+          currentIdx={currentIdx}
+          phaseIdx={phaseIdx}
+          agents={AGENTS}
+          title="Your app is being crafted, layer by layer"
+          description={
+            <>
+              AI is bringing your{' '}
+              <span className="font-semibold">{appName}</span> app to life —
+              roles, data, pages, and more.
+            </>
+          }
+          completedAction={
+            allAgentsDone ? (
+              <>
+                <div className="flex items-center gap-2 text-[15px] font-medium text-gray-900">
+                  <span
+                    className="inline-flex items-center justify-center w-6 h-6 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: 'var(--green-500)' }}
+                  >
+                    <CheckCheck
+                      className="w-3.5 h-3.5 text-white"
+                      strokeWidth={3}
+                    />
+                  </span>
+                  App generated successfully
+                </div>
+                <button
+                  type="button"
+                  onClick={onComplete}
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg border bg-white text-[13px] font-medium hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                  style={{
+                    borderColor: 'var(--purple-300)',
+                    color: 'var(--purple-600)',
+                  }}
+                >
+                  Open app
+                  <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+                </button>
+              </>
+            ) : undefined
+          }
+        />
         <RightPane
           currentIdx={currentIdx}
+          phaseIdx={phaseIdx}
           appName={appName}
           appDescription={appDescription}
         />
@@ -162,7 +254,7 @@ export function AppCreatingView({
 
 /* ---------- Background atmosphere ---------- */
 
-function BackgroundAtmosphere() {
+export function BackgroundAtmosphere() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <div
@@ -195,10 +287,27 @@ function BackgroundAtmosphere() {
 
 /* ---------- Left pane: progress narrative ---------- */
 
-function LeftPane({ currentIdx, appName }: { currentIdx: number; appName: string }) {
+export function LeftPane({
+  currentIdx,
+  phaseIdx,
+  agents,
+  title,
+  description,
+  completedAction,
+}: {
+  currentIdx: number
+  phaseIdx: number
+  agents: Agent[]
+  title: string
+  description: React.ReactNode
+  // Optional CTA rendered below the agent timeline once all agents are
+  // 'done'. Used by AppCreatingView to surface "App generated successfully
+  // → Open app". AgentScanningView leaves this undefined.
+  completedAction?: React.ReactNode
+}) {
   return (
     <div className="flex flex-col items-center justify-start py-10 px-8 overflow-y-auto">
-      <div className="w-full max-w-[480px]">
+      <div className="w-full max-w-[540px]">
         {/* Title block — pinned to the top of the pane */}
         <div className="flex flex-col items-center text-center mb-8">
           <h1
@@ -208,39 +317,39 @@ function LeftPane({ currentIdx, appName }: { currentIdx: number; appName: string
                 'linear-gradient(265deg, var(--magenta-500), var(--purple-500))',
             }}
           >
-            Your app is being crafted, layer by layer
+            {title}
           </h1>
 
           {/* Description — gray-900, app name highlighted in semibold */}
           <p className="mt-3 text-[13px] text-gray-900 max-w-[440px] leading-relaxed">
-            Our AI agents are collaborating in real time to bring your{' '}
-            <span className="font-semibold">{appName}</span> app to life —
-            defining roles, modeling data, and composing pages along the way.
+            {description}
           </p>
         </div>
 
-        {/* AI hero icon — Sparkles glyph in purple-500 */}
+        {/* AI hero — same lucide `Sparkles` icon used in the Start Building
+            button (big 4-pointed sparkle + 2 small "+" sparkles). Coloured
+            purple-500 to match the AI-feature accent. */}
         <div className="flex justify-center mb-8">
           <Sparkles
-            className="w-20 h-20"
-            strokeWidth={1.25}
+            className="w-12 h-12"
+            strokeWidth={1.5}
             style={{ color: 'var(--purple-500)' }}
           />
         </div>
 
         {/* Agent timeline — AI-gradient border ring around a flat white-50 surface */}
         <div
-          className="rounded-xl p-[1.5px] w-full max-w-[400px] mx-auto"
+          className="rounded-[24px] p-[1.5px] w-full max-w-[520px] mx-auto"
           style={{
             background:
               'linear-gradient(246.77deg, var(--purple-200) 0%, var(--magenta-200) 100%)',
           }}
         >
           <div
-            className="rounded-[10.5px] p-9"
-            style={{ background: 'color-mix(in srgb, var(--white) 75%, transparent)' }}
+            className="rounded-[22.5px] p-9"
+            style={{ background: 'color-mix(in srgb, var(--white) 90%, transparent)' }}
           >
-            <ol className="relative space-y-4">
+            <ol className="relative space-y-4 max-w-[360px] mx-auto">
               {/* Vertical connector line */}
               <div
                 className="absolute left-[16px] top-3 bottom-3 w-px"
@@ -249,22 +358,51 @@ function LeftPane({ currentIdx, appName }: { currentIdx: number; appName: string
                     'linear-gradient(to bottom, transparent, var(--gray-300), transparent)',
                 }}
               />
-              {AGENTS.map((agent, i) => (
-                <AgentRow key={agent.id} agent={agent} state={stateFor(i, currentIdx)} />
-              ))}
+              {agents.map((agent, i) => {
+                const state = stateFor(i, currentIdx)
+                // Only render agents that have started — queued agents stay
+                // hidden until their turn so the timeline grows progressively.
+                if (state === 'queued') return null
+                return (
+                  <AgentRow
+                    key={agent.id}
+                    agent={agent}
+                    state={state}
+                    phaseIdx={i === currentIdx ? phaseIdx : 0}
+                  />
+                )
+              })}
             </ol>
           </div>
         </div>
+
+        {/* Completion CTA — appears only after all agents have transitioned
+            to done. Sits below the gradient-ringed timeline, fading in. */}
+        {completedAction && (
+          <div className="mt-16 flex flex-col items-center text-center ai-fade-up">
+            {completedAction}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function AgentRow({ agent, state }: { agent: Agent; state: AgentState }) {
+function AgentRow({
+  agent,
+  state,
+  phaseIdx,
+}: {
+  agent: Agent
+  state: AgentState
+  phaseIdx: number
+}) {
+  const accentColor = `var(--${agent.color}-500)`
+
   return (
     <li
       className={cn(
-        'relative flex items-start gap-3 py-1.5 transition-opacity duration-300',
+        'relative flex items-start gap-3 py-1.5 transition-opacity duration-300 ai-fade-up',
         state === 'done' && 'opacity-90',
       )}
     >
@@ -277,56 +415,93 @@ function AgentRow({ agent, state }: { agent: Agent; state: AgentState }) {
             <SkeletonBar width="60%" height="14px" shimmering />
             <SkeletonBar width="85%" height="10px" shimmering />
           </div>
+        ) : state === 'done' ? (
+          <p className="text-[13px] leading-snug text-gray-600">
+            <span className="font-semibold text-gray-900">{agent.name}</span>{' '}
+            {agent.successPhrase}
+            <CheckCheck
+              className="inline-block ml-1.5 w-3.5 h-3.5 align-middle"
+              strokeWidth={2.5}
+              style={{ color: 'var(--green-500)' }}
+            />
+          </p>
         ) : (
           <>
-            <p
-              className={cn(
-                'text-[14px] tracking-tight text-gray-900 transition-colors',
-                state === 'active' ? 'font-semibold' : 'font-medium',
-              )}
-            >
-              {agent.name}
+            {/* Title line */}
+            <p className="text-[13px] leading-snug">
+              <span className="font-semibold text-gray-900">{agent.name}</span>{' '}
+              <span className="text-gray-600">working on it</span>
+              <DotTrail color={accentColor} />
             </p>
-            {state === 'active' ? (
-              <div className="mt-0.5 text-[12px] leading-snug">
-                <span
-                  className="text-shimmer"
-                  style={{
-                    backgroundImage: `linear-gradient(90deg, var(--gray-600) 0%, var(--gray-600) 35%, var(--${agent.color}-500) 50%, var(--gray-600) 65%, var(--gray-600) 100%)`,
-                  }}
-                >
-                  {agent.description}
-                </span>
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '3px',
-                    marginLeft: '6px',
-                    verticalAlign: 'middle',
-                  }}
-                  aria-hidden="true"
-                >
-                  {[0, 1, 2].map((i) => (
+
+            {/* Phase checklist box — opens below the title */}
+            <div
+              className="mt-2 rounded-md p-2.5 space-y-1.5 ai-fade-up"
+              style={{
+                background: 'var(--gray-50)',
+                border: '1px solid var(--gray-100)',
+              }}
+            >
+              {agent.phases.map((phrase, i) => {
+                const isPast = i < phaseIdx
+                const isCurrent = i === phaseIdx
+                // Hide yet-to-start sub-items — only render past (done) and
+                // current (in-flight) phases. The box grows as the agent
+                // progresses through its phases.
+                if (!isPast && !isCurrent) return null
+                const label = stripIsPrefix(phrase)
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 text-[12px]"
+                  >
+                    {isPast && (
+                      <Check
+                        className="w-3.5 h-3.5 flex-shrink-0"
+                        strokeWidth={3}
+                        style={{ color: 'var(--green-500)' }}
+                      />
+                    )}
+                    {isCurrent && (
+                      <span
+                        className="relative flex items-center justify-center flex-shrink-0"
+                        style={{ width: '14px', height: '14px' }}
+                        aria-hidden="true"
+                      >
+                        <span className="relative flex w-1.5 h-1.5">
+                          <span className="absolute inset-0 rounded-full bg-blue-500 ai-pulse-ping" />
+                          <span className="relative rounded-full w-1.5 h-1.5 bg-blue-500" />
+                        </span>
+                      </span>
+                    )}
+                    {!isPast && !isCurrent && (
+                      <Circle
+                        className="w-3.5 h-3.5 flex-shrink-0 text-gray-300"
+                        strokeWidth={1.5}
+                      />
+                    )}
                     <span
-                      key={i}
-                      className="dot-pulse"
-                      style={{
-                        width: '4px',
-                        height: '4px',
-                        borderRadius: '9999px',
-                        background: `var(--${agent.color}-500)`,
-                        animationDelay: `${i * 200}ms`,
-                      }}
-                    />
-                  ))}
-                </span>
-              </div>
-            ) : (
-              <p className="text-[12px] mt-0.5 leading-snug text-gray-600">
-                {agent.description}
-              </p>
-            )}
+                      className={cn(
+                        'leading-snug',
+                        isPast && 'text-gray-700',
+                        isCurrent && 'text-shimmer font-medium',
+                        !isPast && !isCurrent && 'text-gray-400',
+                      )}
+                      style={
+                        isCurrent
+                          ? {
+                              backgroundImage:
+                                'linear-gradient(90deg, var(--gray-900) 0%, var(--gray-900) 35%, var(--gray-400) 50%, var(--gray-900) 65%, var(--gray-900) 100%)',
+                            }
+                          : undefined
+                      }
+                    >
+                      {label}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
           </>
         )}
       </div>
@@ -334,18 +509,61 @@ function AgentRow({ agent, state }: { agent: Agent; state: AgentState }) {
   )
 }
 
-// Rounded-corner octagon (iOS-app-icon-style "squircle-octagon") imported from
-// /Downloads/shape_octogan.svg. Path stays in its native 198×198 coordinate
-// space; the SVG `viewBox` lets it scale to whatever container we put it in.
+// Three pulsing dots after "working on it" — same staggered pulse pattern as
+// before, just abstracted into a tiny component.
+function DotTrail({ color }: { color: string }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '3px',
+        marginLeft: '6px',
+        verticalAlign: 'middle',
+      }}
+      aria-hidden="true"
+    >
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="dot-pulse"
+          style={{
+            width: '4px',
+            height: '4px',
+            borderRadius: '9999px',
+            background: color,
+            animationDelay: `${i * 200}ms`,
+          }}
+        />
+      ))}
+    </span>
+  )
+}
+
+// Strip a leading "is " from a phase so the checklist rows read cleanly
+// ("is creating roles for your team" → "creating roles for your team").
+function stripIsPrefix(phrase: string): string {
+  return phrase.replace(/^is\s+/, '')
+}
+
+// Rounded-corner square — 32×32 native coordinate space with 12px corner
+// radius. Since the avatar renders at 32×32 on screen, viewBox units map 1:1
+// to rendered pixels (12 path units = 12 visual pixels).
 const AVATAR_PATH_D =
-  'M92.5588 1.21792C96.4792 -0.405981 100.884 -0.405984 104.805 1.21792L163.269 25.4348' +
-  'C167.19 27.0587 170.305 30.1735 171.929 34.094L196.146 92.5588' +
-  'C197.769 96.4792 197.769 100.884 196.146 104.805L171.929 163.269' +
-  'C170.305 167.19 167.19 170.305 163.269 171.929L104.805 196.146' +
-  'C100.884 197.769 96.4792 197.769 92.5588 196.146L34.094 171.929' +
-  'C30.1735 170.305 27.0587 167.19 25.4348 163.269L1.21793 104.805' +
-  'C-0.405973 100.884 -0.405976 96.4792 1.21793 92.5588L25.4348 34.094' +
-  'C27.0587 30.1735 30.1735 27.0587 34.094 25.4348L92.5588 1.21792Z'
+  'M 12 0 H 20 A 12 12 0 0 1 32 12 V 20 A 12 12 0 0 1 20 32 H 12 A 12 12 0 0 1 0 20 V 12 A 12 12 0 0 1 12 0 Z'
+
+const AVATAR_VIEW_BOX = '0 0 32 32'
+
+// 12 dot positions evenly spaced around a circle (clock positions) for the
+// iOS-style sequence loader. Computed once at module load — radius 5 inside
+// the 14×14 viewBox, starting at 12 o'clock.
+const IOS_DOT_POSITIONS = Array.from({ length: 12 }, (_, i) => {
+  const angle = (i * 30 - 90) * (Math.PI / 180)
+  return {
+    cx: 7 + 5 * Math.cos(angle),
+    cy: 7 + 5 * Math.sin(angle),
+  }
+})
 
 // Three states map to three avatar treatments:
 //   • active — bold gradient avatar whose fill rotates 360° via SVG
@@ -368,13 +586,6 @@ function AgentStatus({
   if (state === 'active') {
     return <ActiveGradientShiftAvatar color={color} Icon={Icon} />
   }
-  if (state === 'queued') {
-    return (
-      <div style={{ opacity: 0.35 }}>
-        <StaticBoldAvatar color={color} Icon={Icon} />
-      </div>
-    )
-  }
   return <StaticBoldAvatar color={color} Icon={Icon} />
 }
 
@@ -389,7 +600,7 @@ function ActiveGradientShiftAvatar({
   return (
     <div className="relative w-[32px] h-[32px]">
       <svg
-        viewBox="0 0 198 198"
+        viewBox={AVATAR_VIEW_BOX}
         className="absolute inset-0 w-full h-full"
         aria-hidden="true"
       >
@@ -437,7 +648,7 @@ function StaticBoldAvatar({
   return (
     <div className="relative w-[32px] h-[32px]">
       <svg
-        viewBox="0 0 198 198"
+        viewBox={AVATAR_VIEW_BOX}
         className="absolute inset-0 w-full h-full"
         aria-hidden="true"
       >
@@ -460,40 +671,341 @@ function StaticBoldAvatar({
 
 /* ---------- Right pane: spec artifact ---------- */
 
+// ----- Mock spec content -----
+// Demo content for "Vendor Onboarding and Management" (the locked-in mock
+// app from BuildWithAIView). Replace these constants when wiring real AI.
+
+interface RoleSpec {
+  name: string
+  responsibilities: string[]
+}
+
+interface EntityField {
+  id: string
+  name: string
+  type: string
+  required: boolean
+}
+
+type PermissionLevel = 'read' | 'edit' | 'manage'
+
+interface EntityPermission {
+  role: string
+  level: PermissionLevel
+}
+
+interface EntitySpec {
+  name: string
+  description: string
+  fields: EntityField[]
+  permissions: EntityPermission[]
+}
+
+interface PageSpec {
+  name: string
+  description: string
+}
+
+interface NavMenuItem {
+  label: string
+  page?: string
+  children?: NavMenuItem[]
+}
+
+interface NavigationSpec {
+  title: string
+  sharedWith: string[] // role names this navigation is exposed to
+  menu: NavMenuItem[]
+}
+
+const MOCK_ROLES: RoleSpec[] = [
+  {
+    name: 'Vendor Manager',
+    responsibilities: [
+      'Oversees the entire vendor lifecycle from onboarding through renewal',
+      'Coordinates handoffs between Procurement, Legal, and Finance teams',
+      'Owns relationship management and quarterly performance reviews',
+      'Approves vendor offboarding and contract closure',
+    ],
+  },
+  {
+    name: 'Procurement Lead',
+    responsibilities: [
+      'Approves new vendor requests and negotiates commercial terms',
+      'Reviews vendor proposals and conducts comparative analysis',
+      'Signs off on final pricing, payment terms, and SLAs',
+      'Acts as the primary point of contact for vendor escalations',
+    ],
+  },
+  {
+    name: 'Compliance Officer',
+    responsibilities: [
+      'Reviews legal documentation and compliance certifications',
+      'Validates insurance coverage and contractual liability clauses',
+      'Conducts risk assessments for every incoming vendor',
+      'Ensures vendors meet internal policy and industry regulations',
+    ],
+  },
+]
+
+const MOCK_ENTITIES: EntitySpec[] = [
+  {
+    name: 'Vendor',
+    description:
+      'The core record for every supplier in the system. Holds identifying information, categorization, status, and onboarding history.',
+    fields: [
+      { id: 'F001', name: 'Vendor Name', type: 'Text', required: true },
+      { id: 'F002', name: 'Vendor Code', type: 'Text', required: true },
+      { id: 'F003', name: 'Category', type: 'Dropdown', required: true },
+      { id: 'F004', name: 'Status', type: 'Status', required: true },
+      { id: 'F005', name: 'Onboarded On', type: 'Date', required: false },
+    ],
+    permissions: [
+      { role: 'Vendor Manager', level: 'manage' },
+      { role: 'Procurement Lead', level: 'edit' },
+      { role: 'Compliance Officer', level: 'read' },
+    ],
+  },
+  {
+    name: 'Contract',
+    description:
+      'Every signed agreement between your organization and a vendor. Tracks dates, terms, and the commercial value of the relationship.',
+    fields: [
+      { id: 'F101', name: 'Contract ID', type: 'Text', required: true },
+      { id: 'F102', name: 'Vendor', type: 'Reference', required: true },
+      { id: 'F103', name: 'Start Date', type: 'Date', required: true },
+      { id: 'F104', name: 'End Date', type: 'Date', required: true },
+      { id: 'F105', name: 'Value', type: 'Currency', required: true },
+    ],
+    permissions: [
+      { role: 'Vendor Manager', level: 'edit' },
+      { role: 'Procurement Lead', level: 'manage' },
+      { role: 'Compliance Officer', level: 'edit' },
+    ],
+  },
+  {
+    name: 'Document',
+    description:
+      'Files attached to a vendor or contract — proposals, certifications, invoices, and signed legal copies. Each document has a type and an owner.',
+    fields: [
+      { id: 'F201', name: 'Document Name', type: 'Text', required: true },
+      { id: 'F202', name: 'Type', type: 'Dropdown', required: true },
+      { id: 'F203', name: 'Uploaded By', type: 'User', required: true },
+      { id: 'F204', name: 'Uploaded On', type: 'Date', required: true },
+    ],
+    permissions: [
+      { role: 'Vendor Manager', level: 'edit' },
+      { role: 'Procurement Lead', level: 'read' },
+      { role: 'Compliance Officer', level: 'manage' },
+    ],
+  },
+]
+
+const MOCK_PAGES: PageSpec[] = [
+  {
+    name: 'Vendor Dashboard',
+    description:
+      'Real-time overview of vendor status, active contracts, and upcoming renewals. Surfaces quick-filter widgets, alerts for expiring agreements, and a snapshot of pending approvals across the team.',
+  },
+  {
+    name: 'Vendor Profile',
+    description:
+      'Complete profile, history, documents, and contract details for a single vendor. Combines basic information, performance metrics, and the full timeline of interactions and document submissions in one scrollable view.',
+  },
+  {
+    name: 'Onboarding Form',
+    description:
+      'Multi-step intake form for new vendor registration. Captures company details, banking info, certifications, and supporting documents — then routes the submission through Procurement and Compliance approvals.',
+  },
+  {
+    name: 'Renewal Tracker',
+    description:
+      'Calendar view of upcoming contract renewals with action items. Highlights agreements approaching expiry, contracts pending review, and renewals needing manager sign-off across the vendor portfolio.',
+  },
+  {
+    name: 'Reports',
+    description:
+      'Analytics, KPIs, and exportable insights across all vendors. Includes spend trends, performance scorecards, compliance status, and renewal forecasts with custom filters and downloadable exports.',
+  },
+]
+
+const MOCK_NAV: NavigationSpec[] = [
+  {
+    title: 'Buyer Navigation',
+    sharedWith: ['Vendor Manager', 'Procurement Lead'],
+    menu: [
+      { label: 'Home', page: 'Vendor Dashboard' },
+      {
+        label: 'Vendors',
+        children: [
+          { label: 'All Vendors', page: 'Vendor Profile' },
+          { label: 'Add Vendor', page: 'Onboarding Form' },
+        ],
+      },
+      { label: 'Renewals', page: 'Renewal Tracker' },
+    ],
+  },
+  {
+    title: 'Compliance Navigation',
+    sharedWith: ['Compliance Officer'],
+    menu: [
+      { label: 'Home', page: 'Vendor Dashboard' },
+      {
+        label: 'Documents',
+        children: [
+          { label: 'Pending Review', page: 'Vendor Profile' },
+          { label: 'Approved', page: 'Vendor Profile' },
+        ],
+      },
+      { label: 'Reports', page: 'Reports' },
+    ],
+  },
+]
+
 function RightPane({
   currentIdx,
+  phaseIdx,
   appName,
   appDescription,
 }: {
   currentIdx: number
+  phaseIdx: number
   appName: string
   appDescription: string
 }) {
+  const roleState = stateFor(0, currentIdx)
+  const flowState = stateFor(1, currentIdx)
+  const entityState = stateFor(2, currentIdx)
+  const pageState = stateFor(3, currentIdx)
+  const navState = stateFor(4, currentIdx)
+
+  // Each section reveals its resolved spec content the moment the driving
+  // agent transitions to 'done'.
+  const rolesResolved = roleState === 'done'
+  const entitiesResolved = entityState === 'done'
+  const pagesResolved = pageState === 'done'
+  const navResolved = navState === 'done'
+
   return (
     <div className="bg-white/75 backdrop-blur-2xl rounded-3xl border border-white/90 shadow-[0_12px_40px_rgba(34,42,59,0.06),0_1px_3px_rgba(34,42,59,0.04)] flex flex-col min-h-0 overflow-hidden">
-      {/* Pinned identity header — neutral gray surface (first-draft baseline) */}
-      <div className="px-9 py-7 flex-shrink-0">
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+      {/* Pinned identity header — purple-tinted surface */}
+      <div className="p-5 flex-shrink-0">
+        <div
+          className="rounded-xl p-4"
+          style={{
+            background:
+              'linear-gradient(135deg, var(--purple-100) 0%, var(--magenta-100) 100%)',
+            border: '1px solid var(--purple-300)',
+          }}
+        >
           <AppIdentity name={appName} description={appDescription} />
         </div>
       </div>
 
       {/* Scrollable agent-generated sections */}
-      <div className="flex-1 overflow-y-auto px-9 py-7 space-y-7">
-        {AGENTS.map((agent, i) => {
-          const state = stateFor(i, currentIdx)
-          if (state === 'queued') return null
-          return (
-            <SpecSection
-              key={agent.id}
-              icon={agent.icon}
-              title={agent.sectionTitle}
-              status={state === 'active' ? 'generating' : 'done'}
-            >
-              <SectionSkeleton shimmering={state === 'active'} />
-            </SpecSection>
-          )
-        })}
+      <div className="flex-1 overflow-y-auto px-10 py-7 space-y-9">
+        {/* 1. Roles */}
+        {roleState !== 'queued' && (
+          <Section
+            title="Roles"
+            subtitle="Control access and responsibilities across your app"
+            count={String(MOCK_ROLES.length)}
+            accentColor="var(--magenta-500)"
+            status={rolesResolved ? 'done' : 'generating'}
+          >
+            {rolesResolved ? (
+              <RoleList items={MOCK_ROLES} />
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                <SingleItemSkeleton
+                  icon={Users}
+                  color="var(--magenta-500)"
+                  descriptionLines={4}
+                />
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* 2. Data entities — driven by Flow + Entity agents */}
+        {flowState !== 'queued' && (
+          <Section
+            title="Data entities"
+            subtitle="Schema definitions with field types and per-role permissions"
+            count={`${MOCK_ENTITIES.length} entities · ${MOCK_ENTITIES.reduce(
+              (acc, e) => acc + e.fields.length,
+              0,
+            )} fields`}
+            accentColor="var(--green-500)"
+            status={entitiesResolved ? 'done' : 'generating'}
+          >
+            {flowState === 'active' ? (
+              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                <SingleItemSkeleton
+                  icon={Database}
+                  color="var(--green-500)"
+                  descriptionLines={2}
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {MOCK_ENTITIES.map((entity) => (
+                  <EntityTable
+                    key={entity.name}
+                    entity={entity}
+                    rowsLoading={entityState === 'active'}
+                  />
+                ))}
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* 3. Pages */}
+        {pageState !== 'queued' && (
+          <Section
+            title="Pages"
+            subtitle="End-user pages composing the app interface"
+            count={String(MOCK_PAGES.length)}
+            accentColor="var(--blue-500)"
+            status={pagesResolved ? 'done' : 'generating'}
+          >
+            {pagesResolved ? (
+              <PageList items={MOCK_PAGES} />
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                <SingleItemSkeleton
+                  icon={FileText}
+                  color="var(--blue-500)"
+                  descriptionLines={2}
+                />
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* 4. Navigation */}
+        {navState !== 'queued' && (
+          <Section
+            title="Navigation"
+            subtitle="Menus tailored to each role group"
+            count={String(MOCK_NAV.length)}
+            accentColor="var(--purple-500)"
+            status={navResolved ? 'done' : 'generating'}
+          >
+            {navResolved ? (
+              <NavSitemap items={MOCK_NAV} />
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                <SingleItemSkeleton
+                  icon={Compass}
+                  color="var(--purple-500)"
+                  descriptionLines={3}
+                />
+              </div>
+            )}
+          </Section>
+        )}
       </div>
     </div>
   )
@@ -521,29 +1033,36 @@ function AppIdentity({ name, description }: { name: string; description: string 
   )
 }
 
-function SpecSection({
-  icon: Icon,
+// Section header — accent dot + 18px semibold title + count badge + subtitle.
+// Per-item icons appear next to each row in the body content.
+function Section({
   title,
+  subtitle,
+  count,
+  accentColor,
   children,
   status,
 }: {
-  icon: LucideIcon
   title: string
+  subtitle?: string
+  count?: string
+  accentColor: string
   children: React.ReactNode
   status?: 'generating' | 'done'
 }) {
   return (
     <div className="ai-fade-up">
-      <div className="flex items-center gap-3 mb-3.5">
+      <div className="flex items-center gap-2.5">
         <span
-          className="inline-flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0"
-          style={{ backgroundColor: 'var(--magenta-100)' }}
-        >
-          <Icon className="w-[15px] h-[15px] text-magenta-600" strokeWidth={2.25} />
-        </span>
-        <h3 className="text-[13px] font-semibold text-gray-900 flex-1 tracking-tight">
+          className="w-2 h-2 rounded-full flex-shrink-0"
+          style={{ backgroundColor: accentColor }}
+          aria-hidden="true"
+        />
+        <h3 className="text-[18px] font-semibold text-gray-900 tracking-tight leading-snug">
           {title}
         </h3>
+        {count !== undefined && <CountBadge>{count}</CountBadge>}
+        <div className="flex-1" />
         {status === 'generating' && (
           <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-magenta-700 px-2 py-0.5 rounded-full bg-magenta-50 border border-magenta-100">
             <span className="relative flex w-1.5 h-1.5">
@@ -560,18 +1079,470 @@ function SpecSection({
           </span>
         )}
       </div>
-      <div className="pl-[44px]">{children}</div>
+      {subtitle && (
+        <p className="text-[12px] text-gray-500 mt-1 mb-4 leading-snug ml-[18px]">
+          {subtitle}
+        </p>
+      )}
+      {!subtitle && <div className="mb-4" />}
+      <div>{children}</div>
     </div>
   )
 }
 
-function SectionSkeleton({ shimmering = false }: { shimmering?: boolean }) {
+// Small gray pill showing a count in the section heading.
+function CountBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[11px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-full font-medium leading-none">
+      {children}
+    </span>
+  )
+}
+
+// Colored badge for entity field types — color picks up the type's meaning.
+const FIELD_TYPE_BADGE: Record<string, string> = {
+  Text: 'bg-gray-100 text-gray-700',
+  Date: 'bg-blue-50 text-blue-700',
+  Currency: 'bg-green-50 text-green-700',
+  Reference: 'bg-purple-50 text-purple-700',
+  Dropdown: 'bg-cyan-50 text-cyan-700',
+  Status: 'bg-magenta-50 text-magenta-700',
+  User: 'bg-purple-50 text-purple-700',
+}
+
+function FieldTypeBadge({ type }: { type: string }) {
+  const cls = FIELD_TYPE_BADGE[type] ?? 'bg-gray-100 text-gray-700'
+  return (
+    <span
+      className={`inline-block text-[11px] ${cls} px-1.5 py-0.5 rounded font-medium leading-none`}
+    >
+      {type}
+    </span>
+  )
+}
+
+// Single chip showing a role's permission level on a given entity.
+const PERMISSION_BADGE: Record<PermissionLevel, { cls: string; label: string }> = {
+  read: { cls: 'bg-gray-100 text-gray-700', label: 'Read-only' },
+  edit: { cls: 'bg-blue-100 text-blue-700', label: 'Edit' },
+  manage: { cls: 'bg-green-100 text-green-700', label: 'Manage' },
+}
+
+function PermissionChip({ level }: { level: PermissionLevel }) {
+  const { cls, label } = PERMISSION_BADGE[level]
+  return (
+    <span
+      className={`inline-block text-[11px] ${cls} px-2 py-0.5 rounded font-medium leading-none`}
+    >
+      {label}
+    </span>
+  )
+}
+
+// Roles list — each role as a shadcn-style card with subtle border + shadow,
+// hover lift. Users icon next to the role name, bulleted responsibilities below.
+function RoleList({ items }: { items: RoleSpec[] }) {
+  return (
+    <ul className="space-y-3">
+      {items.map((item, i) => (
+        <li
+          key={item.name}
+          className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all ai-fade-up"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          <div className="flex items-center gap-2.5 mb-3">
+            <Users
+              className="w-[18px] h-[18px] flex-shrink-0"
+              strokeWidth={1.75}
+              style={{ color: 'var(--magenta-500)' }}
+            />
+            <span className="text-[14px] font-semibold text-gray-900 leading-snug">
+              {item.name}
+            </span>
+          </div>
+          <ul className="space-y-1.5">
+            {item.responsibilities.map((r, j) => (
+              <li
+                key={j}
+                className="text-[13px] text-gray-600 leading-relaxed flex gap-2"
+              >
+                <span className="text-gray-400 mt-0.5 select-none leading-snug">
+                  •
+                </span>
+                <span>{r}</span>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Pages list — each page as a compact card. FileText icon next to the name,
+// 2-3 line description below.
+function PageList({ items }: { items: PageSpec[] }) {
+  return (
+    <ul className="space-y-2.5">
+      {items.map((item, i) => (
+        <li
+          key={item.name}
+          className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all ai-fade-up flex gap-3"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          <FileText
+            className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
+            strokeWidth={1.75}
+            style={{ color: 'var(--blue-500)' }}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-semibold text-gray-900 leading-snug">
+              {item.name}
+            </p>
+            <p className="text-[13px] text-gray-600 leading-relaxed mt-1">
+              {item.description}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Single-item loader — the old SectionSkeleton shape: icon + 1 title bar + N
+// description bars. Depicts "one item being created" while the agent works.
+// Icon uses the section's brand colour so the user can see which kind of item
+// is being generated.
+function SingleItemSkeleton({
+  icon: Icon,
+  color,
+  descriptionLines = 3,
+}: {
+  icon: LucideIcon
+  color: string
+  descriptionLines?: number
+}) {
+  const widths = ['100%', '92%', '76%', '60%']
+  return (
+    <div className="flex gap-3">
+      <Icon
+        className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
+        strokeWidth={1.75}
+        style={{ color }}
+      />
+      <div className="flex-1 space-y-2.5">
+        <SkeletonBar width="48%" height="14px" shimmering />
+        {Array.from({ length: descriptionLines }).map((_, i) => (
+          <SkeletonBar
+            key={i}
+            width={widths[i] ?? '60%'}
+            height="10px"
+            shimmering
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Navigation skeleton — a compact tree-shaped placeholder (no icon).
+function NavSkeleton() {
   return (
     <div className="space-y-2.5">
-      <SkeletonBar width="48%" height="14px" shimmering={shimmering} />
-      <SkeletonBar width="100%" height="10px" shimmering={shimmering} />
-      <SkeletonBar width="92%" height="10px" shimmering={shimmering} />
-      <SkeletonBar width="76%" height="10px" shimmering={shimmering} />
+      <SkeletonBar width="40%" height="12px" shimmering />
+      <div className="pl-5 space-y-2.5">
+        <SkeletonBar width="55%" height="10px" shimmering />
+        <SkeletonBar width="50%" height="10px" shimmering />
+      </div>
+      <SkeletonBar width="35%" height="12px" shimmering />
+    </div>
+  )
+}
+
+// Lightweight entity name list shown during Flow agent's success phase, just
+// before the Entity agent takes over and replaces this with full tables.
+function EntityNameList({ entities }: { entities: EntitySpec[] }) {
+  return (
+    <ul className="space-y-3">
+      {entities.map((entity, i) => (
+        <li
+          key={entity.name}
+          className="flex items-center gap-3 ai-fade-up"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          <Database
+            className="w-[18px] h-[18px] flex-shrink-0"
+            strokeWidth={1.75}
+            style={{ color: 'var(--green-500)' }}
+          />
+          <p className="text-[14px] font-semibold text-gray-900">
+            {entity.name}
+          </p>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Per-entity card — shadcn-style elevated card. Header has Database icon +
+// name + inline stats. Body shows description, fields table with type chips
+// and dot-required column, then a 2-column permission chip table.
+function EntityTable({
+  entity,
+  rowsLoading,
+}: {
+  entity: EntitySpec
+  rowsLoading: boolean
+}) {
+  const requiredCount = entity.fields.filter((f) => f.required).length
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all ai-fade-up">
+      {/* Header: icon + name + inline stats */}
+      <div className="flex items-start gap-2.5">
+        <Database
+          className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
+          strokeWidth={1.75}
+          style={{ color: 'var(--green-500)' }}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-3">
+            <h4 className="text-[14px] font-semibold text-gray-900 leading-snug">
+              {entity.name}
+            </h4>
+            <span className="text-[11px] text-gray-500 font-medium whitespace-nowrap">
+              {entity.fields.length} fields · {requiredCount} required
+            </span>
+          </div>
+          <p className="text-[13px] text-gray-600 mt-1 leading-relaxed">
+            {entity.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Fields table */}
+      <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <table className="w-full text-[12px] leading-snug">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
+                Field Name
+              </th>
+              <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
+                Type
+              </th>
+              <th className="text-center px-3 py-2 font-medium text-gray-700 border-b border-gray-200 w-[80px]">
+                Required
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rowsLoading
+              ? Array.from({ length: entity.fields.length }).map((_, i) => (
+                  <tr
+                    key={i}
+                    className={
+                      i < entity.fields.length - 1
+                        ? 'border-b border-gray-100'
+                        : ''
+                    }
+                  >
+                    <td className="px-3 py-2">
+                      <SkeletonBar width="90px" height="10px" shimmering />
+                    </td>
+                    <td className="px-3 py-2">
+                      <SkeletonBar width="50px" height="10px" shimmering />
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <div className="inline-block">
+                        <SkeletonBar width="10px" height="10px" shimmering />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              : entity.fields.map((field, i) => (
+                  <tr
+                    key={field.id}
+                    className={
+                      i < entity.fields.length - 1
+                        ? 'border-b border-gray-100'
+                        : ''
+                    }
+                  >
+                    <td className="px-3 py-2 text-gray-900">{field.name}</td>
+                    <td className="px-3 py-2">
+                      <FieldTypeBadge type={field.type} />
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      {field.required && (
+                        <span
+                          className="inline-block w-2 h-2 rounded-full"
+                          style={{ backgroundColor: 'var(--green-500)' }}
+                          aria-label="Required"
+                        />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Permissions */}
+      <p className="text-[13px] text-gray-600 mt-5 mb-2 leading-relaxed">
+        <span className="font-semibold text-gray-900">Permissions</span>
+        {' — '}
+        Who can view, edit, or fully manage {entity.name} records.
+      </p>
+      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <table className="w-full text-[12px] leading-snug">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
+                Role
+              </th>
+              <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
+                Permission
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rowsLoading
+              ? entity.permissions.map((_, i) => (
+                  <tr
+                    key={i}
+                    className={
+                      i < entity.permissions.length - 1
+                        ? 'border-b border-gray-100'
+                        : ''
+                    }
+                  >
+                    <td className="px-3 py-2">
+                      <SkeletonBar width="120px" height="10px" shimmering />
+                    </td>
+                    <td className="px-3 py-2">
+                      <SkeletonBar width="60px" height="10px" shimmering />
+                    </td>
+                  </tr>
+                ))
+              : entity.permissions.map((perm, i) => (
+                  <tr
+                    key={perm.role}
+                    className={
+                      i < entity.permissions.length - 1
+                        ? 'border-b border-gray-100'
+                        : ''
+                    }
+                  >
+                    <td className="px-3 py-2 text-gray-900">{perm.role}</td>
+                    <td className="px-3 py-2">
+                      <PermissionChip level={perm.level} />
+                    </td>
+                  </tr>
+                ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// Sitemap — one card per navigation, laid out like the Roles/Pages cards:
+// Compass icon top-left, title + "Shared with: …" + menu tree in a single
+// indented content column to the right.
+function NavSitemap({ items }: { items: NavigationSpec[] }) {
+  return (
+    <ul className="space-y-3">
+      {items.map((nav, i) => (
+        <li
+          key={nav.title}
+          className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all ai-fade-up flex gap-3"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          <Compass
+            className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
+            strokeWidth={1.75}
+            style={{ color: 'var(--purple-500)' }}
+          />
+          <div className="flex-1 min-w-0">
+            {/* Title */}
+            <p className="text-[14px] font-semibold text-gray-900 leading-snug">
+              {nav.title}
+            </p>
+
+            {/* Shared with — plain comma-separated text */}
+            <p className="mt-1 text-[13px] text-gray-600 leading-relaxed">
+              <span className="text-gray-500">Shared with: </span>
+              {nav.sharedWith.join(', ')}
+            </p>
+
+            {/* Menu tree */}
+            <div className="mt-3 space-y-2">
+              {nav.menu.map((item) => (
+                <NavMenu key={item.label} item={item} />
+              ))}
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Single menu item — top-level row with optional sub-menu rows indented
+// under a vertical purple connector. Rendered inside a `NavSitemap` card,
+// so it carries no card chrome of its own.
+function NavMenu({ item }: { item: NavMenuItem }) {
+  const hasChildren = !!item.children?.length
+  return (
+    <div>
+      <div className="flex items-center gap-2 text-[13px]">
+        <span
+          className="w-1 h-1 rounded-full flex-shrink-0"
+          style={{ backgroundColor: 'var(--gray-500)' }}
+          aria-hidden="true"
+        />
+        <span className="font-semibold text-gray-900">{item.label}</span>
+        {!hasChildren && item.page && (
+          <>
+            <ArrowRight
+              className="w-3 h-3 flex-shrink-0"
+              strokeWidth={2}
+              style={{ color: 'var(--gray-400)' }}
+            />
+            <span className="text-gray-600">{item.page}</span>
+          </>
+        )}
+      </div>
+      {hasChildren && (
+        <div
+          className="mt-1.5 pl-3 ml-0.5 space-y-1.5 border-l"
+          style={{ borderColor: 'var(--gray-200)' }}
+        >
+          {item.children!.map((child) => (
+            <div
+              key={child.label}
+              className="flex items-center gap-2 text-[13px]"
+            >
+              <span
+                className="w-1 h-1 rounded-full flex-shrink-0"
+                style={{ backgroundColor: 'var(--gray-500)' }}
+                aria-hidden="true"
+              />
+              <span className="font-medium text-gray-900">{child.label}</span>
+              {child.page && (
+                <>
+                  <ArrowRight
+                    className="w-3 h-3 flex-shrink-0"
+                    strokeWidth={2}
+                    style={{ color: 'var(--gray-400)' }}
+                  />
+                  <span className="text-gray-600">{child.page}</span>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -613,7 +1584,7 @@ function SkeletonBar({
 
 /* ---------- Inline keyframes (failsafe vs globals.css cache misses) ---------- */
 
-function InlineKeyframes() {
+export function InlineKeyframes() {
   return (
     <style>{`
       @keyframes ai-gradient-i { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
@@ -624,6 +1595,15 @@ function InlineKeyframes() {
       @keyframes skeleton-shimmer-i { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
       @keyframes text-shimmer-i { 0% { background-position: 200% 0%; } 100% { background-position: -200% 0%; } }
       @keyframes dot-pulse-i { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); } 40% { opacity: 1; transform: scale(1.1); } }
+      @keyframes octagon-ripple-i { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.85); opacity: 0; } }
+      @keyframes octagon-pulse-i { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.92); } }
+      @keyframes octagon-rotate-i { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes dot-bounce-i { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-3px); opacity: 1; } }
+      @keyframes progress-arc-i { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }
+      @keyframes mat-spin-rotate-i { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes mat-spin-dash-i { 0% { stroke-dasharray: 1 99; stroke-dashoffset: 0; } 50% { stroke-dasharray: 75 25; stroke-dashoffset: -25; } 100% { stroke-dasharray: 1 99; stroke-dashoffset: -99; } }
+      @keyframes ios-fade-i { 0% { opacity: 1; } 100% { opacity: 0.15; } }
+      @keyframes filling-sweep-i { 0% { stroke-dasharray: 0 100; } 85% { stroke-dasharray: 100 0; } 100% { stroke-dasharray: 100 0; } }
 
       .ai-gradient    { background-image: linear-gradient(135deg, var(--magenta-300), var(--magenta-500), var(--magenta-700), var(--magenta-500)); background-size: 300% 300%; animation: ai-gradient-i 6s ease-in-out infinite; }
       .ai-liquid      { animation: ai-liquid-i 6s ease-in-out infinite; }
@@ -632,6 +1612,16 @@ function InlineKeyframes() {
       .ai-cursor      { animation: ai-cursor-i 0.9s steps(2) infinite; }
       .text-shimmer   { background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: text-shimmer-i 4.5s linear infinite; }
       .dot-pulse      { display: inline-block; animation: dot-pulse-i 1.4s ease-in-out infinite; }
+      .octagon-ripple { animation: octagon-ripple-i 3s ease-out infinite; transform-origin: center; }
+      .octagon-pulse  { animation: octagon-pulse-i 2.4s ease-in-out infinite; transform-origin: center; }
+      .octagon-rotate { animation: octagon-rotate-i 30s linear infinite; transform-origin: center; }
+      .dot-bounce     { display: inline-block; animation: dot-bounce-i 1.1s ease-in-out infinite; }
+      .progress-arc   { animation: progress-arc-i 1.4s linear infinite; }
+      .mat-spin-rotate { animation: mat-spin-rotate-i 2.2s linear infinite; transform-origin: center; transform-box: fill-box; }
+      .mat-spin-dash   { animation: mat-spin-dash-i 2.2s ease-in-out infinite; }
+      .ios-dot         { animation: ios-fade-i 1.2s linear infinite; }
+      .filling-sweep   { animation: filling-sweep-i 2s ease-in-out infinite; }
+      .flat-liquid    { background: linear-gradient(135deg, var(--magenta-200) 0%, var(--purple-200) 50%, var(--blue-200) 100%); animation: ai-liquid-i 6s ease-in-out infinite; }
     `}</style>
   )
 }
