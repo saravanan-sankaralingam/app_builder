@@ -1,0 +1,52 @@
+<svg width="286" height="260" viewBox="0 0 286 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg_fill" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#fcf2f9"/><stop offset="100%" stop-color="#f5f5fd"/>
+    </linearGradient>
+    <linearGradient id="skel" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#f0c0e1"/><stop offset="100%" stop-color="#cfcff3"/>
+    </linearGradient>
+    <linearGradient id="border_grad" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#e58dc9"/><stop offset="100%" stop-color="#a8a8e9"/>
+    </linearGradient>
+    <linearGradient id="title_grad" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#e58dc9"/><stop offset="100%" stop-color="#a8a8e9"/>
+    </linearGradient>
+    <linearGradient id="hdr_grad" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#f0c0e1"/><stop offset="100%" stop-color="#cfcff3"/>
+    </linearGradient>
+  </defs>
+  <rect x="36.5" y=".5" width="213" height="259" rx="15.5" fill="url(#bg_fill)" opacity=".4"/>
+  <rect x="36.5" y=".5" width="213" height="259" rx="15.5" fill="none" stroke="url(#border_grad)" stroke-opacity=".5"/>
+  <!-- Static title + description -->
+  <rect x="56" y="18" width="110" height="10" rx="2.5" fill="url(#title_grad)"/>
+  <rect x="56" y="34" width="174" height="5" rx="1.5" fill="url(#skel)" opacity=".8"/>
+  <rect x="56" y="43" width="130" height="5" rx="1.5" fill="url(#skel)" opacity=".8"/>
+  <line x1="56" y1="57" x2="230" y2="57" stroke="url(#border_grad)" stroke-opacity=".4" stroke-width=".8"/>
+  <!-- SECTION 1 -->
+  <rect x="56" y="65" width="88" height="8" rx="2" fill="url(#hdr_grad)">
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;0.9" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="width" values="0;88;88;0" keyTimes="0;0.15;0.75;0.9" dur="8s" repeatCount="indefinite"/>
+  </rect>
+  <circle cx="62" cy="83" r="2.5" fill="url(#hdr_grad)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/></circle>
+  <rect x="70" y="79" width="140" height="5" rx="1.5" fill="url(#skel)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/><animate attributeName="width" values="0;0;140;140;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/></rect>
+  <circle cx="62" cy="97" r="2.5" fill="url(#hdr_grad)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/></circle>
+  <rect x="70" y="93" width="116" height="5" rx="1.5" fill="url(#skel)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/><animate attributeName="width" values="0;0;116;116;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/></rect>
+  <circle cx="62" cy="111" r="2.5" fill="url(#hdr_grad)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/></circle>
+  <rect x="70" y="107" width="154" height="5" rx="1.5" fill="url(#skel)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/><animate attributeName="width" values="0;0;154;154;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/></rect>
+  <circle cx="62" cy="125" r="2.5" fill="url(#hdr_grad)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/></circle>
+  <rect x="70" y="121" width="128" height="5" rx="1.5" fill="url(#skel)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/><animate attributeName="width" values="0;0;128;128;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" repeatCount="indefinite"/></rect>
+  <!-- SECTION 2 — begin="4s" offset -->
+  <rect x="56" y="65" width="96" height="8" rx="2" fill="url(#hdr_grad)">
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/>
+    <animate attributeName="width" values="0;96;96;0" keyTimes="0;0.15;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/>
+  </rect>
+  <circle cx="62" cy="83" r="2.5" fill="url(#hdr_grad)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/></circle>
+  <rect x="70" y="79" width="120" height="5" rx="1.5" fill="url(#skel)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/><animate attributeName="width" values="0;0;120;120;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/></rect>
+  <circle cx="62" cy="97" r="2.5" fill="url(#hdr_grad)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/></circle>
+  <rect x="70" y="93" width="146" height="5" rx="1.5" fill="url(#skel)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/><animate attributeName="width" values="0;0;146;146;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/></rect>
+  <circle cx="62" cy="111" r="2.5" fill="url(#hdr_grad)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/></circle>
+  <rect x="70" y="107" width="110" height="5" rx="1.5" fill="url(#skel)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/><animate attributeName="width" values="0;0;110;110;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/></rect>
+  <circle cx="62" cy="125" r="2.5" fill="url(#hdr_grad)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/></circle>
+  <rect x="70" y="121" width="136" height="5" rx="1.5" fill="url(#skel)"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/><animate attributeName="width" values="0;0;136;136;0" keyTimes="0;0.15;0.25;0.75;0.9" dur="8s" begin="4s" repeatCount="indefinite"/></rect>
+</svg>

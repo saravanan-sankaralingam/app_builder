@@ -6,7 +6,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Users,
-  Workflow,
+  Wand2,
+  ShieldCheck,
   Database,
   FileText,
   Compass,
@@ -45,93 +46,81 @@ export interface Agent {
   icon: LucideIcon
   // Brand colour family used for the agent's avatar gradient (-400 → -500)
   color: 'magenta' | 'purple' | 'blue' | 'cyan' | 'green'
-  // Four rotating verb phrases displayed after the agent name during active
-  // state (3s per phrase). The agent name + phrase reads as one sentence.
-  phases: [string, string, string, string]
+  // Verb phrases surfaced as sub-items in the active-agent checklist box.
+  // Length is variable — the post-review AGENTS use 4 phrases each; the
+  // pre-review SCANNING_AGENTS use different counts per agent.
+  phases: string[]
   // Success verb phrase shown alongside the green double-tick when the agent
   // transitions to Done (or during the final 3s of its active window).
   successPhrase: string
 }
 
+// Post-review build roster — two agents. The App Builder agent walks through
+// the full construction sequence one sub-step at a time; the Validator agent
+// runs a single end-to-end check at the end. Sub-item indices on the App
+// Builder drive the right-pane section reveal (see RightPane below).
 const AGENTS: Agent[] = [
   {
-    id: 'roles',
-    name: 'Role creator agent',
-    sectionTitle: 'Roles',
-    icon: Users,
+    id: 'app-builder',
+    name: 'App Builder agent',
+    sectionTitle: 'App',
+    icon: Wand2,
     color: 'magenta',
     phases: [
-      'is creating roles for your team',
-      'is drafting descriptions for each role',
-      'is mapping permissions to actions',
-      'is fine-tuning the role boundaries',
+      'Initiating the project workspace',
+      'Creating the user roles',
+      'Allocating stable identifiers',
+      'Creating the master lists',
+      'Wiring up the workflows',
+      'Provisioning the data entities',
+      'Composing pages and forms',
+      'Building the navigation menus',
     ],
-    successPhrase: 'has completed generating roles',
+    successPhrase: 'has built the app',
   },
   {
-    id: 'flow',
-    name: 'Flow creator agent',
-    sectionTitle: 'Flow',
-    icon: Workflow,
-    color: 'purple',
-    phases: [
-      'is plotting the approval flow',
-      'is mapping step-by-step transitions',
-      'is connecting the workflow stages',
-      'is finalizing the approval routing',
-    ],
-    successPhrase: 'has completed generating flow',
-  },
-  {
-    id: 'entity',
-    name: 'Entity creator agent',
-    sectionTitle: 'Entities',
-    icon: Database,
-    color: 'blue',
-    phases: [
-      'is modeling your data structure',
-      'is defining fields and their types',
-      'is mapping relationships between entities',
-      'is setting up validation rules',
-    ],
-    successPhrase: 'has completed generating entities',
-  },
-  {
-    id: 'page',
-    name: 'Page creator agent',
-    sectionTitle: 'Pages',
-    icon: FileText,
-    color: 'cyan',
-    phases: [
-      'is composing the page layouts',
-      'is assembling forms and dashboards',
-      'is wiring up the detail views',
-      'is polishing the layout and spacing',
-    ],
-    successPhrase: 'has completed generating pages',
-  },
-  {
-    id: 'navigation',
-    name: 'Navigation creator agent',
-    sectionTitle: 'Navigation',
-    icon: Compass,
+    id: 'validator',
+    name: 'Validator agent',
+    sectionTitle: 'Validation',
+    icon: ShieldCheck,
     color: 'green',
-    phases: [
-      'is laying out the menu structure',
-      'is wiring routes between every page',
-      'is organizing the sidebar items',
-      'is configuring the navigation paths',
-    ],
-    successPhrase: 'has completed generating navigation',
+    phases: ['Validating the assembled app end-to-end'],
+    successPhrase: 'has validated the app',
   },
 ]
 
-// Timing: each agent gets 4 ticks of 4s = 16s total — all rotating phases.
-// There is no dedicated success tick: the moment the 4th phase ends, the
-// previous agent transitions to 'done' (showing the success line + check) and
-// the next agent simultaneously starts at phase 0.
-export const PHASE_DURATION = 4_000
-export const PHASES_PER_AGENT = 4
+// Per-agent phase duration (ms). Order matches AGENTS. App Builder takes 5s
+// per sub-item (8 × 5s = 40s); Validator runs its single check for 5s.
+const AGENT_PHASE_DURATIONS_MS = [5_000, 5_000]
+
+// Temporary — while we're actively iterating on the building screen, hide
+// the completion popover so the resolved right-pane spec stays visible
+// after both agents finish. Set this back to `false` to re-enable the
+// "App generated successfully" dialog.
+const HOLD_COMPLETION_DIALOG = true
+
+// Cumulative tick boundaries — agent i owns ticks [cumulativeTicks[i-1],
+// cumulativeTicks[i]). Last entry is the total tick count (9 for this roster).
+const CUMULATIVE_TICKS = AGENTS.reduce<number[]>((acc, agent) => {
+  const last = acc[acc.length - 1] ?? 0
+  acc.push(last + agent.phases.length)
+  return acc
+}, [])
+
+// TICK_SCHEDULE[i] is the wall-clock ms at which `tickCount` advances from
+// `i` to `i + 1`, honouring each agent's own phase duration.
+const TICK_SCHEDULE: number[] = (() => {
+  const schedule: number[] = []
+  let cumulativeMs = 0
+  AGENTS.forEach((agent, agentIdx) => {
+    const phaseDuration = AGENT_PHASE_DURATIONS_MS[agentIdx]
+    agent.phases.forEach(() => {
+      cumulativeMs += phaseDuration
+      schedule.push(cumulativeMs)
+    })
+  })
+  return schedule
+})()
 
 type AgentState = 'queued' | 'active' | 'done'
 
@@ -147,33 +136,28 @@ export function AppCreatingView({
   onBack,
   onComplete,
 }: AppCreatingViewProps) {
-  // Single counter — `tickCount` advances every PHASE_DURATION (3s). Both the
-  // current agent and the current phase within that agent derive from it.
+  // Single counter — `tickCount` advances on the schedule in TICK_SCHEDULE,
+  // which honours each agent's own AGENT_PHASE_DURATIONS_MS entry. Both the
+  // current agent and the current phase within that agent derive from it via
+  // the cumulative-count table below.
   const [tickCount, setTickCount] = useState(0)
 
   useEffect(() => {
     setTickCount(0)
-    const interval = setInterval(() => {
-      setTickCount((t) => {
-        const next = t + 1
-        // Allow one extra tick after the last agent's last rotating phase so
-        // the last agent can transition to 'done' (success line + check).
-        // Freeze beyond that.
-        if (next > AGENTS.length * PHASES_PER_AGENT) {
-          clearInterval(interval)
-          return t
-        }
-        return next
-      })
-    }, PHASE_DURATION)
-    return () => clearInterval(interval)
+    // One setTimeout per tick advance — lets each agent's phases run at their
+    // own pace (App Builder 5s, Validator 5s) rather than a global interval.
+    const timeouts = TICK_SCHEDULE.map((delayMs, idx) =>
+      setTimeout(() => setTickCount(idx + 1), delayMs),
+    )
+    return () => timeouts.forEach(clearTimeout)
   }, [onComplete])
 
-  const currentIdx = Math.min(
-    Math.floor(tickCount / PHASES_PER_AGENT),
-    AGENTS.length,
-  )
-  const phaseIdx = tickCount % PHASES_PER_AGENT
+  // Which agent + phase are we on right now?
+  const activeIdx = CUMULATIVE_TICKS.findIndex((c) => c > tickCount)
+  const currentIdx = activeIdx === -1 ? AGENTS.length : activeIdx
+  const priorCumulative =
+    currentIdx === 0 ? 0 : CUMULATIVE_TICKS[currentIdx - 1]
+  const phaseIdx = tickCount - priorCumulative
   const allAgentsDone = currentIdx >= AGENTS.length
 
   return (
@@ -210,35 +194,20 @@ export function AppCreatingView({
               roles, data, pages, and more.
             </>
           }
-          completedAction={
-            allAgentsDone ? (
-              <>
-                <div className="flex items-center gap-2 text-[15px] font-medium text-gray-900">
-                  <span
-                    className="inline-flex items-center justify-center w-6 h-6 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: 'var(--green-500)' }}
-                  >
-                    <CheckCheck
-                      className="w-3.5 h-3.5 text-white"
-                      strokeWidth={3}
-                    />
-                  </span>
-                  App generated successfully
-                </div>
-                <button
-                  type="button"
-                  onClick={onComplete}
-                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg border bg-white text-[13px] font-medium hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
-                  style={{
-                    borderColor: 'var(--purple-300)',
-                    color: 'var(--purple-600)',
-                  }}
-                >
-                  Open app
-                  <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
-                </button>
-              </>
-            ) : undefined
+          hero={
+            // Animated app-mock loader — a shimmering browser-frame preview
+            // that morphs through Dashboard → Table → Form states while the
+            // App Builder is at work. Static SVG served from /public with
+            // built-in SMIL animation. Only shown on this post-review screen.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/app-builder-loader.svg"
+              alt=""
+              width={180}
+              height={145}
+              className="w-[180px] h-[145px]"
+              aria-hidden="true"
+            />
           }
         />
         <RightPane
@@ -247,6 +216,58 @@ export function AppCreatingView({
           appName={appName}
           appDescription={appDescription}
         />
+      </div>
+
+      {/* Completion popover — normally opens on top of the building screen
+          the moment both agents finish. Temporarily HELD OFF while we iterate
+          on the building screen itself. Flip HOLD_COMPLETION_DIALOG to false
+          to re-enable the popup. */}
+      <AppCreatedDialog
+        open={allAgentsDone && !HOLD_COMPLETION_DIALOG}
+        onOpen={onComplete}
+      />
+    </div>
+  )
+}
+
+/* ---------- Completion dialog ---------- */
+
+function AppCreatedDialog({
+  open,
+  onOpen,
+}: {
+  open: boolean
+  onOpen: () => void
+}) {
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" />
+
+      <div className="relative bg-white rounded-xl shadow-xl w-[440px] p-8 flex flex-col items-center text-center ai-fade-up">
+        {/* Success badge — solid green circle with white CheckCheck */}
+        <span
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"
+          style={{ backgroundColor: 'var(--green-500)' }}
+        >
+          <CheckCheck className="w-5 h-5 text-white" strokeWidth={2.75} />
+        </span>
+
+        <h2 className="mt-4 text-[20px] font-semibold text-gray-900 leading-snug">
+          App generated successfully
+        </h2>
+        <p className="mt-2 text-[13px] text-gray-600 leading-relaxed">
+          Your app is ready to explore.
+        </p>
+
+        <Button
+          onClick={onOpen}
+          className="mt-6 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm"
+        >
+          Open app
+          <ArrowRight className="w-3.5 h-3.5 ml-1.5" strokeWidth={2.25} />
+        </Button>
       </div>
     </div>
   )
@@ -294,6 +315,7 @@ export function LeftPane({
   title,
   description,
   completedAction,
+  hero,
 }: {
   currentIdx: number
   phaseIdx: number
@@ -304,6 +326,10 @@ export function LeftPane({
   // 'done'. Used by AppCreatingView to surface "App generated successfully
   // → Open app". AgentScanningView leaves this undefined.
   completedAction?: React.ReactNode
+  // Optional hero visual replacing the default Sparkles-on-blob glyph.
+  // AppCreatingView passes an animated app-mock loader here; AgentScanningView
+  // leaves it undefined, so the default sparkle composition renders.
+  hero?: React.ReactNode
 }) {
   return (
     <div className="flex flex-col items-center justify-start py-10 px-8 overflow-y-auto">
@@ -326,11 +352,14 @@ export function LeftPane({
           </p>
         </div>
 
-        {/* AI hero — custom AI sparkle from /Downloads/ai_icon.svg sitting
-            on top of a settled liquid-morph blob (soft AI-gradient halo).
-            A periodic diagonal white shine sweeps across the blob via
-            `.ai-icon-flash` to bring the composition to life. */}
+        {/* AI hero — either a custom visual passed via the `hero` prop
+            (used by AppCreatingView for the animated app-mock loader) or
+            the default composition: a custom AI sparkle from
+            /Downloads/ai_icon.svg on top of a settled liquid-morph blob
+            (soft AI-gradient halo). A periodic diagonal white shine sweeps
+            across the icon silhouette via SVG SMIL. */}
         <div className="flex justify-center mb-8">
+        {hero ?? (
           <div className="relative w-[88px] h-[88px] flex items-center justify-center">
             {/* Settled liquid blob behind the icon — 50% opacity so it
                 reads as a soft halo, not a competing surface. Animation
@@ -430,6 +459,7 @@ export function LeftPane({
               </g>
             </svg>
           </div>
+        )}
         </div>
 
         {/* Agent timeline — AI-gradient border ring around a flat white-50 surface */}
@@ -577,7 +607,7 @@ function AgentRow({
                     )}
                     <span
                       className={cn(
-                        'leading-snug',
+                        'leading-snug whitespace-nowrap',
                         isPast && 'text-gray-700',
                         isCurrent && 'text-shimmer font-medium',
                         !isPast && !isCurrent && 'text-gray-400',
@@ -968,18 +998,40 @@ function RightPane({
   appName: string
   appDescription: string
 }) {
-  const roleState = stateFor(0, currentIdx)
-  const flowState = stateFor(1, currentIdx)
-  const entityState = stateFor(2, currentIdx)
-  const pageState = stateFor(3, currentIdx)
-  const navState = stateFor(4, currentIdx)
+  // Post-review flow now has just two agents — App Builder (agent 0, 8 sub-
+  // items) followed by Validator (agent 1, 1 sub-item). Right-pane section
+  // reveals are driven off the App Builder's *phase* progression instead of a
+  // per-agent state, since App Builder covers every artifact.
+  const builderState = stateFor(0, currentIdx)
+  const builderDone = builderState === 'done'
 
-  // Each section reveals its resolved spec content the moment the driving
-  // agent transitions to 'done'.
-  const rolesResolved = roleState === 'done'
-  const entitiesResolved = entityState === 'done'
-  const pagesResolved = pageState === 'done'
-  const navResolved = navState === 'done'
+  // Effective builder phase — during 'active', it's the current phaseIdx;
+  // once builder is done (Validator running or completion), it's past-the-end
+  // so every section reads as fully resolved.
+  const builderPhase =
+    builderState === 'active' ? phaseIdx : builderDone ? AGENTS[0].phases.length : 0
+
+  // Builder phase index reference:
+  //   0 Initiating the project workspace  → Roles start loading immediately
+  //   1 Creating the user roles           → Roles resolve when phase >= 2
+  //   2 Allocating stable identifiers     → Entities loader appears
+  //   3 Creating the master lists
+  //   4 Wiring up the workflows
+  //   5 Provisioning the data entities    → Entities resolve when phase >= 6
+  //   6 Composing pages and forms         → Pages loader appears, Pages resolve when phase >= 7
+  //   7 Building the navigation menus     → Nav loader appears, Nav resolves when phase >= 8
+  //
+  // Sequential reveal: only one section is generating at a time. As each
+  // section flips to Generated, the next one appears with its skeleton and
+  // starts loading. Previously-completed sections stay visible above.
+  const rolesShown = true
+  const rolesResolved = builderPhase >= 2 || builderDone
+  const entitiesShown = builderPhase >= 2 || builderDone
+  const entitiesResolved = builderPhase >= 6 || builderDone
+  const pagesShown = builderPhase >= 6 || builderDone
+  const pagesResolved = builderPhase >= 7 || builderDone
+  const navShown = builderPhase >= 7 || builderDone
+  const navResolved = builderPhase >= 8 || builderDone
 
   return (
     <div className="bg-white/75 backdrop-blur-2xl rounded-3xl border border-white/90 shadow-[0_12px_40px_rgba(34,42,59,0.06),0_1px_3px_rgba(34,42,59,0.04)] flex flex-col min-h-0 overflow-hidden">
@@ -997,33 +1049,32 @@ function RightPane({
         </div>
       </div>
 
-      {/* Scrollable agent-generated sections */}
-      <div className="flex-1 overflow-y-auto px-10 py-7 space-y-9">
-        {/* 1. Roles */}
-        {roleState !== 'queued' && (
+      {/* Scrollable agent-generated sections — a gray-200 separator sits
+          between every pair via `divide-y`. Each direct child gets 18px
+          top/bottom padding so the divider has equal breathing room, and
+          the first/last children trim their outside edges so we don't
+          add extra padding at the very top / bottom of the scroll area. */}
+      <div className="flex-1 overflow-y-auto px-10 py-7 divide-y divide-gray-200 [&>*]:py-[18px] [&>*:first-child]:pt-0 [&>*:last-child]:pb-0">
+        {/* 1. Roles — first section, shown from the moment the screen mounts. */}
+        {rolesShown && (
           <Section
             title="Roles"
             subtitle="Control access and responsibilities across your app"
             count={String(MOCK_ROLES.length)}
             accentColor="var(--magenta-500)"
+            icon={Users}
             status={rolesResolved ? 'done' : 'generating'}
           >
             {rolesResolved ? (
               <RoleList items={MOCK_ROLES} />
             ) : (
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-                <SingleItemSkeleton
-                  icon={Users}
-                  color="var(--magenta-500)"
-                  descriptionLines={4}
-                />
-              </div>
+              <RowListSkeleton count={MOCK_ROLES.length} />
             )}
           </Section>
         )}
 
-        {/* 2. Data entities — driven by Flow + Entity agents */}
-        {flowState !== 'queued' && (
+        {/* 2. Data entities — appears once Roles resolves. */}
+        {entitiesShown && (
           <Section
             title="Data entities"
             subtitle="Schema definitions with field types and per-role permissions"
@@ -1032,72 +1083,49 @@ function RightPane({
               0,
             )} fields`}
             accentColor="var(--green-500)"
+            icon={Database}
             status={entitiesResolved ? 'done' : 'generating'}
           >
-            {flowState === 'active' ? (
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-                <SingleItemSkeleton
-                  icon={Database}
-                  color="var(--green-500)"
-                  descriptionLines={2}
-                />
-              </div>
+            {entitiesResolved ? (
+              <EntityList items={MOCK_ENTITIES} />
             ) : (
-              <div className="space-y-3">
-                {MOCK_ENTITIES.map((entity) => (
-                  <EntityTable
-                    key={entity.name}
-                    entity={entity}
-                    rowsLoading={entityState === 'active'}
-                  />
-                ))}
-              </div>
+              <RowListSkeleton count={MOCK_ENTITIES.length} lines={2} />
             )}
           </Section>
         )}
 
-        {/* 3. Pages */}
-        {pageState !== 'queued' && (
+        {/* 3. Pages — appears once Data entities resolves. */}
+        {pagesShown && (
           <Section
             title="Pages"
             subtitle="End-user pages composing the app interface"
             count={String(MOCK_PAGES.length)}
             accentColor="var(--blue-500)"
+            icon={FileText}
             status={pagesResolved ? 'done' : 'generating'}
           >
             {pagesResolved ? (
               <PageList items={MOCK_PAGES} />
             ) : (
-              <div className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-                <SingleItemSkeleton
-                  icon={FileText}
-                  color="var(--blue-500)"
-                  descriptionLines={2}
-                />
-              </div>
+              <RowListSkeleton count={MOCK_PAGES.length} />
             )}
           </Section>
         )}
 
-        {/* 4. Navigation */}
-        {navState !== 'queued' && (
+        {/* 4. Navigation — appears once Pages resolves. */}
+        {navShown && (
           <Section
             title="Navigation"
             subtitle="Menus tailored to each role group"
             count={String(MOCK_NAV.length)}
             accentColor="var(--purple-500)"
+            icon={Compass}
             status={navResolved ? 'done' : 'generating'}
           >
             {navResolved ? (
               <NavSitemap items={MOCK_NAV} />
             ) : (
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-                <SingleItemSkeleton
-                  icon={Compass}
-                  color="var(--purple-500)"
-                  descriptionLines={3}
-                />
-              </div>
+              <RowListSkeleton count={MOCK_NAV.length} />
             )}
           </Section>
         )}
@@ -1135,6 +1163,7 @@ function Section({
   subtitle,
   count,
   accentColor,
+  icon: Icon,
   children,
   status,
 }: {
@@ -1142,45 +1171,55 @@ function Section({
   subtitle?: string
   count?: string
   accentColor: string
+  icon?: LucideIcon
   children: React.ReactNode
   status?: 'generating' | 'done'
 }) {
   return (
     <div className="ai-fade-up">
       <div className="flex items-center gap-2.5">
-        <span
-          className="w-2 h-2 rounded-full flex-shrink-0"
-          style={{ backgroundColor: accentColor }}
-          aria-hidden="true"
-        />
+        {Icon ? (
+          <Icon
+            className="w-4 h-4 flex-shrink-0"
+            strokeWidth={1.75}
+            style={{ color: accentColor }}
+            aria-hidden="true"
+          />
+        ) : (
+          <span
+            className="w-2 h-2 rounded-full flex-shrink-0"
+            style={{ backgroundColor: accentColor }}
+            aria-hidden="true"
+          />
+        )}
         <h3 className="text-[18px] font-semibold text-gray-900 tracking-tight leading-snug">
           {title}
         </h3>
         {count !== undefined && <CountBadge>{count}</CountBadge>}
         <div className="flex-1" />
         {status === 'generating' && (
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-magenta-700 px-2 py-0.5 rounded-full bg-magenta-50 border border-magenta-100">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white px-2 py-0.5 rounded-full bg-magenta-500">
             <span className="relative flex w-1.5 h-1.5">
-              <span className="absolute inset-0 rounded-full bg-magenta-500 ai-pulse-ping" />
-              <span className="relative rounded-full w-1.5 h-1.5 bg-magenta-500" />
+              <span className="absolute inset-0 rounded-full bg-white ai-pulse-ping" />
+              <span className="relative rounded-full w-1.5 h-1.5 bg-white" />
             </span>
             Generating
           </span>
         )}
         {status === 'done' && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-700 px-2 py-0.5 rounded-full bg-green-50 border border-green-100">
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-white px-2 py-0.5 rounded-full bg-green-500">
             <Check className="w-2.5 h-2.5" strokeWidth={3.5} />
             Generated
           </span>
         )}
       </div>
       {subtitle && (
-        <p className="text-[12px] text-gray-500 mt-1 mb-4 leading-snug ml-[18px]">
+        <p className="text-[12px] text-gray-700 mt-1 mb-4 leading-snug ml-[26px]">
           {subtitle}
         </p>
       )}
       {!subtitle && <div className="mb-4" />}
-      <div>{children}</div>
+      <div className="pl-[26px]">{children}</div>
     </div>
   )
 }
@@ -1234,40 +1273,26 @@ function PermissionChip({ level }: { level: PermissionLevel }) {
   )
 }
 
-// Roles list — each role as a shadcn-style card with subtle border + shadow,
-// hover lift. Users icon next to the role name, bulleted responsibilities below.
+// Roles — checklist of generated role names. Green tick before each name
+// signals the role has been generated. Detailed responsibilities are no
+// longer surfaced here (see role editor for the full breakdown).
 function RoleList({ items }: { items: RoleSpec[] }) {
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-2">
       {items.map((item, i) => (
         <li
           key={item.name}
-          className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all ai-fade-up"
+          className="flex items-center gap-2 ai-fade-up"
           style={{ animationDelay: `${i * 80}ms` }}
         >
-          <div className="flex items-center gap-2.5 mb-3">
-            <Users
-              className="w-[18px] h-[18px] flex-shrink-0"
-              strokeWidth={1.75}
-              style={{ color: 'var(--magenta-500)' }}
-            />
-            <span className="text-[14px] font-semibold text-gray-900 leading-snug">
-              {item.name}
-            </span>
-          </div>
-          <ul className="space-y-1.5">
-            {item.responsibilities.map((r, j) => (
-              <li
-                key={j}
-                className="text-[13px] text-gray-600 leading-relaxed flex gap-2"
-              >
-                <span className="text-gray-400 mt-0.5 select-none leading-snug">
-                  •
-                </span>
-                <span>{r}</span>
-              </li>
-            ))}
-          </ul>
+          <Check
+            className="w-4 h-4 flex-shrink-0"
+            strokeWidth={3}
+            style={{ color: 'var(--green-500)' }}
+          />
+          <span className="text-[14px] text-gray-900 leading-snug">
+            {item.name}
+          </span>
         </li>
       ))}
     </ul>
@@ -1276,28 +1301,104 @@ function RoleList({ items }: { items: RoleSpec[] }) {
 
 // Pages list — each page as a compact card. FileText icon next to the name,
 // 2-3 line description below.
+// Pages — checklist of generated page names. Descriptions are surfaced in
+// the page editor rather than here so this section stays scannable.
 function PageList({ items }: { items: PageSpec[] }) {
   return (
-    <ul className="space-y-2.5">
+    <ul className="space-y-2">
       {items.map((item, i) => (
         <li
           key={item.name}
-          className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all ai-fade-up flex gap-3"
+          className="flex items-center gap-2 ai-fade-up"
           style={{ animationDelay: `${i * 80}ms` }}
         >
-          <FileText
-            className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
-            strokeWidth={1.75}
-            style={{ color: 'var(--blue-500)' }}
+          <Check
+            className="w-4 h-4 flex-shrink-0"
+            strokeWidth={3}
+            style={{ color: 'var(--green-500)' }}
+          />
+          <span className="text-[14px] text-gray-900 leading-snug">
+            {item.name}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Data entities — checklist of generated entity names, each followed by a
+// short description line and a comma-separated list of its field names.
+// Field types + per-role permissions are hidden here (see the entity editor).
+function EntityList({ items }: { items: EntitySpec[] }) {
+  return (
+    <ul className="space-y-3">
+      {items.map((entity, i) => (
+        <li
+          key={entity.name}
+          className="flex items-start gap-2 ai-fade-up"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          <Check
+            className="w-4 h-4 flex-shrink-0 mt-0.5"
+            strokeWidth={3}
+            style={{ color: 'var(--green-500)' }}
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-gray-900 leading-snug">
-              {item.name}
+            <p className="text-[14px] text-gray-900 leading-snug">
+              {entity.name}
             </p>
             <p className="text-[13px] text-gray-600 leading-relaxed mt-1">
-              {item.description}
+              <span className="text-gray-500">Fields: </span>
+              {entity.fields.map((f) => f.name).join(', ')}
             </p>
           </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Row-list loader — N flat rows (no card chrome). Each row: a muted circle
+// placeholder in the tick slot + one or more shimmering skeleton bars
+// standing in for the row's text. Meant to preview how many items the agent
+// is about to generate (e.g. 3 rows for 3 roles) so the space doesn't jump
+// when the resolved rows swap in.
+function RowListSkeleton({
+  count,
+  lines = 1,
+}: {
+  count: number
+  lines?: number
+}) {
+  return (
+    <ul className="space-y-2">
+      {Array.from({ length: count }).map((_, i) => (
+        <li key={i} className="flex items-start gap-2">
+          <Circle
+            className="w-4 h-4 flex-shrink-0 text-gray-300 mt-0.5"
+            strokeWidth={1.75}
+          />
+          {lines === 1 ? (
+            <div className="flex-1 flex items-center py-1">
+              <SkeletonBar
+                width={`${60 + ((i * 7) % 25)}%`}
+                height="10px"
+                shimmering
+              />
+            </div>
+          ) : (
+            <div className="flex-1 space-y-1.5 py-1">
+              <SkeletonBar width="55%" height="10px" shimmering />
+              {Array.from({ length: lines - 1 }).map((_, j) => (
+                <SkeletonBar
+                  key={j}
+                  width={j === lines - 2 ? '75%' : '92%'}
+                  height="8px"
+                  shimmering
+                />
+              ))}
+            </div>
+          )}
         </li>
       ))}
     </ul>
@@ -1541,42 +1642,25 @@ function EntityTable({
   )
 }
 
-// Sitemap — one card per navigation, laid out like the Roles/Pages cards:
-// Compass icon top-left, title + "Shared with: …" + menu tree in a single
-// indented content column to the right.
+// Navigation — checklist of generated navigation names. Shared-with roles
+// and the menu tree are surfaced in the navigation editor rather than here.
 function NavSitemap({ items }: { items: NavigationSpec[] }) {
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-2">
       {items.map((nav, i) => (
         <li
           key={nav.title}
-          className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all ai-fade-up flex gap-3"
+          className="flex items-center gap-2 ai-fade-up"
           style={{ animationDelay: `${i * 80}ms` }}
         >
-          <Compass
-            className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
-            strokeWidth={1.75}
-            style={{ color: 'var(--purple-500)' }}
+          <Check
+            className="w-4 h-4 flex-shrink-0"
+            strokeWidth={3}
+            style={{ color: 'var(--green-500)' }}
           />
-          <div className="flex-1 min-w-0">
-            {/* Title */}
-            <p className="text-[14px] font-semibold text-gray-900 leading-snug">
-              {nav.title}
-            </p>
-
-            {/* Shared with — plain comma-separated text */}
-            <p className="mt-1 text-[13px] text-gray-600 leading-relaxed">
-              <span className="text-gray-500">Shared with: </span>
-              {nav.sharedWith.join(', ')}
-            </p>
-
-            {/* Menu tree */}
-            <div className="mt-3 space-y-2">
-              {nav.menu.map((item) => (
-                <NavMenu key={item.label} item={item} />
-              ))}
-            </div>
-          </div>
+          <span className="text-[14px] text-gray-900 leading-snug">
+            {nav.title}
+          </span>
         </li>
       ))}
     </ul>

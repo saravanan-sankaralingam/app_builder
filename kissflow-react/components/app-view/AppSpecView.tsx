@@ -47,7 +47,7 @@ export function AppSpecView({ appId }: { appId: string }) {
   }
 
   return (
-    <div className="bg-white/75 backdrop-blur-2xl rounded-xl border border-white/90 shadow-[0_12px_40px_rgba(34,42,59,0.06),0_1px_3px_rgba(34,42,59,0.04)] flex flex-col min-h-0 overflow-hidden">
+    <div className="bg-white/75 backdrop-blur-2xl rounded-t-xl border border-b-0 border-white/90 shadow-[0_12px_40px_rgba(34,42,59,0.06),0_1px_3px_rgba(34,42,59,0.04)] flex flex-col min-h-0 overflow-hidden">
       {/* Pinned identity header */}
       <div className="p-5 flex-shrink-0">
         <div
@@ -67,61 +67,60 @@ export function AppSpecView({ appId }: { appId: string }) {
         {/* Left — Quick navigator (20%) */}
         <QuickNav
           sections={[
-            { id: SPEC_SECTIONS.roles, label: 'Roles', accent: 'var(--magenta-500)' },
-            { id: SPEC_SECTIONS.entities, label: 'Data entities', accent: 'var(--green-500)' },
-            { id: SPEC_SECTIONS.pages, label: 'Pages', accent: 'var(--blue-500)' },
-            { id: SPEC_SECTIONS.navigation, label: 'Navigation', accent: 'var(--purple-500)' },
+            { id: SPEC_SECTIONS.roles, label: 'Roles', icon: Users },
+            { id: SPEC_SECTIONS.entities, label: 'Data entities', icon: Database },
+            { id: SPEC_SECTIONS.pages, label: 'Pages', icon: FileText },
+            { id: SPEC_SECTIONS.navigation, label: 'Navigation', icon: Compass },
           ]}
         />
 
-        {/* Right — Scrollable content (80%) */}
-        <div className="flex-1 overflow-y-auto px-10 py-7 space-y-9">
-          <Section
-            id={SPEC_SECTIONS.roles}
-            title="Roles"
-            subtitle="Control access and responsibilities across your app"
-            count={String(spec.roles.length)}
-            accentColor="var(--magenta-500)"
-          >
-            <RoleList items={spec.roles} />
-          </Section>
+        {/* Right — Spec content (80%) enclosed in a card container matching the left */}
+        <div className="flex-1 flex pr-5 min-h-0">
+          <div className="flex-1 rounded-t-xl border border-b-0 border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-y-auto px-10 py-7 divide-y divide-gray-200 [&>*:not(:first-child)]:pt-9 [&>*:not(:last-child)]:pb-9">
+            <Section
+              id={SPEC_SECTIONS.roles}
+              title="Roles"
+              subtitle="Control access and responsibilities across your app"
+              count={String(spec.roles.length)}
+              accentColor="var(--magenta-500)"
+            >
+              <RoleList items={spec.roles} />
+            </Section>
 
-          <Section
-            id={SPEC_SECTIONS.entities}
-            title="Data entities"
-            subtitle="Schema definitions with field types and per-role permissions"
-            count={`${spec.entities.length} entities · ${spec.entities.reduce(
-              (n, e) => n + e.fields.length,
-              0,
-            )} fields`}
-            accentColor="var(--green-500)"
-          >
-            <div className="space-y-3">
-              {spec.entities.map((entity) => (
-                <EntityCard key={entity.name} entity={entity} />
-              ))}
-            </div>
-          </Section>
+            <Section
+              id={SPEC_SECTIONS.entities}
+              title="Data entities"
+              subtitle="Schema definitions with field types and per-role permissions"
+              count={String(spec.entities.length)}
+              accentColor="var(--green-500)"
+            >
+              <div className="space-y-3">
+                {spec.entities.map((entity) => (
+                  <EntityCard key={entity.name} entity={entity} />
+                ))}
+              </div>
+            </Section>
 
-          <Section
-            id={SPEC_SECTIONS.pages}
-            title="Pages"
-            subtitle="End-user pages composing the app interface"
-            count={String(spec.pages.length)}
-            accentColor="var(--blue-500)"
-          >
-            <PageList items={spec.pages} />
-          </Section>
+            <Section
+              id={SPEC_SECTIONS.pages}
+              title="Pages"
+              subtitle="End-user pages composing the app interface"
+              count={String(spec.pages.length)}
+              accentColor="var(--blue-500)"
+            >
+              <PageList items={spec.pages} />
+            </Section>
 
-          <Section
-            id={SPEC_SECTIONS.navigation}
-            title="Navigation"
-            subtitle="Menus tailored to each role group"
-            count={String(spec.navigations.length)}
-            accentColor="var(--purple-500)"
-          >
-            <NavSitemap items={spec.navigations} />
-          </Section>
+            <Section
+              id={SPEC_SECTIONS.navigation}
+              title="Navigation"
+              subtitle="Menus tailored to each role group"
+              count={String(spec.navigations.length)}
+              accentColor="var(--purple-500)"
+            >
+              <NavSitemap items={spec.navigations} />
+            </Section>
+          </div>
         </div>
       </div>
     </div>
@@ -139,7 +138,7 @@ const SPEC_SECTIONS = {
 interface QuickNavItem {
   id: string
   label: string
-  accent: string
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
 }
 
 function QuickNav({ sections }: { sections: QuickNavItem[] }) {
@@ -149,27 +148,26 @@ function QuickNav({ sections }: { sections: QuickNavItem[] }) {
   }
 
   return (
-    <aside className="w-1/5 flex-shrink-0 px-5 pb-5 flex">
-      <div className="flex-1 rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-3">
+    <aside className="w-1/5 flex-shrink-0 px-5 flex">
+      <div className="flex-1 rounded-t-xl border border-b-0 border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        <p className="text-[11px] font-normal uppercase tracking-wide text-gray-700 mb-3">
           In this spec
         </p>
         <nav className="space-y-1">
-          {sections.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => handleClick(s.id)}
-              className="w-full flex items-center gap-2.5 text-left px-2 py-1.5 rounded-md text-[13px] text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-            >
-              <span
-                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: s.accent }}
-                aria-hidden="true"
-              />
-              <span className="truncate">{s.label}</span>
-            </button>
-          ))}
+          {sections.map((s) => {
+            const Icon = s.icon
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleClick(s.id)}
+                className="w-full flex items-center gap-2.5 text-left px-2 py-1.5 rounded-md text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                <Icon className="w-[16px] h-[16px] flex-shrink-0 text-gray-700" strokeWidth={1.75} />
+                <span className="truncate">{s.label}</span>
+              </button>
+            )
+          })}
         </nav>
       </div>
     </aside>
@@ -215,7 +213,7 @@ function Section({
     <div id={id} className="scroll-mt-4">
       <div className="flex items-center gap-2.5">
         <span
-          className="w-2 h-2 rounded-full flex-shrink-0"
+          className="w-[3px] h-5 rounded-sm flex-shrink-0"
           style={{ backgroundColor: accentColor }}
           aria-hidden="true"
         />
@@ -225,7 +223,7 @@ function Section({
         {count !== undefined && <CountBadge>{count}</CountBadge>}
       </div>
       {subtitle && (
-        <p className="text-[13px] text-gray-600 leading-relaxed mt-1 ml-4.5">{subtitle}</p>
+        <p className="text-[13px] text-gray-600 leading-relaxed mt-1 ml-[13px]">{subtitle}</p>
       )}
       <div className="mt-3.5">{children}</div>
     </div>
@@ -234,7 +232,7 @@ function Section({
 
 function CountBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-full font-medium leading-none">
+    <span className="text-[11px] bg-gray-100 text-gray-700 px-1.5 py-1 rounded-full font-medium leading-none">
       {children}
     </span>
   )

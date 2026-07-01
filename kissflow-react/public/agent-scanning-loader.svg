@@ -1,0 +1,71 @@
+<svg width="286" height="260" viewBox="0 0 286 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes scan-animation {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(260px); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes glow-down-animation {
+      0%     { opacity: 1; }
+      50%    { opacity: 1; }
+      50.01% { opacity: 0; }
+      100%   { opacity: 0; }
+    }
+    @keyframes glow-up-animation {
+      0%     { opacity: 0; }
+      50%    { opacity: 0; }
+      50.01% { opacity: 1; }
+      100%   { opacity: 1; }
+    }
+    .scanner-group { animation: scan-animation 2s ease-in-out infinite; }
+    .glow-down { animation: glow-down-animation 2s ease-in-out infinite; }
+    .glow-up   { animation: glow-up-animation 2s ease-in-out infinite; }
+  </style>
+  <defs>
+    <linearGradient id="line_grad" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#d341a5"/>
+      <stop offset="100%" stop-color="#6e6edb"/>
+    </linearGradient>
+    <linearGradient id="glow_above" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#f0c0e1" stop-opacity="0"/>
+      <stop offset="60%"  stop-color="#cfcff3" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#e58dc9" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="glow_below" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#e58dc9" stop-opacity="0.55"/>
+      <stop offset="40%"  stop-color="#cfcff3" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#f0c0e1" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="skel" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#f0c0e1"/>
+      <stop offset="100%" stop-color="#cfcff3"/>
+    </linearGradient>
+    <linearGradient id="border_grad" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#e58dc9"/>
+      <stop offset="100%" stop-color="#a8a8e9"/>
+    </linearGradient>
+    <linearGradient id="bg_fill" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%"   stop-color="#fcf2f9"/>
+      <stop offset="100%" stop-color="#f5f5fd"/>
+    </linearGradient>
+  </defs>
+  <!-- Card background -->
+  <rect x="36.5" y=".5" width="213" height="259" rx="15.5" fill="url(#bg_fill)" opacity=".4"/>
+  <!-- Document skeleton -->
+  <g transform="translate(36 0)">
+    <rect x=".5" y=".5" width="213" height="259" rx="15.5" fill="none" stroke="url(#border_grad)" stroke-opacity=".5"/>
+    <rect x="20" y="32"  width="174" height="16" rx="4" fill="url(#skel)" opacity=".7"/>
+    <rect x="20" y="68"  width="92"  height="16" rx="4" fill="url(#skel)" opacity=".7"/>
+    <rect x="20" y="104" width="146" height="16" rx="4" fill="url(#skel)" opacity=".7"/>
+    <rect x="20" y="140" width="101" height="16" rx="4" fill="url(#skel)" opacity=".7"/>
+    <path d="M20 180a4 4 0 0 1 4-4h58a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4z" fill="url(#skel)" opacity=".7"/>
+    <path d="M20 216a4 4 0 0 1 4-4h138a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4z" fill="url(#skel)" opacity=".7"/>
+  </g>
+  <!-- Scanner -->
+  <g class="scanner-group">
+    <rect y="-63" width="286" height="63" fill="url(#glow_above)" class="glow-down"/>
+    <rect y="3"   width="286" height="63" fill="url(#glow_below)" class="glow-up"/>
+    <rect width="286" height="3" fill="url(#line_grad)"/>
+    <rect y="1"   width="286" height="1"  fill="white" opacity=".4"/>
+  </g>
+</svg>

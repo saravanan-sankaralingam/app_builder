@@ -1664,7 +1664,7 @@ export function BuilderLayout({
               onSwitchToPage={switchToPageCallback}
             />
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 flex flex-col overflow-hidden rounded-tl-lg bg-transparent">
+              <div className="flex-1 flex flex-col overflow-hidden rounded-tl-lg bg-transparent pr-3">
                 <AppSpecView appId={appId} />
               </div>
             </div>
