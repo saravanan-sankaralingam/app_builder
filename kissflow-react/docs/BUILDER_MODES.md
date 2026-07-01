@@ -1,11 +1,18 @@
 # Builder Top-Bar Modes
 
-> **Important design rule:** Spec X and Spec Y are **readable specification documents**, not configuration editors. They translate the app's technical configuration into prose for a non-technical reader. Anything interactive (dropdowns, pickers, modals, "Manage >" buttons) belongs in **Build mode**, not Spec.
+> **Important design rule:** Spec is a **readable specification document**, not a configuration editor. It translates the app's technical configuration into prose for a non-technical reader. Anything interactive (dropdowns, pickers, modals, "Manage >" buttons) belongs in **Build mode**, not Spec.
+>
+> **History:** the Builder used to ship two spec modes — Spec X (flat nav, split content) and Spec Y (expandable tree, full-width detail). Both were removed on 2026-07-01 in favour of a single Spec mode driven by per-app content in `lib/app-specs.ts`. The frozen structural + mock-data snapshot of that older UI lives at [`SPEC_X_SPEC_Y_SNAPSHOT.md`](SPEC_X_SPEC_Y_SNAPSHOT.md) as historical reference — the code is gone.
 
+The Builder header exposes a centered toggle group with **three** modes that swap the entire main area below the header. The toggle lives in `components/builder/BuilderTopBar.tsx`; the layout switching lives in `components/builder/BuilderLayout.tsx`.
 
-The Builder header exposes a centered toggle group with four modes that swap the entire main area below the header. The toggle lives in `components/builder/BuilderTopBar.tsx` (lines ~434-482); the layout switching lives in `components/builder/BuilderLayout.tsx` (initial state at line ~463, branches at lines ~1433 / ~1459 / ~2114 and the fallback `build` branch after).
+State: `mode: 'play' | 'spec' | 'build'`. The parent (`BuilderLayout`) initialises to `'play'`; the `BuilderTopBar` prop default is `'build'` but the parent always passes a value, so the prop default is dead.
 
-State: `mode: 'play' | 'spec-x' | 'spec-y' | 'build'`. The parent (`BuilderLayout`) initializes to `'play'`; the `BuilderTopBar` prop default is `'build'` but the parent always passes a value, so the prop default is dead.
+### BuilderTopBar styling (key bits)
+
+- **App icon** (left cluster): rendered without a background tile. Size `h-5 w-5` (20×20), `strokeWidth={1.25}`, color via `iconColorFromBg(appIconBg)` from `lib/icon-color.ts`. The outer "App Info" wrapper has `pl-3` for left breathing room. See [`COLORS.md`](COLORS.md) "Rendering an app icon on a white surface" for the wider rule.
+- **Mode toggle** (centered Play / Spec / Build): active state is `bg-blue-500 text-white` (brand primary blue). Inactive state is `text-gray-900 hover:bg-gray-200`. Pill chrome `bg-gray-100 rounded-lg p-0.5`.
+- **Deploy button** (right cluster): solid green pill — `bg-green-500 text-white hover:bg-green-600` with `border-transparent`. The Rocket icon inherits `currentColor`, so it renders white on the green.
 
 ---
 
@@ -16,121 +23,70 @@ State: `mode: 'play' | 'spec-x' | 'spec-y' | 'build'`. The parent (`BuilderLayou
 **Layout:**
 ```
 ┌─────────────┬─────────────────────────────────┐
-│ CopilotPanel│ AppRuntimePreview               │
+│ CopilotPanel│ Runtime preview                 │
 │   (~320px)  │ (fills remaining width)         │
 └─────────────┴─────────────────────────────────┘
 ```
 
-**Content:**
-- Left: `CopilotPanel` — chat-style assistant scoped to the app. Can add pages to the preview via `addNavItemCallback` and switch the preview to a specific page via `switchToPageCallback`.
-- Right: `AppRuntimePreview` — the app as it would run, wrapped in a rounded top-left container with `pr-2 pb-2` outer spacing.
+**What renders on the right:**
+- If the `appId` matches a static app registered in `lib/static-apps.ts` (Retail One, Inventory Management, Expense Management today) → `<PlatformAppPreview />` renders the actual Platform page at `/app/<slug>` inside the Builder. See [`APP_NAV_HEADER.md`](APP_NAV_HEADER.md#mirrored-in-the-builders-play-mode).
+- Otherwise → `<AppRuntimePreview />` renders a copilot-driven empty shell. Pages are added via `addNavItemCallback` and switched via `switchToPageCallback`.
+
+### Runtime preview header — matches the Platform in-app header
+
+For static apps, the Platform page's sticky header (`h-[86px] px-5 py-3` white card, line-underline tabs) drives the visual. For copilot-driven apps, `AppRuntimePreview` renders its own header with the same spec plus a "Viewing as" role-switcher dropdown on the right. See [`APP_NAV_HEADER.md`](APP_NAV_HEADER.md) for the canonical spec.
+
+12px gap between the header card and the content follows (`gap-3` on the wrapping flex column).
 
 **Use it when:** You want to demo or sanity-check the app's runtime behaviour from the builder.
 
 ---
 
-## 2. Spec X
+## 2. Spec
 
-**Purpose:** Browse the app's specification as a flat blueprint. Two layers of selection: top-level section (fixed left nav) and a sub-item (inner list inside the content pane).
-
-**Layout:**
-```
-┌─────────────┬──────────────────────────────────────────────┐
-│ CopilotPanel│ ┌─ App header card (icon + name + desc) ──┐ │
-│             │ ├─ Blueprint frame ────────────────────────┤ │
-│             │ │ ┌─ Nav (180px) ─┬─ Content pane ────────┐│ │
-│             │ │ │ App Roles     │ section-specific UI   ││ │
-│             │ │ │ Data entities │                       ││ │
-│             │ │ │ Workflows     │                       ││ │
-│             │ │ │ Permissions   │                       ││ │
-│             │ │ │ Interface     │                       ││ │
-│             │ │ │ Integrations  │                       ││ │
-│             │ │ └───────────────┴───────────────────────┘│ │
-│             │ └──────────────────────────────────────────┘ │
-└─────────────┴──────────────────────────────────────────────┘
-```
-
-**Left nav (flat, 180px wide):** App Roles · Data entities · Workflows · Permissions · Views · Reports · Interface · Integrations.
-
-**Right content per section:**
-
-| Section | What it shows |
-|---|---|
-| **App Roles** | Static cards per role (Employee / Manager / HR Admin) with green-check capability bullets |
-| **Data entities** | Inner two-column: 200px entity list (left) + selected entity details (right). Details include "Shared with" avatars and a Field Name / Type / ID / Required table. Header has a **"Show relationships"** button that opens a 900×700 modal with a React Flow diagram of entity edges (animated smoothstep). |
-| **Workflows** | Card per workflow with a **vertical timeline** of numbered circular step nodes connected by a vertical line, step name and description to the right of each circle. Process entities show approval steps; board entities show levels. Matches the Kissflow product convention of vertical workflows. |
-| **Permissions** | One table per role × entity with View / Create / Edit (all/own) / Delete columns plus action-permission chips |
-| **Views** | Renders `ViewsSection` (`components/builder/ViewsSection.tsx`). Views grouped by data entity. **Data Form views show a full spec card** per view: description + Columns table (Field / Type / Permission with Editable / Read-only / Hidden chips) + Data filter sentence + Quick filters list + Bulk actions list + Default sort sentence + Table style. **Board and Process views** are listed as simple rows for now (rich spec to be added later). DataForm view types: Table/Gallery/Sheet. Board: Kanban/List/Matrix/Timeline. Process: My Items / My Tasks / Participated Items / Admin Items (all Table) — Process view names are product convention. Per-view config lives in `viewSpecs` inside `ViewsSection.tsx`. |
-| **Reports** | Placeholder ("coming soon") |
-| **Interface** | Placeholder ("coming soon") |
-| **Integrations** | Placeholder ("coming soon") |
-
-**Key state:** `selectedBlueprintSection`, `selectedDataEntity`, `showRelationships`.
-
----
-
-## 3. Spec Y
-
-**Purpose:** Same blueprint content as Spec X, but collapses the two layers of selection into one expandable tree in the left nav, freeing the right pane to be full-width for the selected item.
+**Purpose:** A single readable spec document per app. Same intent as the old Spec X / Spec Y — translate the technical configuration into prose the business team can read — but with one canonical layout and per-app content instead of shared mock data.
 
 **Layout:**
 ```
-┌─────────────┬──────────────────────────────────────────────┐
-│ CopilotPanel│ ┌─ App header card ───────────────────────┐ │
-│             │ ├─ Blueprint frame ────────────────────────┤ │
-│             │ │ ┌─ Nav (220px) ──┬─ Content (full) ─────┐│ │
-│             │ │ │ App Roles       │ Full-width detail   ││ │
-│             │ │ │ ▾ Data entities │ for whatever is     ││ │
-│             │ │ │   • Employee... │ selected in the     ││ │
-│             │ │ │   • Leave Req.. │ tree.               ││ │
-│             │ │ │ ▸ Workflows     │                     ││ │
-│             │ │ │ ▸ Permissions   │                     ││ │
-│             │ │ │ Interface       │                     ││ │
-│             │ │ │ Integrations    │                     ││ │
-│             │ │ └─────────────────┴─────────────────────┘│ │
-│             │ └──────────────────────────────────────────┘ │
-└─────────────┴──────────────────────────────────────────────┘
+┌─────────────┬─────────────────────────────────┐
+│ CopilotPanel│ AppSpecView                     │
+│   (~320px)  │ (fills remaining width)         │
+└─────────────┴─────────────────────────────────┘
 ```
 
-**Left nav (expandable tree, 220px wide):**
-- App Roles (leaf)
-- Data entities ▸ expands to list each entity inline
-- Workflows ▸ expands to list each workflow inline
-- Permissions ▸ expands to list each role inline
-- Views ▸ expands to list each view grouped by entity inline — selecting a view shows just that view's spec card in the right pane (via `ViewsSection`'s `focusedView` prop)
-- Reports (leaf)
-- Interface (leaf)
-- Integrations (leaf)
+**Content structure** (`components/app-view/AppSpecView.tsx`):
 
-Only one section expands at a time (`expandedSection` state, single-string).
+1. **Pinned identity header** — app name + description on a purple/magenta gradient card.
+2. Four scrollable sections, each with an accent dot + 18px semibold title + count badge + subtitle:
+   - **Roles** (magenta accent) — role cards with responsibility bullets
+   - **Data entities** (green accent) — entity cards with description, fields table (name / type badge / required dot), and per-role permission chips
+   - **Pages** (blue accent) — page cards with name + description
+   - **Navigation** (purple accent) — one card per navigation with "shared with: {roles}" and an indented menu tree
 
-**Right pane behaviour:**
-- Pick a parent section with nothing nested selected → overview content (e.g., roles cards) or a hint ("Select a data entity from the left navigation").
-- Pick a nested entity / workflow / role → full-width detail view for that single item.
+**Data source:** `lib/app-specs.ts` — a per-app registry keyed by `appId`. Each entry conforms to the `AppSpec` interface:
 
-**Key state:** `expandedSection`, `selectedBlueprintSection`, `selectedEntityInSpecY`, `selectedWorkflow`, `selectedRole`.
+```ts
+interface AppSpec {
+  roles: RoleSpec[]         // { name, responsibilities: string[] }
+  entities: EntitySpec[]    // { name, description, fields: EntityField[], permissions: EntityPermission[] }
+  pages: PageSpec[]         // { name, description }
+  navigations: NavigationSpec[]  // { title, sharedWith: string[], menu: NavMenuItem[] }
+}
+```
+
+**Adding a new static app to Spec:**
+1. Register the app in `lib/static-apps.ts`.
+2. Author an `AppSpec` entry for it in `lib/app-specs.ts`. That's it — `AppSpecView` picks it up by id.
+3. If no entry exists for an id, the panel renders a "No spec yet" empty state pointing to the file.
+
+**Visual language borrowed from `/new/app` creation flow:** the RightPane in `components/new-app/AppCreatingView.tsx` uses the same section shape, field-type badges, and permission chips — Spec mode is intentionally the same visual so users see the same document during creation and after the app is live.
 
 ---
 
-## 4. Build
+## 3. Build
 
 **Purpose:** The actual low-code builder — sidebar, tab bar, and per-tab editors (DataForm, Board, Process, List, Page, Navigation, etc.).
 
-**Fallback branch** after the spec-y conditional. This is the original builder UI: `BuilderSidebar` + `BuilderTabBar` + tab-specific editor components (`FormBuilder`, `ListEditor`, `PageEditor`, `NavigationEditor`, etc.) plus the `BuilderUtilityBar`.
+**Fallback branch** after the spec conditional. This is the original builder UI: `BuilderSidebar` + `BuilderTabBar` + tab-specific editor components (`FormBuilder`, `ListEditor`, `PageEditor`, `NavigationEditor`, etc.) plus the `BuilderUtilityBar`.
 
-See `CLAUDE.md` § "BuilderUtilityBar Buttons by Tab Type" and `ComponentsProperties.md` for the styling spec of this mode.
-
----
-
-## Comparing Spec X vs Spec Y
-
-| | Spec X | Spec Y |
-|---|---|---|
-| Nav width | 180px | 220px |
-| Nav style | Flat list | Expandable tree |
-| Where item-selection happens | Inside content pane (inner list) | Inside left nav |
-| Content pane | Split (list + detail) for entities | Full-width detail |
-| Top-level sections | Same six | Same six |
-| Underlying data | Same mocks (`mockDataEntities`, `mockWorkflows`, `mockRoles`) | Same mocks |
-
-Open design question: which model to keep. Spec X gives a stable nav and lets the user scan a section's items without committing; Spec Y is more compact and gives more room to detail content but hides the item list one click deeper when collapsed.
+See the root `CLAUDE.md` § "BuilderUtilityBar Buttons by Tab Type" and `ComponentsProperties.md` for the styling spec of this mode.

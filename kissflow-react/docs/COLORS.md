@@ -10,6 +10,76 @@
 
 The `.dark` block in `globals.css` ships an **inverted gray scale that only covers `100–999` (10 tiers).** Lighter tiers like `gray-50` are **not** redefined for dark mode, so `var(--gray-50)` cascades from `:root` (the light value) inside `.dark`. This is fine while dark mode isn't actively exercised, but needs a dark-mode counterpart when it is.
 
+### Brand palette only — what is NOT in the palette
+
+Tailwind's full default color set is technically still callable (it falls through when `@theme inline` doesn't override a token), but using anything outside the brand palette silently bypasses the design system. Three traps to watch for:
+
+1. **Non-brand color families** — these are Tailwind defaults with no brand equivalent. Don't use them.
+
+   | Tailwind family | Use instead |
+   |---|---|
+   | `amber-*` | **`yellow-*`** |
+   | `emerald-*` | **`green-*`** |
+   | `sky-*` | **`skyblue-*`** |
+   | `violet-*`, `indigo-*`, `fuchsia-*` | **`purple-*`** (or `magenta-*` for brand pink) |
+   | `rose-*` | **`pink-*`** |
+   | `slate-*`, `zinc-*`, `neutral-*`, `stone-*` | **`gray-*`** |
+   | `teal-*`, `lime-*` | closest of `cyan-*` / `green-*` |
+
+2. **The `-50` tier doesn't exist** for any brand family **except `gray`**. `bg-blue-50`, `hover:bg-purple-50`, `bg-red-50` etc. silently hit Tailwind defaults — bump them to `-100`.
+
+3. **Raw hex codes in chart/SVG props** must come from this doc, not Tailwind's palette. Common substitutions:
+
+   | Tailwind default | Brand replacement |
+   |---|---|
+   | `#3B82F6` (blue-500) | `#0565FF` (brand `blue-500`) |
+   | `#10B981` (emerald-500) | `#009E4F` (brand `green-500`) |
+   | `#8B5CF6` (violet-500) | `#6D2BF0` (brand `purple-500`) |
+   | `#F59E0B` (amber-500) | `#F0B100` (brand `yellow-500`) |
+   | `#94A3B8` (slate-400) | `#B5BAC9` (brand `gray-500`) |
+   | `#E5E7EB` (gray-200) | `#E5E7ED` (brand `gray-300`) |
+   | `#9CA3AF` (gray-400) | `#B5BAC9` (brand `gray-500`) |
+
+   For recharts in particular: pass hex strings, not Tailwind class names, but make sure those hex strings come from the brand palette.
+
+**Quick checks before committing:**
+```bash
+# Hunt for non-brand families (should print nothing under your changes):
+grep -rE "(amber|emerald|sky-|violet|indigo|fuchsia|rose|slate|zinc|neutral|stone|teal|lime)-(50|100|200|300|400|500|600|700|800|900)" components/ app/
+
+# Hunt for brand families using -50 (should be empty except for gray-50):
+grep -rE "(blue|red|green|orange|purple|cyan|skyblue|pink|magenta|yellow|rust)-50\b" components/ app/
+```
+
+---
+
+## Rendering an app icon on a white surface — `lib/icon-color.ts`
+
+Apps store a light tint as `iconBg` on the `App` model (the `-100` brand shade) and the icon is normally rendered white-on-tinted-tile. When we render the icon **without** that background — e.g. the in-app header at `/app/[slug]`, the BuilderTopBar app icon, the Play-mode `AppRuntimePreview` header — the icon needs a darker, visible color.
+
+That mapping lives in `lib/icon-color.ts`:
+
+```ts
+import { iconColorFromBg } from '@/lib/icon-color'
+
+<Icon style={{ color: iconColorFromBg(app.iconBg) }} strokeWidth={1.25} />
+```
+
+`iconColorFromBg(iconBg)`:
+- Looks up `iconBg` (a brand `-100` hex) in a static map and returns the matching **`-500`** brand hex.
+- Falls back to the input hex if no match is found.
+- Includes one legacy mapping for the Tailwind-default `#DBEAFE` (Retail One's iconBg) → brand `#0565FF`.
+
+**House style for app icons on white surfaces (Platform in-app header, BuilderTopBar, Play AppRuntimePreview):**
+
+| Property | Value |
+|---|---|
+| Size | `h-5 w-5` (20×20 px) |
+| Color | `iconColorFromBg(iconBg)` (brand `-500`) — or the equivalent `text-{family}-500` Tailwind class when the family is hardcoded at the call site |
+| Stroke width | `1.25` |
+
+When the design changes (e.g. you want `-600` instead of `-500`), edit the lookup map in one place and every consuming surface picks it up.
+
 ---
 
 ## Primary Colors

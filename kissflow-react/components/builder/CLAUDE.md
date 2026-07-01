@@ -7,12 +7,12 @@ Builder is the authoring tool. App authors use it to define data layers, fields,
 ## Required reading before changes
 
 - [`../../docs/BUILDER_LAYERS.md`](../../docs/BUILDER_LAYERS.md) — the 5 Layers (Data, Interface, Logic, Roles & Permissions, Settings) that segregate the Builder UI
-- [`../../docs/BUILDER_MODES.md`](../../docs/BUILDER_MODES.md) — Play / Spec X / Spec Y / Build modes, layout switching, what each mode shows
+- [`../../docs/BUILDER_MODES.md`](../../docs/BUILDER_MODES.md) — Play / Spec / Build modes, layout switching, what each mode shows
 - [`../../ComponentsProperties.md`](../../ComponentsProperties.md) — property panel + utility bar styling spec, which utility-bar buttons appear per tab type
 - [`../../docs/PAGE_BUILDER.md`](../../docs/PAGE_BUILDER.md) — Page editor (3-section drag-and-drop layout)
 - [`../../STYLE_BACKUPS.md`](../../STYLE_BACKUPS.md) — pre-experiment style snapshots for quick revert
 
-**Critical design rule (from BUILDER_MODES):** Spec X and Spec Y are *readable specification documents*, not configuration editors. Removing editor UI ≠ removing content — every editor field must map to a prose/table analogue in the spec.
+**Critical design rule (from BUILDER_MODES):** Spec is a *readable specification document*, not a configuration editor. Removing editor UI ≠ removing content — every editor field must map to a prose/table analogue in the spec. Per-app spec content lives in `lib/app-specs.ts` and renders through `components/app-view/AppSpecView.tsx`.
 
 ## Entry routes
 
@@ -21,7 +21,7 @@ Builder is the authoring tool. App authors use it to define data layers, fields,
 
 ## Shell
 
-`BuilderLayout.tsx` is the top-level Builder shell. It owns the mode state (`'play' | 'spec-x' | 'spec-y' | 'build'`) and swaps the entire main area based on mode. See `docs/BUILDER_MODES.md` for the exact line numbers (initial state at ~463, branches at ~1433 / ~1459 / ~2114).
+`BuilderLayout.tsx` is the top-level Builder shell. It owns the mode state (`'play' | 'spec' | 'build'`) and swaps the entire main area based on mode. See `docs/BUILDER_MODES.md` for what each mode shows.
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -64,3 +64,5 @@ Implication: when fixing a view-rendering bug, the fix usually lives in `compone
 - Property panel styling follows `ComponentsProperties.md` — don't freelance, the spec is precise about spacing/typography
 - Utility bar visibility follows the per-tab-type table in the root `CLAUDE.md` (and `ComponentsProperties.md`). Adding a new tab type means updating that table.
 - Don't import from `app/(main)/` here — Builder must not depend on Platform routes
+- When rendering the app icon on a white surface (`BuilderTopBar`, Play-mode `AppRuntimePreview`), follow the house style in [`../../docs/COLORS.md`](../../docs/COLORS.md#rendering-an-app-icon-on-a-white-surface--libicon-colorts): no background tile, `h-5 w-5`, `strokeWidth={1.25}`, color via `iconColorFromBg(appIconBg)`. Three different files have local `AppIcon` helpers (BuilderTopBar, AppRuntimePreview, CopilotPanel); each one accepts `style` and `strokeWidth` so the lucide icon underneath can be styled.
+- The Play-mode runtime header in `AppRuntimePreview` mirrors the Platform's in-app header. See [`../../docs/APP_NAV_HEADER.md`](../../docs/APP_NAV_HEADER.md#mirrored-in-the-builders-play-mode) — when one changes, change both.

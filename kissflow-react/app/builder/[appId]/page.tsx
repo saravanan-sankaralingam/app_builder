@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { BuilderLayout } from '@/components/builder/BuilderLayout'
 import { getApp, updateApp, checkAppName } from '@/lib/api/apps'
 import type { App } from '@/lib/api/apps'
+import { getStaticApp, isStaticAppId } from '@/lib/static-apps'
 
 export default function BuilderPage() {
   const params = useParams()
@@ -18,6 +19,15 @@ export default function BuilderPage() {
 
   useEffect(() => {
     async function fetchApp() {
+      // Prototype frontend-only apps (e.g. inventory-management) live in a
+      // static registry — skip the backend round-trip and hydrate locally.
+      const staticApp = getStaticApp(appId)
+      if (staticApp) {
+        setApp(staticApp)
+        setLoading(false)
+        return
+      }
+
       try {
         const fetchedApp = await getApp(appId)
         setApp(fetchedApp)
@@ -53,6 +63,13 @@ export default function BuilderPage() {
   }
 
   const handleNameChange = async (newName: string): Promise<{ success: boolean; error?: string }> => {
+    // Prototype apps don't persist — update local state only and skip the
+    // backend uniqueness check + write.
+    if (isStaticAppId(appId)) {
+      setApp((prev) => (prev ? { ...prev, name: newName } : prev))
+      return { success: true }
+    }
+
     try {
       // Check if name is available (exclude current app from check)
       const isAvailable = await checkAppName(newName, appId)

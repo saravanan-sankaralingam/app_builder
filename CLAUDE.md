@@ -20,6 +20,7 @@ This is a monorepo with two halves. For code-level conventions, read the nested 
 | Frontend (React/Next.js UI, builder, views) | [`kissflow-react/CLAUDE.md`](kissflow-react/CLAUDE.md) |
 | Backend (Fastify API, Prisma, auth) | [`backend/CLAUDE.md`](backend/CLAUDE.md) |
 | Platform shell (top nav, profile dropdown, left nav) | [`kissflow-react/docs/PLATFORM_SHELL.md`](kissflow-react/docs/PLATFORM_SHELL.md) |
+| App nav header (sticky in-app header — icon, title, avatars, Manage, tabs) | [`kissflow-react/docs/APP_NAV_HEADER.md`](kissflow-react/docs/APP_NAV_HEADER.md) |
 | Platform Home (`/` landing page content) | [`kissflow-react/docs/PLATFORM_HOME.md`](kissflow-react/docs/PLATFORM_HOME.md) |
 | Platform My Items (`/my-items` page content) | [`kissflow-react/docs/PLATFORM_MY_ITEMS.md`](kissflow-react/docs/PLATFORM_MY_ITEMS.md) |
 | Platform Explorer (`/explorer` page content) | [`kissflow-react/docs/PLATFORM_EXPLORER.md`](kissflow-react/docs/PLATFORM_EXPLORER.md) |
@@ -27,7 +28,8 @@ This is a monorepo with two halves. For code-level conventions, read the nested 
 | Platform Create (`/create` + `/create/app` flow) | [`kissflow-react/docs/PLATFORM_CREATE.md`](kissflow-react/docs/PLATFORM_CREATE.md) |
 | Platform New App (`/new/app` flow — left-nav Create > App) | [`kissflow-react/docs/PLATFORM_NEW_APP.md`](kissflow-react/docs/PLATFORM_NEW_APP.md) |
 | Builder structure (5 Layers: Data, Interface, Logic, Roles, Settings) | [`kissflow-react/docs/BUILDER_LAYERS.md`](kissflow-react/docs/BUILDER_LAYERS.md) |
-| Builder modes (Play/Spec X/Spec Y/Build) | [`kissflow-react/docs/BUILDER_MODES.md`](kissflow-react/docs/BUILDER_MODES.md) |
+| Builder modes (Play/Spec/Build) | [`kissflow-react/docs/BUILDER_MODES.md`](kissflow-react/docs/BUILDER_MODES.md) |
+| Spec X / Spec Y frozen snapshot (historical — removed 2026-07-01) | [`kissflow-react/docs/SPEC_X_SPEC_Y_SNAPSHOT.md`](kissflow-react/docs/SPEC_X_SPEC_Y_SNAPSHOT.md) |
 | Property panel + utility bar styling | [`kissflow-react/ComponentsProperties.md`](kissflow-react/ComponentsProperties.md) |
 | Page editor layout | [`kissflow-react/docs/PAGE_BUILDER.md`](kissflow-react/docs/PAGE_BUILDER.md) |
 | Color tokens | [`kissflow-react/docs/COLORS.md`](kissflow-react/docs/COLORS.md) |

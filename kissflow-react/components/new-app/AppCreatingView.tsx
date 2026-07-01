@@ -326,15 +326,110 @@ export function LeftPane({
           </p>
         </div>
 
-        {/* AI hero — same lucide `Sparkles` icon used in the Start Building
-            button (big 4-pointed sparkle + 2 small "+" sparkles). Coloured
-            purple-500 to match the AI-feature accent. */}
+        {/* AI hero — custom AI sparkle from /Downloads/ai_icon.svg sitting
+            on top of a settled liquid-morph blob (soft AI-gradient halo).
+            A periodic diagonal white shine sweeps across the blob via
+            `.ai-icon-flash` to bring the composition to life. */}
         <div className="flex justify-center mb-8">
-          <Sparkles
-            className="w-12 h-12"
-            strokeWidth={1.5}
-            style={{ color: 'var(--purple-500)' }}
-          />
+          <div className="relative w-[88px] h-[88px] flex items-center justify-center">
+            {/* Settled liquid blob behind the icon — 50% opacity so it
+                reads as a soft halo, not a competing surface. Animation
+                comes from `.flat-liquid` (ai-liquid-i border-radius morph).
+                The flash sweep now lives inside the SVG and is clipped to
+                the icon's silhouette, so the blob itself stays calm. */}
+            <div
+              className="absolute inset-0 flat-liquid"
+              style={{
+                background:
+                  'linear-gradient(135deg, var(--magenta-300) 0%, var(--purple-300) 50%, var(--blue-300) 100%)',
+                opacity: 0.5,
+              }}
+              aria-hidden="true"
+            />
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 40 40"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              className="relative"
+            >
+              <defs>
+                <linearGradient
+                  id="ai-hero-sparkle-grad"
+                  x1="35.584"
+                  y1="3.32936"
+                  x2="1.92087"
+                  y2="6.07464"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#D341A5" />
+                  <stop offset="1" stopColor="#6E6EDB" />
+                </linearGradient>
+                {/* Flash gradient — narrow white shine band, fully
+                    transparent at the edges so it reads as a moving
+                    highlight rather than a hard rectangle. */}
+                <linearGradient
+                  id="ai-hero-sparkle-flash"
+                  x1="0"
+                  y1="0"
+                  x2="14"
+                  y2="0"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0" stopColor="white" stopOpacity="0" />
+                  <stop offset="0.5" stopColor="white" stopOpacity="0.95" />
+                  <stop offset="1" stopColor="white" stopOpacity="0" />
+                </linearGradient>
+                {/* Clip path matching the icon shapes — restricts the
+                    flash sweep to the icon silhouette so the shine never
+                    appears over the blob area. The stroke-only ring is
+                    represented as the filled circle for clipping. */}
+                <clipPath id="ai-hero-sparkle-clip">
+                  <path d="M18.3617 4.69C18.4331 4.30768 18.636 3.96236 18.9352 3.71387C19.2344 3.46537 19.6111 3.32935 20 3.32935C20.3889 3.32935 20.7656 3.46537 21.0648 3.71387C21.364 3.96236 21.5669 4.30768 21.6383 4.69L23.39 13.9533C23.5144 14.6119 23.8345 15.2177 24.3084 15.6916C24.7823 16.1655 25.3881 16.4856 26.0467 16.61L35.31 18.3617C35.6923 18.4331 36.0376 18.636 36.2861 18.9352C36.5346 19.2344 36.6707 19.6111 36.6707 20C36.6707 20.3889 36.5346 20.7656 36.2861 21.0648C36.0376 21.364 35.6923 21.5669 35.31 21.6383L26.0467 23.39C25.3881 23.5144 24.7823 23.8345 24.3084 24.3084C23.8345 24.7823 23.5144 25.3881 23.39 26.0467L21.6383 35.31C21.5669 35.6923 21.364 36.0376 21.0648 36.2861C20.7656 36.5346 20.3889 36.6707 20 36.6707C19.6111 36.6707 19.2344 36.5346 18.9352 36.2861C18.636 36.0376 18.4331 35.6923 18.3617 35.31L16.61 26.0467C16.4856 25.3881 16.1655 24.7823 15.6916 24.3084C15.2177 23.8345 14.6119 23.5144 13.9533 23.39L4.69 21.6383C4.30768 21.5669 3.96236 21.364 3.71387 21.0648C3.46537 20.7656 3.32935 20.3889 3.32935 20C3.32935 19.6111 3.46537 19.2344 3.71387 18.9352C3.96236 18.636 4.30768 18.4331 4.69 18.3617L13.9533 16.61C14.6119 16.4856 15.2177 16.1655 15.6916 15.6916C16.1655 15.2177 16.4856 14.6119 16.61 13.9533L18.3617 4.69Z" />
+                  <path d="M33.333 2.08301C34.0233 2.08301 34.5829 2.64276 34.583 3.33301V5.41699H36.667C37.3572 5.41717 37.917 5.97674 37.917 6.66699C37.9169 7.35713 37.3571 7.91682 36.667 7.91699H34.583V10C34.5828 10.6902 34.0233 11.25 33.333 11.25C32.6429 11.2498 32.0832 10.6901 32.083 10V7.91699H30C29.3097 7.91699 28.7501 7.35724 28.75 6.66699C28.75 5.97664 29.3096 5.41699 30 5.41699H32.083V3.33301C32.0831 2.64289 32.6429 2.08321 33.333 2.08301Z" />
+                  <circle cx="6.66671" cy="33.3333" r="3.3333" />
+                </clipPath>
+              </defs>
+              <path
+                d="M18.3617 4.69C18.4331 4.30768 18.636 3.96236 18.9352 3.71387C19.2344 3.46537 19.6111 3.32935 20 3.32935C20.3889 3.32935 20.7656 3.46537 21.0648 3.71387C21.364 3.96236 21.5669 4.30768 21.6383 4.69L23.39 13.9533C23.5144 14.6119 23.8345 15.2177 24.3084 15.6916C24.7823 16.1655 25.3881 16.4856 26.0467 16.61L35.31 18.3617C35.6923 18.4331 36.0376 18.636 36.2861 18.9352C36.5346 19.2344 36.6707 19.6111 36.6707 20C36.6707 20.3889 36.5346 20.7656 36.2861 21.0648C36.0376 21.364 35.6923 21.5669 35.31 21.6383L26.0467 23.39C25.3881 23.5144 24.7823 23.8345 24.3084 24.3084C23.8345 24.7823 23.5144 25.3881 23.39 26.0467L21.6383 35.31C21.5669 35.6923 21.364 36.0376 21.0648 36.2861C20.7656 36.5346 20.3889 36.6707 20 36.6707C19.6111 36.6707 19.2344 36.5346 18.9352 36.2861C18.636 36.0376 18.4331 35.6923 18.3617 35.31L16.61 26.0467C16.4856 25.3881 16.1655 24.7823 15.6916 24.3084C15.2177 23.8345 14.6119 23.5144 13.9533 23.39L4.69 21.6383C4.30768 21.5669 3.96236 21.364 3.71387 21.0648C3.46537 20.7656 3.32935 20.3889 3.32935 20C3.32935 19.6111 3.46537 19.2344 3.71387 18.9352C3.96236 18.636 4.30768 18.4331 4.69 18.3617L13.9533 16.61C14.6119 16.4856 15.2177 16.1655 15.6916 15.6916C16.1655 15.2177 16.4856 14.6119 16.61 13.9533L18.3617 4.69Z"
+                fill="url(#ai-hero-sparkle-grad)"
+              />
+              <path
+                d="M33.333 2.08301C34.0233 2.08301 34.5829 2.64276 34.583 3.33301V5.41699H36.667C37.3572 5.41717 37.917 5.97674 37.917 6.66699C37.9169 7.35713 37.3571 7.91682 36.667 7.91699H34.583V10C34.5828 10.6902 34.0233 11.25 33.333 11.25C32.6429 11.2498 32.0832 10.6901 32.083 10V7.91699H30C29.3097 7.91699 28.7501 7.35724 28.75 6.66699C28.75 5.97664 29.3096 5.41699 30 5.41699H32.083V3.33301C32.0831 2.64289 32.6429 2.08321 33.333 2.08301Z"
+                fill="#D341A5"
+              />
+              <path
+                d="M6.66671 36.6667C8.50766 36.6667 10 35.1743 10 33.3333C10 31.4924 8.50766 30 6.66671 30C4.82576 30 3.33337 31.4924 3.33337 33.3333C3.33337 35.1743 4.82576 36.6667 6.66671 36.6667Z"
+                stroke="#6E6EDB"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Flash overlay — a narrow white band that sweeps left→right
+                  every 3.6s. The `<g clipPath>` restricts the shine to
+                  the icon silhouette so it only flashes over the visible
+                  shapes, not the blob. */}
+              <g clipPath="url(#ai-hero-sparkle-clip)">
+                <rect
+                  x="-14"
+                  y="0"
+                  width="14"
+                  height="40"
+                  fill="url(#ai-hero-sparkle-flash)"
+                >
+                  <animate
+                    attributeName="x"
+                    from="-14"
+                    to="40"
+                    dur="3.6s"
+                    repeatCount="indefinite"
+                  />
+                </rect>
+              </g>
+            </svg>
+          </div>
         </div>
 
         {/* Agent timeline — AI-gradient border ring around a flat white-50 surface */}
@@ -1604,6 +1699,7 @@ export function InlineKeyframes() {
       @keyframes mat-spin-dash-i { 0% { stroke-dasharray: 1 99; stroke-dashoffset: 0; } 50% { stroke-dasharray: 75 25; stroke-dashoffset: -25; } 100% { stroke-dasharray: 1 99; stroke-dashoffset: -99; } }
       @keyframes ios-fade-i { 0% { opacity: 1; } 100% { opacity: 0.15; } }
       @keyframes filling-sweep-i { 0% { stroke-dasharray: 0 100; } 85% { stroke-dasharray: 100 0; } 100% { stroke-dasharray: 100 0; } }
+      @keyframes ai-icon-flash-i { 0% { transform: translateX(-150%) skewX(-18deg); } 60%, 100% { transform: translateX(150%) skewX(-18deg); } }
 
       .ai-gradient    { background-image: linear-gradient(135deg, var(--magenta-300), var(--magenta-500), var(--magenta-700), var(--magenta-500)); background-size: 300% 300%; animation: ai-gradient-i 6s ease-in-out infinite; }
       .ai-liquid      { animation: ai-liquid-i 6s ease-in-out infinite; }
@@ -1622,6 +1718,7 @@ export function InlineKeyframes() {
       .ios-dot         { animation: ios-fade-i 1.2s linear infinite; }
       .filling-sweep   { animation: filling-sweep-i 2s ease-in-out infinite; }
       .flat-liquid    { background: linear-gradient(135deg, var(--magenta-200) 0%, var(--purple-200) 50%, var(--blue-200) 100%); animation: ai-liquid-i 6s ease-in-out infinite; }
+      .ai-icon-flash  { position: absolute; top: 0; left: 0; width: 60%; height: 100%; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 50%, transparent 100%); animation: ai-icon-flash-i 3.6s ease-in-out infinite; }
     `}</style>
   )
 }

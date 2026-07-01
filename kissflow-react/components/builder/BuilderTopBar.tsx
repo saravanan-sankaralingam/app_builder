@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/popover'
 import * as LucideIcons from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { iconColorFromBg } from '@/lib/icon-color'
 
 interface RecentApp {
   id: string
@@ -29,16 +30,16 @@ interface BuilderTopBarProps {
   recentApps?: RecentApp[]
   onAppSwitch?: (appId: string) => void
   onGoToExplorer?: () => void
-  mode?: 'play' | 'spec-x' | 'spec-y' | 'build'
-  onModeChange?: (mode: 'play' | 'spec-x' | 'spec-y' | 'build') => void
+  mode?: 'play' | 'spec' | 'build'
+  onModeChange?: (mode: 'play' | 'spec' | 'build') => void
 }
 
-function AppIcon({ name, className }: { name: string; className?: string }) {
-  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[name]
+function AppIcon({ name, className, style, strokeWidth }: { name: string; className?: string; style?: React.CSSProperties; strokeWidth?: number }) {
+  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties; strokeWidth?: number }>>)[name]
   if (!IconComponent) {
-    return <LucideIcons.Folder className={className} />
+    return <LucideIcons.Folder className={className} style={style} strokeWidth={strokeWidth} />
   }
-  return <IconComponent className={className} />
+  return <IconComponent className={className} style={style} strokeWidth={strokeWidth} />
 }
 
 // Icon categories for the picker
@@ -185,16 +186,15 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
     <header className="h-full">
       <div className="flex h-11 items-center justify-between relative">
         {/* Left Side - App Info */}
-        <div className="flex items-center pl-[2px]">
+        <div className="flex items-center pl-3">
           {/* App Icon - centered in sidebar-width container to align with sidebar icons */}
           <div className="w-10 flex items-center justify-center">
             <Popover open={isIconPickerOpen} onOpenChange={setIsIconPickerOpen}>
               <PopoverTrigger asChild>
                 <button
                   className="relative w-7 h-7 rounded-md flex items-center justify-center group cursor-pointer"
-                  style={{ backgroundColor: selectedColor }}
                 >
-                  <AppIcon name={selectedIcon} className="h-3.5 w-3.5 text-white" />
+                  <AppIcon name={selectedIcon} className="h-5 w-5" style={{ color: iconColorFromBg(selectedColor) }} strokeWidth={1.25} />
                   {/* Edit indicator on hover */}
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Pencil className="h-2 w-2 text-white" />
@@ -439,40 +439,29 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded-md transition-colors",
                 mode === 'play'
-                  ? "bg-purple-600 text-white"
+                  ? "bg-blue-500 text-white"
                   : "text-gray-900 hover:bg-gray-200"
               )}
             >
               Play
             </button>
             <button
-              onClick={() => onModeChange?.('spec-x')}
+              onClick={() => onModeChange?.('spec')}
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded-md transition-colors",
-                mode === 'spec-x'
-                  ? "bg-purple-600 text-white"
+                mode === 'spec'
+                  ? "bg-blue-500 text-white"
                   : "text-gray-900 hover:bg-gray-200"
               )}
             >
-              Spec X
-            </button>
-            <button
-              onClick={() => onModeChange?.('spec-y')}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
-                mode === 'spec-y'
-                  ? "bg-purple-600 text-white"
-                  : "text-gray-900 hover:bg-gray-200"
-              )}
-            >
-              Spec Y
+              Spec
             </button>
             <button
               onClick={() => onModeChange?.('build')}
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded-md transition-colors",
                 mode === 'build'
-                  ? "bg-purple-600 text-white"
+                  ? "bg-blue-500 text-white"
                   : "text-gray-900 hover:bg-gray-200"
               )}
             >
@@ -501,7 +490,7 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
           <Button
             variant="ghost"
             size="sm"
-            className="h-[28px] px-3 cursor-pointer bg-white/80 text-purple-700 hover:bg-white hover:text-purple-800 border border-purple-300 gap-1.5"
+            className="h-[28px] px-3 cursor-pointer bg-green-500 text-white hover:bg-green-600 hover:text-white border-transparent gap-1.5"
           >
             <Rocket className="size-3" fill="currentColor" />
             <span className="text-xs font-medium">Deploy</span>

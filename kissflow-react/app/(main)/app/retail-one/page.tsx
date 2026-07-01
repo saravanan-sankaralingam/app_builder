@@ -1,15 +1,17 @@
 'use client'
 
-import { ShoppingBag, Settings, MoreVertical, Pin, UserPlus, TrendingUp, TrendingDown, Store, DollarSign, Users, Package, ArrowUpRight, ArrowDownRight, Calendar, Clock, CheckCircle2, AlertCircle, XCircle, Activity, Zap, Target, Bell, Star, ChevronDown, Phone, Mail, FileText, List, MinusCircle, Clipboard, Wallet, Image } from 'lucide-react'
+import { ShoppingBag, Settings, MoreVertical, Pin, UserPlus, TrendingUp, TrendingDown, Store, DollarSign, Users, Package, ArrowUpRight, ArrowDownRight, Calendar, Clock, CheckCircle2, AlertCircle, XCircle, Activity, Zap, Target, Bell, Star, ChevronDown, ChevronRight, Phone, Mail, FileText, List, MinusCircle, Clipboard, Wallet, Image } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { ManageView } from '@/components/app-view/ManageView'
 
 type ViewType = 'home' | 'home-n' | 'home-p' | 'site-evaluation' | 'site-evaluation-n' | 'store-acquisition' | 'store-acquisition-n' | 'projects' | 'project-status' | 'rules-engine'
 
 export default function RetailOnePage() {
   const [currentView, setCurrentView] = useState<ViewType>('home')
+  const [isManaging, setIsManaging] = useState(false)
   const [storeAcquisitionTab, setStoreAcquisitionTab] = useState<'my-items' | 'my-tasks'>('my-tasks')
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [projectDetailTab, setProjectDetailTab] = useState<'summary' | 'budget' | 'tasks' | 'layout' | 'procurement' | 'inventory' | 'team'>('summary')
@@ -53,7 +55,7 @@ export default function RetailOnePage() {
   return (
     <div className="min-h-[calc(100vh-50px)] bg-gray-100">
       {/* App Header */}
-      <div className="px-5 py-3">
+      <div className="sticky top-0 z-10 bg-gray-100 px-5 py-3">
         <div className="bg-white rounded-lg h-[86px] px-5 py-3 flex flex-col justify-between">
           {/* Top Row: App Info + Actions */}
           <div className="flex items-center justify-between">
@@ -88,7 +90,12 @@ export default function RetailOnePage() {
 
             {/* Right: Manage + More */}
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" className="gap-2 h-8 text-[13px]">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 h-8 text-[13px]"
+                onClick={() => setIsManaging(true)}
+              >
                 <Settings className="h-3 w-3" />
                 Manage
               </Button>
@@ -98,7 +105,21 @@ export default function RetailOnePage() {
             </div>
           </div>
 
-          {/* Navigation Tabs - Line Variant */}
+          {/* Second row — breadcrumb when managing, tabs otherwise */}
+          {isManaging ? (
+            <nav className="flex items-center gap-1.5 text-sm pl-8 mb-2">
+              <button
+                type="button"
+                onClick={() => setIsManaging(false)}
+                className="text-blue-600 font-medium hover:underline leading-none"
+              >
+                Retail One
+              </button>
+              <ChevronRight className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+              <span className="text-gray-700 font-medium leading-none">Manage</span>
+            </nav>
+          ) : (
+          /* Navigation Tabs - Line Variant */
           <div className="flex gap-3 -mb-3">
             <button
               onClick={() => setCurrentView('home')}
@@ -211,11 +232,20 @@ export default function RetailOnePage() {
               Rules Engine
             </button>
           </div>
+          )}
         </div>
       </div>
 
       {/* View Content */}
       <div className="p-6">
+        {isManaging ? (
+          <ManageView
+            onEditApp={() =>
+              window.open('/builder/retail-one', '_blank', 'noopener,noreferrer')
+            }
+          />
+        ) : (
+        <>
         {currentView === 'home' && (
           <div className="space-y-4">
             {/* Row 1 - 3 Cards */}
@@ -3749,6 +3779,8 @@ export default function RetailOnePage() {
           <div className="text-center text-gray-500 py-12">
             Rules Engine content coming soon...
           </div>
+        )}
+        </>
         )}
       </div>
     </div>

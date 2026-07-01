@@ -10,6 +10,8 @@ import {
   Plus,
   Store,
   ShoppingBag,
+  Boxes,
+  Receipt,
   ChevronRight,
   Pin,
   PinOff,
@@ -51,6 +53,8 @@ const topItems: NavItem[] = [
 const initialPinnedApps: NavItem[] = []
 const initialRecentApps: NavItem[] = [
   { icon: ShoppingBag, label: 'Retail One', href: '/app/retail-one' },
+  { icon: Boxes, label: 'Inventory Management', href: '/app/inventory-management' },
+  { icon: Receipt, label: 'Expense Management', href: '/app/expense-management' },
 ]
 
 const createItem: NavItem = {

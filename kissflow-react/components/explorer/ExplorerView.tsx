@@ -8,7 +8,7 @@ import { AppsGroupedByType } from './AppsGroupedByType'
 import { listApps, App, AppStatus } from '@/lib/api/apps'
 import { getIconByName } from '@/lib/icons'
 import { AppData, AppGroupType, APP_GROUP_TYPES } from '@/types/app'
-import { Loader2, ShoppingBag } from 'lucide-react'
+import { Loader2, ShoppingBag, Boxes, Receipt } from 'lucide-react'
 
 type FilterType = 'live' | 'managed' | 'others'
 type ViewMode = 'grid' | 'list'
@@ -62,6 +62,24 @@ export function ExplorerView() {
         description: 'Comprehensive retail management application',
         icon: ShoppingBag,
         iconBg: '#DBEAFE',
+        createdBy: 'System',
+        type: 'Application',
+      },
+      {
+        id: 'inventory-management',
+        name: 'Inventory Management',
+        description: 'Track stock levels, movements, and replenishment across warehouses',
+        icon: Boxes,
+        iconBg: '#FFF4ED',
+        createdBy: 'System',
+        type: 'Application',
+      },
+      {
+        id: 'expense-management',
+        name: 'Expense Management',
+        description: 'Submit, approve, and track employee expense claims and reimbursements',
+        icon: Receipt,
+        iconBg: '#F7F2FF',
         createdBy: 'System',
         type: 'Application',
       },
