@@ -7,16 +7,18 @@ import {
   ArrowRight,
   Users,
   Wand2,
-  ShieldCheck,
+  Palette,
+  Rocket,
   Database,
   FileText,
   Compass,
+  Workflow,
   Check,
   CheckCheck,
   Circle,
-  Handshake,
-  Loader2,
-  Sparkles,
+  ClipboardCheck,
+  Layers,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -55,70 +57,156 @@ export interface Agent {
   successPhrase: string
 }
 
-// Post-review build roster — two agents. The App Builder agent walks through
-// the full construction sequence one sub-step at a time; the Validator agent
-// runs a single end-to-end check at the end. Sub-item indices on the App
-// Builder drive the right-pane section reveal (see RightPane below).
+// Post-review roster — four agents. Requirements Analyst and Solutions
+// Architect already completed on the pre-review scanning screen, so they
+// render as 'done' from the moment this screen mounts. App Builder and
+// Validator are the two new agents that actually run here.
+//
+// Keeping all four in one array (rather than passing pre-done ones as
+// props) means the LeftPane timeline reads as one continuous narrative
+// across both screens — the user sees the completed steps carried over,
+// and the App Builder appears as the *third* agent in sequence.
 const AGENTS: Agent[] = [
+  {
+    id: 'requirements-analyst',
+    name: 'Requirements Analyst agent',
+    sectionTitle: 'Requirements',
+    icon: ClipboardCheck,
+    color: 'magenta',
+    phases: [
+      'Reading your prompt and attachments',
+      'Distilling intent and success criteria',
+    ],
+    successPhrase: 'has captured the requirements',
+  },
+  {
+    id: 'solutions-architect',
+    name: 'Solutions Architect agent',
+    sectionTitle: 'Architecture',
+    icon: Layers,
+    color: 'purple',
+    phases: [
+      'Framing the app scope and boundaries',
+      'Mapping roles to jobs-to-be-done',
+      'Modelling the data entities',
+      'Architecting fields and constraints',
+      'Composing pages and end-user flows',
+      'Enriching entities with context',
+      'Weaving it into a cohesive blueprint',
+    ],
+    successPhrase: 'has drafted the app blueprint',
+  },
   {
     id: 'app-builder',
     name: 'App Builder agent',
     sectionTitle: 'App',
     icon: Wand2,
-    color: 'magenta',
+    color: 'blue',
     phases: [
-      'Initiating the project workspace',
       'Creating the user roles',
       'Allocating stable identifiers',
       'Creating the master lists',
+      'Creating the data entities',
+      'Creating fields, views and reports',
       'Wiring up the workflows',
-      'Provisioning the data entities',
-      'Composing pages and forms',
-      'Building the navigation menus',
     ],
-    successPhrase: 'has built the app',
+    successPhrase: 'has built the app structure',
   },
   {
-    id: 'validator',
-    name: 'Validator agent',
-    sectionTitle: 'Validation',
-    icon: ShieldCheck,
+    id: 'designer',
+    name: 'Designer agent',
+    sectionTitle: 'Design',
+    icon: Palette,
+    color: 'cyan',
+    phases: [
+      'Composing the page layouts',
+      'Building the navigation menus',
+    ],
+    successPhrase: 'has designed the interface',
+  },
+  {
+    id: 'publisher',
+    name: 'Publisher agent',
+    sectionTitle: 'Publish',
+    icon: Rocket,
     color: 'green',
-    phases: ['Validating the assembled app end-to-end'],
-    successPhrase: 'has validated the app',
+    phases: ['Publishing the app'],
+    successPhrase: 'has published the app',
   },
 ]
 
-// Per-agent phase duration (ms). Order matches AGENTS. App Builder takes 5s
-// per sub-item (8 × 5s = 40s); Validator runs its single check for 5s.
-const AGENT_PHASE_DURATIONS_MS = [5_000, 5_000]
+// Indexes of the three post-review agents in AGENTS. The two agents before
+// App Builder (Requirements Analyst and Solutions Architect) already ran on
+// the pre-review screen, so we start the tick counter at the boundary
+// between them and App Builder.
+const APP_BUILDER_AGENT_IDX = 2
+const DESIGNER_AGENT_IDX = 3
 
-// Temporary — while we're actively iterating on the building screen, hide
-// the completion popover so the resolved right-pane spec stays visible
-// after both agents finish. Set this back to `false` to re-enable the
-// "App generated successfully" dialog.
-const HOLD_COMPLETION_DIALOG = true
+// Per-agent phase duration (ms). Order matches AGENTS. Only App Builder
+// (5s × 5 = 25s), Designer (5s × 2 = 10s), and Publisher (5s × 1 = 5s)
+// actually run — the first two entries are populated for shape completeness
+// but never fire since those agents are already 'done' when the screen mounts.
+const AGENT_PHASE_DURATIONS_MS = [3_000, 5_000, 5_000, 5_000, 5_000]
+
+// Confetti burst around the success tick — 12 particles fanned across the
+// full compass, colours pulled from the AI brand palette + green. Kept as a
+// constant so the render is deterministic and doesn't reshuffle on re-render.
+// Upward y is constrained to ~-55px so particles don't get clipped by the
+// card's top edge; downward y goes further since the modal has room below.
+const CONFETTI_PARTICLES: Array<{
+  x: number
+  y: number
+  rot: number
+  color: string
+  size: number
+  shape: 'square' | 'circle'
+  delay: number
+}> = [
+  { x: 60, y: -50, rot: 320, color: 'var(--magenta-500)', size: 10, shape: 'square', delay: 0 },
+  { x: -65, y: -40, rot: -280, color: 'var(--purple-500)', size: 9, shape: 'circle', delay: 40 },
+  { x: 90, y: -10, rot: 240, color: 'var(--blue-500)', size: 8, shape: 'square', delay: 80 },
+  { x: -90, y: 5, rot: -220, color: 'var(--cyan-500)', size: 9, shape: 'circle', delay: 20 },
+  { x: 55, y: 80, rot: 300, color: 'var(--green-500)', size: 11, shape: 'square', delay: 60 },
+  { x: -55, y: 85, rot: -260, color: 'var(--magenta-400)', size: 8, shape: 'circle', delay: 100 },
+  { x: 20, y: -55, rot: 210, color: 'var(--purple-400)', size: 9, shape: 'square', delay: 30 },
+  { x: -20, y: 95, rot: -200, color: 'var(--blue-400)', size: 8, shape: 'circle', delay: 70 },
+  { x: 80, y: 45, rot: 280, color: 'var(--magenta-500)', size: 9, shape: 'square', delay: 50 },
+  { x: -80, y: 40, rot: -240, color: 'var(--green-400)', size: 8, shape: 'circle', delay: 90 },
+  { x: 35, y: -55, rot: 260, color: 'var(--cyan-400)', size: 8, shape: 'circle', delay: 110 },
+  { x: -35, y: -50, rot: -300, color: 'var(--purple-500)', size: 9, shape: 'square', delay: 10 },
+]
+
+// Set to `true` to suppress the completion popover during design iteration
+// (the resolved right-pane spec stays visible after both agents finish).
+// Now `false` — the popover is the primary CTA at the end of the flow.
+const HOLD_COMPLETION_DIALOG = false
 
 // Cumulative tick boundaries — agent i owns ticks [cumulativeTicks[i-1],
-// cumulativeTicks[i]). Last entry is the total tick count (9 for this roster).
+// cumulativeTicks[i]). Last entry is the total tick count (18 for this roster).
 const CUMULATIVE_TICKS = AGENTS.reduce<number[]>((acc, agent) => {
   const last = acc[acc.length - 1] ?? 0
   acc.push(last + agent.phases.length)
   return acc
 }, [])
 
+// Initial tick count on mount — set past the two pre-run agents' ticks so
+// they read as 'done' and App Builder starts at its phase 0.
+const INITIAL_TICK_COUNT = CUMULATIVE_TICKS[APP_BUILDER_AGENT_IDX - 1]
+
 // TICK_SCHEDULE[i] is the wall-clock ms at which `tickCount` advances from
-// `i` to `i + 1`, honouring each agent's own phase duration.
+// `INITIAL_TICK_COUNT + i` to `INITIAL_TICK_COUNT + i + 1`. Only App Builder
+// and Validator phases contribute — the pre-run agents don't schedule any
+// ticks since they're already done.
 const TICK_SCHEDULE: number[] = (() => {
   const schedule: number[] = []
   let cumulativeMs = 0
-  AGENTS.forEach((agent, agentIdx) => {
+  for (let agentIdx = APP_BUILDER_AGENT_IDX; agentIdx < AGENTS.length; agentIdx++) {
     const phaseDuration = AGENT_PHASE_DURATIONS_MS[agentIdx]
-    agent.phases.forEach(() => {
+    for (let p = 0; p < AGENTS[agentIdx].phases.length; p++) {
       cumulativeMs += phaseDuration
       schedule.push(cumulativeMs)
-    })
-  })
+    }
+  }
   return schedule
 })()
 
@@ -136,18 +224,20 @@ export function AppCreatingView({
   onBack,
   onComplete,
 }: AppCreatingViewProps) {
-  // Single counter — `tickCount` advances on the schedule in TICK_SCHEDULE,
-  // which honours each agent's own AGENT_PHASE_DURATIONS_MS entry. Both the
-  // current agent and the current phase within that agent derive from it via
-  // the cumulative-count table below.
-  const [tickCount, setTickCount] = useState(0)
+  // Single counter — starts at INITIAL_TICK_COUNT so the two pre-run agents
+  // read as 'done' immediately, then advances on the schedule in TICK_SCHEDULE
+  // (which covers only the App Builder + Validator phases).
+  const [tickCount, setTickCount] = useState(INITIAL_TICK_COUNT)
+  // Local dismiss flag — once the user closes the completion popover, keep
+  // it closed so they can inspect the resolved spec without it re-opening.
+  const [dialogClosed, setDialogClosed] = useState(false)
 
   useEffect(() => {
-    setTickCount(0)
+    setTickCount(INITIAL_TICK_COUNT)
     // One setTimeout per tick advance — lets each agent's phases run at their
     // own pace (App Builder 5s, Validator 5s) rather than a global interval.
     const timeouts = TICK_SCHEDULE.map((delayMs, idx) =>
-      setTimeout(() => setTickCount(idx + 1), delayMs),
+      setTimeout(() => setTickCount(INITIAL_TICK_COUNT + idx + 1), delayMs),
     )
     return () => timeouts.forEach(clearTimeout)
   }, [onComplete])
@@ -223,8 +313,10 @@ export function AppCreatingView({
           on the building screen itself. Flip HOLD_COMPLETION_DIALOG to false
           to re-enable the popup. */}
       <AppCreatedDialog
-        open={allAgentsDone && !HOLD_COMPLETION_DIALOG}
+        open={allAgentsDone && !HOLD_COMPLETION_DIALOG && !dialogClosed}
         onOpen={onComplete}
+        onClose={() => setDialogClosed(true)}
+        appName={appName}
       />
     </div>
   )
@@ -235,39 +327,133 @@ export function AppCreatingView({
 function AppCreatedDialog({
   open,
   onOpen,
+  onClose,
+  appName,
 }: {
   open: boolean
   onOpen: () => void
+  onClose: () => void
+  appName: string
 }) {
   if (!open) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" />
+      {/* Backdrop — soft blur so the resolved spec is glimpsed but muted. */}
+      <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" />
 
-      <div className="relative bg-white rounded-xl shadow-xl w-[440px] p-8 flex flex-col items-center text-center ai-fade-up">
-        {/* Success badge — solid green circle with white CheckCheck */}
-        <span
-          className="inline-flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"
-          style={{ backgroundColor: 'var(--green-500)' }}
-        >
-          <CheckCheck className="w-5 h-5 text-white" strokeWidth={2.75} />
-        </span>
+      {/* Outer card — gradient hairline ring wrapping a white surface. */}
+      <div
+        className="relative rounded-[20px] p-[1.5px] w-[460px] ai-fade-up shadow-[0_24px_60px_rgba(34,42,59,0.18),0_2px_8px_rgba(34,42,59,0.08)]"
+        style={{
+          background:
+            'linear-gradient(246.77deg, var(--purple-200) 0%, var(--magenta-200) 100%)',
+        }}
+      >
+        <div className="rounded-[18.5px] px-9 pt-20 pb-16 flex flex-col items-center text-center overflow-hidden relative bg-white">
+          {/* Close button — top-right corner. */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
+          >
+            <X className="w-4 h-4 text-gray-500" strokeWidth={2.25} />
+          </button>
 
-        <h2 className="mt-4 text-[20px] font-semibold text-gray-900 leading-snug">
-          App generated successfully
-        </h2>
-        <p className="mt-2 text-[13px] text-gray-600 leading-relaxed">
-          Your app is ready to explore.
-        </p>
+          {/* Success badge — solid green circle with a static halo behind
+              and two continuously-pulsing rings to grab attention. */}
+          <div className="relative z-10 w-14 h-14">
+            {/* Static soft halo behind everything. */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background:
+                  'radial-gradient(circle at center, color-mix(in srgb, var(--green-500) 32%, transparent), transparent 65%)',
+                filter: 'blur(14px)',
+                transform: 'scale(1.6)',
+              }}
+              aria-hidden="true"
+            />
+            {/* Attention-grabbing pulses — two rings offset by 1.6s so the
+                effect is nearly continuous. Sits behind the solid badge. */}
+            <span
+              className="absolute inset-0 rounded-full ai-pulse-ping"
+              style={{ backgroundColor: 'var(--green-500)', opacity: 0.28 }}
+              aria-hidden="true"
+            />
+            <span
+              className="absolute inset-0 rounded-full ai-pulse-ping"
+              style={{
+                backgroundColor: 'var(--green-500)',
+                opacity: 0.28,
+                animationDelay: '1.6s',
+              }}
+              aria-hidden="true"
+            />
+            {/* Solid badge — sits on top, with the tick popping in on mount. */}
+            <span
+              className="absolute inset-0 inline-flex items-center justify-center rounded-full ring-4 ring-white"
+              style={{
+                background:
+                  'linear-gradient(135deg, var(--green-500) 0%, color-mix(in srgb, var(--green-500) 78%, black) 100%)',
+                boxShadow:
+                  '0 8px 20px -6px color-mix(in srgb, var(--green-500) 55%, transparent)',
+              }}
+            >
+              <CheckCheck
+                className="w-6 h-6 text-white success-check-pop"
+                strokeWidth={2.75}
+              />
+            </span>
 
-        <Button
-          onClick={onOpen}
-          className="mt-6 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-sm"
-        >
-          Open app
-          <ArrowRight className="w-3.5 h-3.5 ml-1.5" strokeWidth={2.25} />
-        </Button>
+            {/* Confetti burst — 12 particles fly outward from the badge on
+                mount. Colours pick from the AI brand palette + green so the
+                celebration reads on-brand. */}
+            {CONFETTI_PARTICLES.map((p, i) => (
+              <span
+                key={i}
+                className="confetti-particle"
+                style={
+                  {
+                    width: `${p.size}px`,
+                    height: `${p.size}px`,
+                    backgroundColor: p.color,
+                    borderRadius: p.shape === 'square' ? '2px' : '999px',
+                    boxShadow: `0 1px 3px color-mix(in srgb, ${p.color} 40%, transparent)`,
+                    animationDelay: `${p.delay}ms`,
+                    '--cx': `${p.x}px`,
+                    '--cy': `${p.y}px`,
+                    '--cr': `${p.rot}deg`,
+                  } as React.CSSProperties
+                }
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+
+          {/* Title — solid green, echoing the success badge. */}
+          <h2
+            className="relative z-10 mt-8 text-[22px] font-semibold tracking-tight leading-snug"
+            style={{ color: 'var(--green-600)' }}
+          >
+            App Generated Successfully
+          </h2>
+          <p className="relative z-10 mt-2 text-[13px] text-gray-600 leading-relaxed max-w-[340px]">
+            Your requested app{' '}
+            <span className="font-semibold text-gray-900">{appName}</span> is
+            now ready to view.
+          </p>
+
+          {/* Primary CTA — same blue button style as the review dialog's
+              "Create app" (shared <Button> + `px-6 bg-blue-500`). */}
+          <Button
+            onClick={onOpen}
+            className="relative z-10 mt-7 px-6 bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            Open app
+          </Button>
+        </div>
       </div>
     </div>
   )
@@ -536,25 +722,34 @@ function AgentRow({
       </div>
       <div className="flex-1 min-w-0 pt-px">
         {state === 'queued' ? (
-          <div className="space-y-2.5 pt-1">
+          <div className="space-y-2.5">
             <SkeletonBar width="60%" height="14px" shimmering />
             <SkeletonBar width="85%" height="10px" shimmering />
           </div>
         ) : state === 'done' ? (
-          <p className="text-[13px] leading-snug text-gray-600">
-            <span className="font-semibold text-gray-900">{agent.name}</span>{' '}
-            {agent.successPhrase}
-            <CheckCheck
-              className="inline-block ml-1.5 w-3.5 h-3.5 align-middle"
-              strokeWidth={2.5}
-              style={{ color: 'var(--green-500)' }}
-            />
-          </p>
+          <>
+            {/* Line 1: agent name */}
+            <p className="text-[13px] font-semibold text-gray-900 leading-snug whitespace-nowrap">
+              {agent.name}
+            </p>
+            {/* Line 2: meaningful success message + double tick */}
+            <p className="text-[13px] leading-snug text-gray-600 whitespace-nowrap mt-0.5">
+              {agent.successPhrase}
+              <CheckCheck
+                className="inline-block ml-1.5 w-3.5 h-3.5 align-middle"
+                strokeWidth={2.5}
+                style={{ color: 'var(--green-500)' }}
+              />
+            </p>
+          </>
         ) : (
           <>
-            {/* Title line */}
-            <p className="text-[13px] leading-snug">
-              <span className="font-semibold text-gray-900">{agent.name}</span>{' '}
+            {/* Line 1: agent name */}
+            <p className="text-[13px] font-semibold text-gray-900 leading-snug whitespace-nowrap">
+              {agent.name}
+            </p>
+            {/* Line 2: "working on it" + animated dot trail */}
+            <p className="text-[13px] leading-snug whitespace-nowrap mt-0.5">
               <span className="text-gray-600">working on it</span>
               <DotTrail color={accentColor} />
             </p>
@@ -926,6 +1121,32 @@ const MOCK_ENTITIES: EntitySpec[] = [
   },
 ]
 
+// Workflow names + their step sequences — displayed the same way as
+// Data entities: name on line 1, comma-separated steps on line 2.
+interface WorkflowSpec {
+  name: string
+  steps: string[]
+}
+
+const MOCK_WORKFLOWS: WorkflowSpec[] = [
+  {
+    name: 'Vendor Onboarding Approval',
+    steps: ['Draft', 'Manager Review', 'Legal Sign-off', 'Approved'],
+  },
+  {
+    name: 'Contract Review Cycle',
+    steps: ['Draft', 'Legal Review', 'Commercial Review', 'Signed'],
+  },
+  {
+    name: 'Renewal Reminder',
+    steps: ['Triggered', 'Notified', 'Action Taken', 'Closed'],
+  },
+  {
+    name: 'Compliance Audit',
+    steps: ['Scheduled', 'In Progress', 'Findings Logged', 'Resolved'],
+  },
+]
+
 const MOCK_PAGES: PageSpec[] = [
   {
     name: 'Vendor Dashboard',
@@ -998,40 +1219,51 @@ function RightPane({
   appName: string
   appDescription: string
 }) {
-  // Post-review flow now has just two agents — App Builder (agent 0, 8 sub-
-  // items) followed by Validator (agent 1, 1 sub-item). Right-pane section
-  // reveals are driven off the App Builder's *phase* progression instead of a
-  // per-agent state, since App Builder covers every artifact.
-  const builderState = stateFor(0, currentIdx)
-  const builderDone = builderState === 'done'
+  // Post-review flow has five agents: two pre-run scanning agents (already
+  // 'done') + App Builder (agent 2, 5 sub-items) + Designer (agent 3, 2
+  // sub-items) + Publisher (agent 4, 1 sub-item). Right-pane sections are
+  // driven by App Builder's phase progression (Roles + Data entities) and
+  // Designer's phase progression (Pages + Navigation).
+  const builderState = stateFor(APP_BUILDER_AGENT_IDX, currentIdx)
+  const designerState = stateFor(DESIGNER_AGENT_IDX, currentIdx)
 
-  // Effective builder phase — during 'active', it's the current phaseIdx;
-  // once builder is done (Validator running or completion), it's past-the-end
-  // so every section reads as fully resolved.
-  const builderPhase =
-    builderState === 'active' ? phaseIdx : builderDone ? AGENTS[0].phases.length : 0
+  // Effective phase index within an agent — 0 while it's queued, current
+  // `phaseIdx` while it's active, or its full phase count once it's done.
+  const phaseIn = (idx: number, state: AgentState) =>
+    state === 'active'
+      ? phaseIdx
+      : state === 'done'
+        ? AGENTS[idx].phases.length
+        : 0
 
-  // Builder phase index reference:
-  //   0 Initiating the project workspace  → Roles start loading immediately
-  //   1 Creating the user roles           → Roles resolve when phase >= 2
-  //   2 Allocating stable identifiers     → Entities loader appears
-  //   3 Creating the master lists
-  //   4 Wiring up the workflows
-  //   5 Provisioning the data entities    → Entities resolve when phase >= 6
-  //   6 Composing pages and forms         → Pages loader appears, Pages resolve when phase >= 7
-  //   7 Building the navigation menus     → Nav loader appears, Nav resolves when phase >= 8
+  const builderPhase = phaseIn(APP_BUILDER_AGENT_IDX, builderState)
+  const designerPhase = phaseIn(DESIGNER_AGENT_IDX, designerState)
+
+  // App Builder phase index reference:
+  //   0 Creating the user roles            → Roles resolve when phase >= 1
+  //   1 Allocating stable identifiers
+  //   2 Creating the master lists
+  //   3 Creating the data entities         → Data entities loader appears
+  //   4 Creating fields, views and reports → Entities resolve when phase >= 5
+  //   5 Wiring up the workflows            → Workflow loader appears; resolves when phase >= 6
+  //
+  // Designer phase index reference:
+  //   0 Composing the page layouts         → Pages loader appears; resolves when phase >= 1
+  //   1 Building the navigation menus      → Nav loader appears; resolves when phase >= 2
   //
   // Sequential reveal: only one section is generating at a time. As each
   // section flips to Generated, the next one appears with its skeleton and
   // starts loading. Previously-completed sections stay visible above.
   const rolesShown = true
-  const rolesResolved = builderPhase >= 2 || builderDone
-  const entitiesShown = builderPhase >= 2 || builderDone
-  const entitiesResolved = builderPhase >= 6 || builderDone
-  const pagesShown = builderPhase >= 6 || builderDone
-  const pagesResolved = builderPhase >= 7 || builderDone
-  const navShown = builderPhase >= 7 || builderDone
-  const navResolved = builderPhase >= 8 || builderDone
+  const rolesResolved = builderPhase >= 1
+  const entitiesShown = rolesResolved
+  const entitiesResolved = builderPhase >= 5
+  const workflowsShown = entitiesResolved
+  const workflowsResolved = builderPhase >= 6
+  const pagesShown = workflowsResolved
+  const pagesResolved = designerPhase >= 1
+  const navShown = pagesResolved
+  const navResolved = designerPhase >= 2
 
   return (
     <div className="bg-white/75 backdrop-blur-2xl rounded-3xl border border-white/90 shadow-[0_12px_40px_rgba(34,42,59,0.06),0_1px_3px_rgba(34,42,59,0.04)] flex flex-col min-h-0 overflow-hidden">
@@ -1094,7 +1326,25 @@ function RightPane({
           </Section>
         )}
 
-        {/* 3. Pages — appears once Data entities resolves. */}
+        {/* 3. Workflows — appears once Data entities resolves. */}
+        {workflowsShown && (
+          <Section
+            title="Workflows"
+            subtitle="Approval chains and background flows that move records along"
+            count={String(MOCK_WORKFLOWS.length)}
+            accentColor="var(--orange-500)"
+            icon={Workflow}
+            status={workflowsResolved ? 'done' : 'generating'}
+          >
+            {workflowsResolved ? (
+              <WorkflowList items={MOCK_WORKFLOWS} />
+            ) : (
+              <RowListSkeleton count={MOCK_WORKFLOWS.length} lines={2} />
+            )}
+          </Section>
+        )}
+
+        {/* 4. Pages — appears once Workflows resolves. */}
         {pagesShown && (
           <Section
             title="Pages"
@@ -1112,7 +1362,7 @@ function RightPane({
           </Section>
         )}
 
-        {/* 4. Navigation — appears once Pages resolves. */}
+        {/* 5. Navigation — appears once Pages resolves. */}
         {navShown && (
           <Section
             title="Navigation"
@@ -1301,6 +1551,39 @@ function RoleList({ items }: { items: RoleSpec[] }) {
 
 // Pages list — each page as a compact card. FileText icon next to the name,
 // 2-3 line description below.
+// Workflows — checklist of generated workflow names, each followed by a
+// comma-separated list of its step names on a second line (matches the
+// EntityList shape). Detailed transitions are hidden here (see the
+// workflow editor).
+function WorkflowList({ items }: { items: WorkflowSpec[] }) {
+  return (
+    <ul className="space-y-3">
+      {items.map((workflow, i) => (
+        <li
+          key={workflow.name}
+          className="flex items-start gap-2 ai-fade-up"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          <Check
+            className="w-4 h-4 flex-shrink-0 mt-0.5"
+            strokeWidth={3}
+            style={{ color: 'var(--green-500)' }}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] text-gray-900 leading-snug">
+              {workflow.name}
+            </p>
+            <p className="text-[13px] text-gray-600 leading-relaxed mt-1">
+              <span className="text-gray-500">Steps: </span>
+              {workflow.steps.join(', ')}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 // Pages — checklist of generated page names. Descriptions are surfaced in
 // the page editor rather than here so this section stays scannable.
 function PageList({ items }: { items: PageSpec[] }) {
@@ -1784,6 +2067,8 @@ export function InlineKeyframes() {
       @keyframes ios-fade-i { 0% { opacity: 1; } 100% { opacity: 0.15; } }
       @keyframes filling-sweep-i { 0% { stroke-dasharray: 0 100; } 85% { stroke-dasharray: 100 0; } 100% { stroke-dasharray: 100 0; } }
       @keyframes ai-icon-flash-i { 0% { transform: translateX(-150%) skewX(-18deg); } 60%, 100% { transform: translateX(150%) skewX(-18deg); } }
+      @keyframes success-check-pop-i { 0% { opacity: 0; transform: scale(0.2) rotate(-8deg); } 60% { opacity: 1; transform: scale(1.2) rotate(4deg); } 80% { transform: scale(0.94) rotate(-2deg); } 100% { transform: scale(1) rotate(0); } }
+      @keyframes confetti-burst-i { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(0deg); } 7% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); } 40% { opacity: 1; transform: translate(calc(-50% + var(--cx, 0px)), calc(-50% + var(--cy, 0px))) scale(0.75) rotate(var(--cr, 180deg)); } 55% { opacity: 0; transform: translate(calc(-50% + var(--cx, 0px) * 1.1), calc(-50% + var(--cy, 0px) * 1.1)) scale(0.35) rotate(var(--cr, 180deg)); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(0deg); } }
 
       .ai-gradient    { background-image: linear-gradient(135deg, var(--magenta-300), var(--magenta-500), var(--magenta-700), var(--magenta-500)); background-size: 300% 300%; animation: ai-gradient-i 6s ease-in-out infinite; }
       .ai-liquid      { animation: ai-liquid-i 6s ease-in-out infinite; }
@@ -1803,6 +2088,8 @@ export function InlineKeyframes() {
       .filling-sweep   { animation: filling-sweep-i 2s ease-in-out infinite; }
       .flat-liquid    { background: linear-gradient(135deg, var(--magenta-200) 0%, var(--purple-200) 50%, var(--blue-200) 100%); animation: ai-liquid-i 6s ease-in-out infinite; }
       .ai-icon-flash  { position: absolute; top: 0; left: 0; width: 60%; height: 100%; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 50%, transparent 100%); animation: ai-icon-flash-i 3.6s ease-in-out infinite; }
+      .success-check-pop { animation: success-check-pop-i 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) both; transform-origin: center; }
+      .confetti-particle { position: absolute; top: 50%; left: 50%; pointer-events: none; z-index: 20; animation: confetti-burst-i 3.6s cubic-bezier(0.16, 1, 0.3, 1) both infinite; }
     `}</style>
   )
 }
