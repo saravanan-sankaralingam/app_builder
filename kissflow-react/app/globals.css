@@ -1,6 +1,6 @@
-
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./tokens/index.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -8,8 +8,8 @@
    COLOR PALETTE - Light Mode
    ============================================ */
 :root {
-  /* Base Radius */
-  --radius: 0.625rem;
+  /* Base Radius — px so it survives the 62.5% root font-size override */
+  --radius: 10px;
 
   /* White & Black */
   --white: #FFFFFF;
@@ -711,11 +711,23 @@
    BASE STYLES
    ============================================ */
 @layer base {
+  html {
+    /* Kissflow rem base: 1rem = 10px. Required so --font-size-*, --space-*
+       and every other rem-valued Kissflow token resolves to its intended
+       pixel size. Every non-Kissflow rem utility (shadcn --radius, arbitrary
+       text-[0.9rem], etc.) proportionally shrinks. */
+    font-size: 62.5%;
+  }
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    /* Baseline body font-size so unclassed text inherits 16px, not the raw
+       10px html root. Every text-N utility (e.g. text-14) still overrides
+       at the element level. Without this line, any element without an
+       explicit text-* class visually shrinks to 10px. */
+    font-size: 1.6rem;
+    @apply bg-gray-100 text-gray-999;
   }
 }
 

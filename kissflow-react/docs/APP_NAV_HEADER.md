@@ -292,6 +292,24 @@ The Builder's **Play mode** runtime preview renders an app header card with the 
 
 When changing the Platform header, change the Builder Play header to match — they're intentionally identical.
 
+### PlatformAppPreview — chrome overrides for Builder embedding
+
+For **static apps** registered in `lib/static-apps.ts`, Play mode renders the actual Platform page via `components/app-view/PlatformAppPreview.tsx` — the full `/app/<slug>` page component. Because the Platform page is sized for the Platform viewport (`min-h-[calc(100vh-50px)] bg-gray-100`) and has its own gutter padding, `PlatformAppPreview` applies three arbitrary Tailwind child-selector overrides so the page fits cleanly inside the Builder chrome:
+
+```tsx
+<div className="flex-1 overflow-auto
+  [&>div]:!bg-transparent          {/* kill Platform root bg-gray-100 */}
+  [&>div]:!min-h-0                 {/* kill min-h-[calc(100vh-50px)] */}
+  [&>div>div]:!p-0                 {/* kill sticky-wrapper px-5 py-3 and content wrapper p-6 */}
+  [&>div>div+div]:!pt-3            {/* restore 12px gap between header and content */}
+  [&>div>div+div]:!px-2            {/* 8px left/right on the content area */}
+">
+  <PageComponent />
+</div>
+```
+
+These only apply inside the Builder — the Platform route at `/app/<slug>` is untouched.
+
 ## Related
 
 - [`PLATFORM_SHELL.md`](PLATFORM_SHELL.md) — Platform TopBar + Sidebar (the surrounding shell)

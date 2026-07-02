@@ -46,28 +46,46 @@ For static apps, the Platform page's sticky header (`h-[86px] px-5 py-3` white c
 
 **Purpose:** A single readable spec document per app. Same intent as the old Spec X / Spec Y — translate the technical configuration into prose the business team can read — but with one canonical layout and per-app content instead of shared mock data.
 
-**Layout:**
+**Outer layout:**
 ```
-┌─────────────┬─────────────────────────────────┐
-│ CopilotPanel│ AppSpecView                     │
-│   (~320px)  │ (fills remaining width)         │
-└─────────────┴─────────────────────────────────┘
+┌─────────────┬─────────────────────────────────────────────────┐
+│ CopilotPanel│ AppSpecView                                     │
+│   (~320px)  │ (fills remaining width; 12px right gap via      │
+│             │  `pr-3` on the BuilderLayout Spec wrapper)      │
+└─────────────┴─────────────────────────────────────────────────┘
 ```
 
-**Content structure** (`components/app-view/AppSpecView.tsx`):
+The AppSpecView outer container is `bg-white/75 backdrop-blur-2xl rounded-t-xl border border-b-0 border-white/90`. Same top-rounded, no-bottom-border shape as the CopilotPanel — the two panels visually "hang" from the top and merge into the Builder chrome at the bottom.
 
-1. **Pinned identity header** — app name + description on a purple/magenta gradient card.
-2. Four scrollable sections, each with an accent dot + 18px semibold title + count badge + subtitle:
-   - **Roles** (magenta accent) — role cards with responsibility bullets
-   - **Data entities** (green accent) — entity cards with description, fields table (name / type badge / required dot), and per-role permission chips
-   - **Pages** (blue accent) — page cards with name + description
-   - **Navigation** (purple accent) — one card per navigation with "shared with: {roles}" and an indented menu tree
+**Inner structure** (`components/app-view/AppSpecView.tsx`):
+
+1. **Pinned identity header** (`p-5`) — app name + description on a purple/magenta gradient card (`linear-gradient(135deg, var(--purple-100) 0%, var(--magenta-100) 100%)` with `var(--purple-300)` border).
+2. **Two-column body** (below the identity header):
+   - **Left 20%** — QuickNav card, `w-1/5 flex-shrink-0 px-5 flex` outer + `rounded-t-xl border border-b-0 border-gray-200 bg-white` inner, stretches to full height. Header **"IN THIS SPEC"** in `text-[11px] font-normal uppercase tracking-wide text-gray-700`, then 4 button entries — each renders an icon + label:
+     - **Roles** — `Users` icon
+     - **Data entities** — `Database` icon
+     - **Pages** — `FileText` icon
+     - **Navigation** — `Compass` icon
+     - Icons are `w-4 h-4` with `strokeWidth={1.75}` in `text-gray-700`. Labels are `text-[13px] font-medium text-gray-900`. Clicking scrolls the right pane to the matching section via `scrollIntoView({ behavior: 'smooth' })`.
+   - **Right 80%** — content card, `flex-1 flex pr-5` outer + `rounded-t-xl border border-b-0 border-gray-200 bg-white` inner. Uses `divide-y divide-gray-200` + `[&>*:not(:first-child)]:pt-9 [&>*:not(:last-child)]:pb-9` — a 1px gray-200 separator sits between each section with 36px of breathing room on both sides.
+
+**Section header** — each section starts with:
+- **Vertical accent bar** — `w-[3px] h-5 rounded-sm` in the section's accent color (magenta / green / blue / purple)
+- **Title** — `text-[18px] font-semibold text-gray-900`
+- **Count badge** — small rounded-full pill (`text-[11px] bg-gray-100 text-gray-700 px-1.5 py-1 rounded-full`) showing the item count (e.g. "4" for 4 entities — no unit label, just the number)
+- **Subtitle** — one line prose describing the section
+
+**Per-section content:**
+- **Roles** — role cards with just `Users` icon + name + one-line description (no bullet list of responsibilities anymore; simpler read).
+- **Data entities** — entity cards with `Database` icon + name + inline stats ("X fields · Y required") + description, then a fields table (name / type badge / required dot) and a per-role permission chip table.
+- **Pages** — page cards with `FileText` icon + name + description.
+- **Navigation** — one card per navigation with `Compass` icon + title + "Shared with: {role names}" + an indented menu tree.
 
 **Data source:** `lib/app-specs.ts` — a per-app registry keyed by `appId`. Each entry conforms to the `AppSpec` interface:
 
 ```ts
 interface AppSpec {
-  roles: RoleSpec[]         // { name, responsibilities: string[] }
+  roles: RoleSpec[]         // { name, description: string }  (single-line prose, not bullets)
   entities: EntitySpec[]    // { name, description, fields: EntityField[], permissions: EntityPermission[] }
   pages: PageSpec[]         // { name, description }
   navigations: NavigationSpec[]  // { title, sharedWith: string[], menu: NavMenuItem[] }
@@ -79,7 +97,7 @@ interface AppSpec {
 2. Author an `AppSpec` entry for it in `lib/app-specs.ts`. That's it — `AppSpecView` picks it up by id.
 3. If no entry exists for an id, the panel renders a "No spec yet" empty state pointing to the file.
 
-**Visual language borrowed from `/new/app` creation flow:** the RightPane in `components/new-app/AppCreatingView.tsx` uses the same section shape, field-type badges, and permission chips — Spec mode is intentionally the same visual so users see the same document during creation and after the app is live.
+**Visual language borrowed from `/new/app` creation flow:** the RightPane in `components/new-app/AppCreatingView.tsx` uses the same section shape, field-type badges, and permission chips — Spec mode is intentionally the same visual so users see the same document during creation and after the app is live. The two divergences today: (1) Spec mode has a left-column QuickNav that the creation flow doesn't, and (2) roles use a single description instead of bulleted responsibilities.
 
 ---
 

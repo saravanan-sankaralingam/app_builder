@@ -11,6 +11,14 @@
 
 @theme inline {
   /* ============================================
+     REPLACE-FULLY MODE — wipe Tailwind defaults
+     so only Kissflow tokens declared below are usable.
+     Removing these two lines drops us back to coexist mode.
+     ============================================ */
+  --color-*: initial;
+  --spacing: initial;
+
+  /* ============================================
      Spacing scale (rem values assume 62.5% root)
      ============================================ */
   --spacing-2: var(--space-2);
