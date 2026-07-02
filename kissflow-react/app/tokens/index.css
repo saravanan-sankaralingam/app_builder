@@ -1,0 +1,294 @@
+/* ============================================
+   Kissflow design tokens — staged only.
+   Not imported from globals.css. See plan file
+   /Users/saravanansankaralingam/.claude/plans/smooth-discovering-toucan.md
+   ============================================ */
+
+@import "./space.css";
+@import "./colors.css";
+@import "./font.css";
+@import "./classes.css";
+
+@theme inline {
+  /* ============================================
+     Spacing scale (rem values assume 62.5% root)
+     ============================================ */
+  --spacing-2: var(--space-2);
+  --spacing-4: var(--space-4);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+  --spacing-18: var(--space-18);
+  --spacing-20: var(--space-20);
+  --spacing-24: var(--space-24);
+  --spacing-28: var(--space-28);
+  --spacing-32: var(--space-32);
+  --spacing-36: var(--space-36);
+  --spacing-40: var(--space-40);
+  --spacing-48: var(--space-48);
+  --spacing-60: var(--space-60);
+  --spacing-72: var(--space-72);
+
+  /* ============================================
+     Palette — primary
+     ============================================ */
+  --color-primary-100: var(--color-primary-100);
+  --color-primary-200: var(--color-primary-200);
+  --color-primary-300: var(--color-primary-300);
+  --color-primary-400: var(--color-primary-400);
+  --color-primary-500: var(--color-primary-500);
+  --color-primary-600: var(--color-primary-600);
+  --color-primary-700: var(--color-primary-700);
+  --color-primary-800: var(--color-primary-800);
+
+  /* Secondary one */
+  --color-secondary-one-100: var(--color-secondary-one-100);
+  --color-secondary-one-200: var(--color-secondary-one-200);
+  --color-secondary-one-300: var(--color-secondary-one-300);
+  --color-secondary-one-400: var(--color-secondary-one-400);
+  --color-secondary-one-500: var(--color-secondary-one-500);
+  --color-secondary-one-600: var(--color-secondary-one-600);
+  --color-secondary-one-700: var(--color-secondary-one-700);
+  --color-secondary-one-800: var(--color-secondary-one-800);
+
+  /* Secondary two */
+  --color-secondary-two-100: var(--color-secondary-two-100);
+  --color-secondary-two-200: var(--color-secondary-two-200);
+  --color-secondary-two-300: var(--color-secondary-two-300);
+  --color-secondary-two-400: var(--color-secondary-two-400);
+  --color-secondary-two-500: var(--color-secondary-two-500);
+  --color-secondary-two-600: var(--color-secondary-two-600);
+  --color-secondary-two-700: var(--color-secondary-two-700);
+  --color-secondary-two-800: var(--color-secondary-two-800);
+
+  /* Secondary three */
+  --color-secondary-three-100: var(--color-secondary-three-100);
+  --color-secondary-three-200: var(--color-secondary-three-200);
+  --color-secondary-three-300: var(--color-secondary-three-300);
+  --color-secondary-three-400: var(--color-secondary-three-400);
+  --color-secondary-three-500: var(--color-secondary-three-500);
+  --color-secondary-three-600: var(--color-secondary-three-600);
+  --color-secondary-three-700: var(--color-secondary-three-700);
+  --color-secondary-three-800: var(--color-secondary-three-800);
+
+  /* Secondary four */
+  --color-secondary-four-100: var(--color-secondary-four-100);
+  --color-secondary-four-200: var(--color-secondary-four-200);
+  --color-secondary-four-300: var(--color-secondary-four-300);
+  --color-secondary-four-400: var(--color-secondary-four-400);
+  --color-secondary-four-500: var(--color-secondary-four-500);
+  --color-secondary-four-600: var(--color-secondary-four-600);
+  --color-secondary-four-700: var(--color-secondary-four-700);
+  --color-secondary-four-800: var(--color-secondary-four-800);
+
+  /* Secondary five */
+  --color-secondary-five-100: var(--color-secondary-five-100);
+  --color-secondary-five-200: var(--color-secondary-five-200);
+  --color-secondary-five-300: var(--color-secondary-five-300);
+  --color-secondary-five-400: var(--color-secondary-five-400);
+  --color-secondary-five-500: var(--color-secondary-five-500);
+  --color-secondary-five-600: var(--color-secondary-five-600);
+  --color-secondary-five-700: var(--color-secondary-five-700);
+  --color-secondary-five-800: var(--color-secondary-five-800);
+
+  /* Secondary six */
+  --color-secondary-six-100: var(--color-secondary-six-100);
+  --color-secondary-six-200: var(--color-secondary-six-200);
+  --color-secondary-six-300: var(--color-secondary-six-300);
+  --color-secondary-six-400: var(--color-secondary-six-400);
+  --color-secondary-six-500: var(--color-secondary-six-500);
+  --color-secondary-six-600: var(--color-secondary-six-600);
+  --color-secondary-six-700: var(--color-secondary-six-700);
+  --color-secondary-six-800: var(--color-secondary-six-800);
+
+  /* Secondary seven */
+  --color-secondary-seven-100: var(--color-secondary-seven-100);
+  --color-secondary-seven-200: var(--color-secondary-seven-200);
+  --color-secondary-seven-300: var(--color-secondary-seven-300);
+  --color-secondary-seven-400: var(--color-secondary-seven-400);
+  --color-secondary-seven-500: var(--color-secondary-seven-500);
+  --color-secondary-seven-600: var(--color-secondary-seven-600);
+  --color-secondary-seven-700: var(--color-secondary-seven-700);
+  --color-secondary-seven-800: var(--color-secondary-seven-800);
+
+  /* Secondary eight */
+  --color-secondary-eight-100: var(--color-secondary-eight-100);
+  --color-secondary-eight-200: var(--color-secondary-eight-200);
+  --color-secondary-eight-300: var(--color-secondary-eight-300);
+  --color-secondary-eight-400: var(--color-secondary-eight-400);
+  --color-secondary-eight-500: var(--color-secondary-eight-500);
+  --color-secondary-eight-600: var(--color-secondary-eight-600);
+  --color-secondary-eight-700: var(--color-secondary-eight-700);
+  --color-secondary-eight-800: var(--color-secondary-eight-800);
+
+  /* Secondary nine */
+  --color-secondary-nine-100: var(--color-secondary-nine-100);
+  --color-secondary-nine-200: var(--color-secondary-nine-200);
+  --color-secondary-nine-300: var(--color-secondary-nine-300);
+  --color-secondary-nine-400: var(--color-secondary-nine-400);
+  --color-secondary-nine-500: var(--color-secondary-nine-500);
+  --color-secondary-nine-600: var(--color-secondary-nine-600);
+  --color-secondary-nine-700: var(--color-secondary-nine-700);
+  --color-secondary-nine-800: var(--color-secondary-nine-800);
+
+  /* Secondary ten */
+  --color-secondary-ten-100: var(--color-secondary-ten-100);
+  --color-secondary-ten-200: var(--color-secondary-ten-200);
+  --color-secondary-ten-300: var(--color-secondary-ten-300);
+  --color-secondary-ten-400: var(--color-secondary-ten-400);
+  --color-secondary-ten-500: var(--color-secondary-ten-500);
+  --color-secondary-ten-600: var(--color-secondary-ten-600);
+  --color-secondary-ten-700: var(--color-secondary-ten-700);
+  --color-secondary-ten-800: var(--color-secondary-ten-800);
+
+  /* ============================================
+     Semantic colors
+     ============================================ */
+  --color-success-100: var(--color-success-100);
+  --color-success-200: var(--color-success-200);
+  --color-success-300: var(--color-success-300);
+  --color-success-400: var(--color-success-400);
+  --color-success-500: var(--color-success-500);
+  --color-success-600: var(--color-success-600);
+  --color-success-700: var(--color-success-700);
+  --color-success-800: var(--color-success-800);
+
+  --color-error-100: var(--color-error-100);
+  --color-error-200: var(--color-error-200);
+  --color-error-300: var(--color-error-300);
+  --color-error-400: var(--color-error-400);
+  --color-error-500: var(--color-error-500);
+  --color-error-600: var(--color-error-600);
+  --color-error-700: var(--color-error-700);
+  --color-error-800: var(--color-error-800);
+
+  --color-warning-100: var(--color-warning-100);
+  --color-warning-200: var(--color-warning-200);
+  --color-warning-300: var(--color-warning-300);
+  --color-warning-400: var(--color-warning-400);
+  --color-warning-500: var(--color-warning-500);
+  --color-warning-600: var(--color-warning-600);
+  --color-warning-700: var(--color-warning-700);
+  --color-warning-800: var(--color-warning-800);
+
+  --color-info-100: var(--color-info-100);
+  --color-info-200: var(--color-info-200);
+  --color-info-300: var(--color-info-300);
+  --color-info-400: var(--color-info-400);
+  --color-info-500: var(--color-info-500);
+  --color-info-600: var(--color-info-600);
+  --color-info-700: var(--color-info-700);
+  --color-info-800: var(--color-info-800);
+
+  /* ============================================
+     Gray scale
+     ============================================ */
+  --color-gray-50: var(--color-gray-50);
+  --color-gray-100: var(--color-gray-100);
+  --color-gray-200: var(--color-gray-200);
+  --color-gray-300: var(--color-gray-300);
+  --color-gray-400: var(--color-gray-400);
+  --color-gray-500: var(--color-gray-500);
+  --color-gray-600: var(--color-gray-600);
+  --color-gray-700: var(--color-gray-700);
+  --color-gray-800: var(--color-gray-800);
+  --color-gray-900: var(--color-gray-900);
+  --color-gray-999: var(--color-gray-999);
+  --color-gray-alpha-25: var(--color-gray-alpha-25);
+  --color-gray-alpha-50: var(--color-gray-alpha-50);
+  --color-gray-alpha-75: var(--color-gray-alpha-75);
+
+  /* ============================================
+     Common colors + overlays
+     ============================================ */
+  --color-white: var(--color-white);
+  --color-white-inverse: var(--color-white-inverse);
+  --color-black: var(--color-black);
+  --color-transparent: var(--color-transparent);
+  --color-white-alpha-10: var(--color-white-alpha-10);
+  --color-white-alpha-20: var(--color-white-alpha-20);
+  --color-white-alpha-25: var(--color-white-alpha-25);
+  --color-white-alpha-50: var(--color-white-alpha-50);
+  --color-white-alpha-75: var(--color-white-alpha-75);
+  --color-overlay-gray: var(--color-overlay-gray);
+  --color-overlay-gray-50: var(--color-overlay-gray-50);
+  --color-overlay-gray-75: var(--color-overlay-gray-75);
+
+  /* NOTE: --color-bg-* (page-background surface tokens) intentionally NOT
+     exposed to Tailwind. Use via `background-color: var(--color-bg-white)` etc.
+     to keep the utility surface free of `bg-bg-*` duplicates.
+
+     Also NOT exposed: --*-filter-500 SVG tint filters, --ai-gradient-*,
+     --left-nav-* — use via `var()` directly. */
+
+  /* ============================================
+     Shadow scale
+     ============================================ */
+  --shadow-100: var(--shadow-100);
+  --shadow-100-top: var(--shadow-100-top);
+  --shadow-200: var(--shadow-200);
+  --shadow-300: var(--shadow-300);
+  --shadow-500: var(--shadow-500);
+
+  /* ============================================
+     Typography — family, weight
+     ============================================ */
+  --font-sans: var(--font-family);
+
+  --font-weight-regular: var(--font-weight-regular);
+  --font-weight-medium: var(--font-weight-medium);
+  --font-weight-semibold: var(--font-weight-semibold);
+
+  /* ============================================
+     Font sizes (utility: text-N)
+     ============================================ */
+  --text-10: var(--font-size-10);
+  --text-11: var(--font-size-11);
+  --text-12: var(--font-size-12);
+  --text-13: var(--font-size-13);
+  --text-14: var(--font-size-14);
+  --text-15: var(--font-size-15);
+  --text-16: var(--font-size-16);
+  --text-18: var(--font-size-18);
+  --text-20: var(--font-size-20);
+  --text-24: var(--font-size-24);
+  --text-28: var(--font-size-28);
+  --text-32: var(--font-size-32);
+  --text-36: var(--font-size-36);
+
+  /* ============================================
+     Line heights (utility: leading-*)
+     ============================================ */
+  --leading-mega: var(--line-height-mega);
+  --leading-h1: var(--line-height-h1);
+  --leading-h2: var(--line-height-h2);
+  --leading-h3: var(--line-height-h3);
+  --leading-h4: var(--line-height-h4);
+  --leading-h5: var(--line-height-h5);
+  --leading-h6: var(--line-height-h6);
+  --leading-baseplus: var(--line-height-baseplus);
+  --leading-base: var(--line-height-base);
+  --leading-smallplus: var(--line-height-smallplus);
+  --leading-small: var(--line-height-small);
+  --leading-tiny: var(--line-height-tiny);
+  --leading-micro: var(--line-height-micro);
+
+  /* ============================================
+     Letter spacing (utility: tracking-*)
+     ============================================ */
+  --tracking-mega: var(--letter-spacing-mega);
+  --tracking-h1: var(--letter-spacing-h1);
+  --tracking-h2: var(--letter-spacing-h2);
+  --tracking-h3: var(--letter-spacing-h3);
+  --tracking-h4: var(--letter-spacing-h4);
+  --tracking-h5: var(--letter-spacing-h5);
+  --tracking-h6: var(--letter-spacing-h6);
+  --tracking-baseplus: var(--letter-spacing-baseplus);
+  --tracking-base: var(--letter-spacing-base);
+  --tracking-smallplus: var(--letter-spacing-smallplus);
+  --tracking-small: var(--letter-spacing-small);
+  --tracking-tiny: var(--letter-spacing-tiny);
+  --tracking-micro: var(--letter-spacing-micro);
+}

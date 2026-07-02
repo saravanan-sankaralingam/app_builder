@@ -1,0 +1,506 @@
+/* stylelint-disable unit-disallowed-list */
+.fullclass {
+  font-size: var(--font-size-36);
+}
+
+.mega,
+.mega400,
+.mega600,
+.mega-400,
+.mega-600 {
+  font-size: var(--font-size-36);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-mega);
+  letter-spacing: var(--letter-spacing-mega);
+  color: var(--color-gray-900);
+}
+
+.h1,
+.h1400,
+.h1600,
+.h1-400,
+.h1-600 {
+  font-size: var(--font-size-32);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h1);
+  letter-spacing: var(--letter-spacing-h1);
+  color: var(--color-gray-900);
+}
+
+.h2,
+.h2400,
+.h2600,
+.h2-400,
+.h2-600 {
+  font-size: var(--font-size-28);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h2);
+  letter-spacing: var(--letter-spacing-h2);
+  color: var(--color-gray-900);
+}
+
+.h3,
+.h3400,
+.h3600,
+.h3-400,
+.h3-600 {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h3);
+  letter-spacing: var(--letter-spacing-h3);
+  color: var(--color-gray-900);
+}
+
+.h4,
+.h4400,
+.h4600,
+.h4-400,
+.h4-600 {
+  font-size: var(--font-size-20);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h4);
+  letter-spacing: var(--letter-spacing-h4);
+  color: var(--color-gray-900);
+}
+
+.h5,
+.h5400,
+.h5600,
+.h5-400,
+.h5-600 {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h5);
+  letter-spacing: var(--letter-spacing-h5);
+  color: var(--color-gray-900);
+}
+
+.h6,
+.h6400,
+.h6600,
+.h6-400,
+.h6-600 {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-h6);
+  letter-spacing: var(--letter-spacing-h6);
+  color: var(--color-gray-900);
+}
+
+/* SOURCE QUIRK: .placeholder is declared here (gray-500) and again below
+   bundled with .base rules (gray-900). Cascade means the .base rule wins
+   and .placeholder ends up gray-900 in practice. Preserved verbatim. */
+.placeholder {
+  color: var(--color-gray-500);
+}
+
+.baseplus,
+.baseplus400,
+.baseplus600,
+.baseplus-400,
+.baseplus-600 {
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-baseplus);
+  letter-spacing: var(--letter-spacing-baseplus);
+  color: var(--color-gray-999);
+}
+
+.base,
+.base400,
+.base600,
+.base-400,
+.base-600,
+.placeholder {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-base);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--color-gray-900);
+}
+
+.smallplus,
+.smallplus400,
+.smallplus600,
+.smallplus-400,
+.smallplus-600 {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-smallplus);
+  letter-spacing: var(--letter-spacing-smallplus);
+  color: var(--color-gray-900);
+}
+
+.small,
+.small400,
+.small600,
+.small-400,
+.small-600 {
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-small);
+  letter-spacing: var(--letter-spacing-small);
+  color: var(--color-gray-700);
+}
+
+.tiny,
+.tiny400,
+.tiny600,
+.tiny-400,
+.tiny-600 {
+  font-size: var(--font-size-11);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tiny);
+  letter-spacing: var(--letter-spacing-tiny);
+  color: var(--color-gray-700);
+}
+
+.micro,
+.micro400,
+.micro600,
+.micro-400,
+.micro-600 {
+  font-size: var(--font-size-10);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-micro);
+  letter-spacing: var(--letter-spacing-micro);
+  color: var(--color-gray-700);
+}
+
+.mega400,
+.h1400,
+.h2400,
+.h3400,
+.h4400,
+.h5400,
+.h6400,
+.baseplus400,
+.base400,
+.smallplus400,
+.small400,
+.tiny400,
+.micro400,
+.mega-400,
+.h1-400,
+.h2-400,
+.h3-400,
+.h4-400,
+.h5-400,
+.h6-400,
+.baseplus-400,
+.base-400,
+.smallplus-400,
+.small-400,
+.tiny-400,
+.micro-400 {
+  font-weight: var(--font-weight-regular);
+}
+
+.mega600,
+.h1600,
+.h2600,
+.h3600,
+.h4600,
+.h5600,
+.h6600,
+.baseplus600,
+.base600,
+.smallplus600,
+.small600,
+.tiny600,
+.micro600,
+.mega-600,
+.h1-600,
+.h2-600,
+.h3-600,
+.h4-600,
+.h5-600,
+.h6-600,
+.baseplus-600,
+.base-600,
+.smallplus-600,
+.small-600,
+.tiny-600,
+.micro-600 {
+  font-weight: var(--font-weight-semibold);
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ellipsis2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ellipsis3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ellipsis4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* SOURCE QUIRK: --shadow-50 is not defined in the token set (scale is
+   100 / 100-top / 200 / 300 / 500). Preserved verbatim from the reference
+   file — resolves to no shadow until --shadow-50 is defined or this class
+   is remapped at adoption. */
+.shadow-2dp,
+.shadow2dp,
+.shadow-2dp-hover:hover,
+.shadow2dphover:hover,
+.shadow-2dp-focus:focus,
+.shadow2dpfocus:focus,
+.shadow-2dp-focus:focus-within,
+.shadow2dpfocus:focus-within {
+  box-shadow: var(--shadow-50);
+}
+
+.shadow-4dp,
+.shadow4dp,
+.shadow-4dp-hover:hover,
+.shadow4dphover:hover,
+.shadow-4dp-focus:focus,
+.shadow4dpfocus:focus,
+.shadow-4dp-focus:focus-within,
+.shadow4dpfocus:focus-within {
+  box-shadow: var(--shadow-100);
+}
+
+.shadow-8dp,
+.shadow8dp,
+.shadow-8dp-hover:hover,
+.shadow8dphover:hover,
+.shadow-8dp-focus:focus,
+.shadow8dpfocus:focus,
+.shadow-8dp-focus:focus-within,
+.shadow8dpfocus:focus-within {
+  box-shadow: var(--shadow-200);
+}
+
+.shadow-12dp,
+.shadow12dp,
+.shadow-12dp-hover:hover,
+.shadow12dphover:hover,
+.shadow-12dp-focus:focus,
+.shadow12dpfocus:focus,
+.shadow-12dp-focus:focus-within,
+.shadow12dpfocus:focus-within {
+  box-shadow: var(--shadow-300);
+}
+
+.shadow-16dp,
+.shadow16dp,
+.shadow-16dp-hover:hover,
+.shadow16dphover:hover,
+.shadow-16dp-focus:focus,
+.shadow16dpfocus:focus,
+.shadow-16dp-focus:focus-within,
+.shadow16dpfocus:focus-within {
+  box-shadow: var(--shadow-500);
+}
+
+.shadow-card,
+.shadowcard,
+.shadow-card-hover:hover,
+.shadowcardhover:hover,
+.shadow-card-focus:focus,
+.shadowcardfocus:focus,
+.shadow-card-focus:focus-within,
+.shadowcardfocus:focus-within {
+  box-shadow: var(--shadow-100);
+}
+
+/* SOURCE HOOK: --input-error-text-color is a themable override slot and is
+   not defined in the token set. Falls back to --color-error-500. */
+.errorMessage {
+  color: var(--input-error-text-color, var(--color-error-500));
+  font-size: var(--font-size-11);
+  font-weight: var(--font-weight-medium);
+}
+
+/* arabic style */
+body.rtl.ar .mega,
+body.rtl.ar .mega400,
+body.rtl.ar .mega600,
+body.rtl.ar .mega-400,
+body.rtl.ar .mega-600 {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .h1,
+body.rtl.ar .h1400,
+body.rtl.ar .h1600,
+body.rtl.ar .h1-400,
+body.rtl.ar .h1-600 {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .h2,
+body.rtl.ar .h2400,
+body.rtl.ar .h2600,
+body.rtl.ar .h2-400,
+body.rtl.ar .h2-600 {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .h3,
+body.rtl.ar .h3400,
+body.rtl.ar .h3600,
+body.rtl.ar .h3-400,
+body.rtl.ar .h3-600 {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .h4,
+body.rtl.ar .h4400,
+body.rtl.ar .h4600,
+body.rtl.ar .h4-400,
+body.rtl.ar .h4-600 {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .h5,
+body.rtl.ar .h5400,
+body.rtl.ar .h5600,
+body.rtl.ar .h5-400,
+body.rtl.ar .h5-600 {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .h6,
+body.rtl.ar .h6400,
+body.rtl.ar .h6600,
+body.rtl.ar .h6-400,
+body.rtl.ar .h6-600 {
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .base,
+body.rtl.ar .base400,
+body.rtl.ar .base600,
+body.rtl.ar .base-400,
+body.rtl.ar .base-600,
+body.rtl.ar .placeholder {
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .smallplus,
+body.rtl.ar .smallplus400,
+body.rtl.ar .smallplus600,
+body.rtl.ar .smallplus-400,
+body.rtl.ar .smallplus-600 {
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .small,
+body.rtl.ar .small400,
+body.rtl.ar .small600,
+body.rtl.ar .small-400,
+body.rtl.ar .small-600 {
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .tiny,
+body.rtl.ar .tiny400,
+body.rtl.ar .tiny600,
+body.rtl.ar .tiny-400,
+body.rtl.ar .tiny-600 {
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .micro,
+body.rtl.ar .micro400,
+body.rtl.ar .micro600,
+body.rtl.ar .micro-400,
+body.rtl.ar .micro-600 {
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+}
+
+body.rtl.ar .base600,
+body.rtl.ar .smallplus600,
+body.rtl.ar .small600,
+body.rtl.ar .tiny600,
+body.rtl.ar .micro600,
+body.rtl.ar .base-600,
+body.rtl.ar .smallplus-600,
+body.rtl.ar .small-600,
+body.rtl.ar .tiny-600,
+body.rtl.ar .micro-600 {
+  font-weight: var(--font-weight-medium);
+}
+
+@media print {
+  .ellipsis {
+    white-space: normal;
+    overflow: unset;
+    text-overflow: unset;
+  }
+
+  .ellipsis2 {
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: unset;
+    overflow: unset;
+  }
+}
+
+.aiGradientText {
+  background: var(--ai-gradient-500);
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.multi-color-loader {
+  background: var(--ai-gradient-loader);
+  background-size: 200% 100%;
+  animation: 2s linear infinite multi-color-loader;
+}
+
+@keyframes multi-color-loader {
+  0% {
+    background-position: 200%;
+  }
+
+  20% {
+    background-position: 100%;
+  }
+
+  40% {
+    background-position: 0%;
+  }
+
+  60% {
+    background-position: -100%;
+  }
+
+  80% {
+    background-position: -150%;
+  }
+
+  100% {
+    background-position: -200%;
+  }
+}
