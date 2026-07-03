@@ -124,19 +124,35 @@ interface WorkflowSpec {
 3. CSS Grid: `gridTemplateColumns: "minmax(160px, max-content) repeat(maxColumn, minmax(160px, 1fr))"`. `overflow-x-auto` on the wrapper so long flows scroll horizontally.
 4. For each `(assignee, column)` cell, place the matching step chip if one exists — otherwise leave empty. Multiple steps at the same column (parallel branches) sit in different assignee rows.
 
-**Step chip — two variants** (both in `StepChip` inside `AppSpecView.tsx`):
+**Rendered via `@xyflow/react` (React Flow, MIT).** The library is already a project dependency. Two custom node types are registered — `stepChip` and `diamond` — each with the same Kissflow orange palette. Edges use React Flow's built-in `smoothstep` type for orthogonal routing with rounded corners; we set the source and target handles per edge based on the target row's position relative to the source (see rules below), so the library's edge router does the actual line drawing. `WF_LAYOUT` (in `AppSpecView.tsx`) is the single geometry constant driving both the swimlane grid background and node positions.
+
+**Step chip — two variants** (both in `AppSpecView.tsx`):
 
 1. **Regular** (`step.next.length <= 1`) — `bg-orange-100 border-orange-300 text-orange-700` rounded-md rectangle with a filled orange-500 badge showing the step's `column` number. If `step.optional` is true, border becomes dashed. If `step.condition` is set, a small italic `text-orange-600` caption sits under the name showing the condition text.
-2. **Diamond** (`step.next.length > 1` — the step branches) — the whole cell becomes a rhombus via `clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)` on a full-cell `absolute inset-0` layer, `bg-orange-100` fill and `1.5px solid` (or dashed if optional) `orange-500` border. Content inside: a lucide **`Split`** icon + the step name, both centered in the diamond's widest strip via `max-w-[62%]` so text doesn't clip the pointed edges. `min-h-[72px]` on the container so the diamond has enough vertical room; the grid row height picks this up and every row in that workflow inherits the same height. A native `title` tooltip on the container enumerates the branch targets and their conditions — `Condition\n→ Finance review: if amount > $1,000\n→ Compliance check: if international travel\n→ Approve: default path` — built by `buildBranchTooltip(step, workflow)`.
+2. **Diamond** (`step.next.length > 1` — the step branches) — a compact **32 × 32 px** rhombus (same visual height as a regular chip) via `clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)` on a full-container `absolute inset-0` layer, `bg-orange-100` fill and `1.5px solid` (or dashed if optional) `orange-500` border. The only content is a bold **`?`** in orange-500 — no step name inside the diamond itself. A native `title` tooltip on the container enumerates the branch targets and their conditions — `Condition\n→ Finance review: if amount > $1,000\n→ Compliance check: if international travel\n→ Approve: default path` — built by `buildBranchTooltip(step, workflow)`. `cursor-help` on the container hints that hovering reveals the routing.
 
-**Connector lines** — SVG overlay absolutely positioned over the grid.
-- `useLayoutEffect` measures each rendered step element via `stepRefs` (a `Map<stepId, HTMLDivElement>`) after paint. One ref map covers both chip and diamond variants — both types register the same callback, and `getBoundingClientRect()` returns the same right-middle / left-middle attach points for both shapes (the diamond's right vertex sits exactly at `(rect.right, rect.top + rect.height/2)`).
-- Path routing via `orthPath(x1, y1, x2, y2)`:
-  - Same-row transition (`|y1 - y2| < 4`) → straight horizontal `M x1 y1 L x2 y2`.
-  - Cross-row → Z-shape `M x1 y1 L xMid y1 L xMid y2 L x2 y2` where `xMid` is the midpoint between the two columns. This is the standard flowchart routing pattern and reads much more cleanly than diagonals when arrows fan out from a diamond.
-- Stroke: **`orange-500`** at 1.5px with `strokeLinecap="round"` + `strokeLinejoin="round"` so the corners on Z-paths look intentional. Arrowhead via a `<marker>` with `orient="auto"` (correctly rotates for the final segment).
-- `ResizeObserver` recomputes on container resize so lines stay in sync during horizontal scroll or window resize.
-- Marker id is `useId()`-scoped so multiple workflow cards on the same page don't collide.
+**Data model rule — branch targets share the diamond's column.** Every step listed in a diamond's `next` array is authored at the same `column` as the diamond, in its own row (per assignee). The only exception: a branch target whose assignee matches the diamond's assignee (same row) cannot share the diamond's column — it goes one column to the right. Downstream (non-branch) steps that come after the convergence point pick up at column+1 from the last branch column, as normal. See `poa-4 Send to supplier` in Purchase Order Approval for the same-row-goes-right case; every other diamond example uses same-column below/above targets.
+
+**Connector lines** — drawn entirely by React Flow.
+- Each node registers **four handles** (`target-left/top/bottom` and `source-right` for chips; `target-left` and `source-right/top/bottom` for diamonds). Handles are hidden via inline styles (`opacity: 0`, transparent background/border) — they exist for edge attach points but this is a read-only view, not an interactive editor.
+- **Edge type: `smoothstep`** — the built-in step edge with rounded corners. Handles the same L-shape / Z-shape routing that the old hand-rolled `orthPathHorizontal` / `orthPathVertical` produced, but it's library-managed. Style: `stroke: var(--orange-500)`, `strokeWidth: 1.5`, `markerEnd: MarkerType.ArrowClosed` in orange-500.
+- **Handle selection per edge** (source and target picked in `buildWorkflowLayout`):
+  - **From a diamond**, the target row's index relative to the diamond decides the vertex:
+    - Same row → `sourceHandle: 'source-right'` → target's `target-left`.
+    - Above the diamond → `sourceHandle: 'source-top'` → target's `target-bottom`.
+    - Below the diamond → `sourceHandle: 'source-bottom'` → target's `target-top`.
+  - **From a regular chip**: always `sourceHandle: 'source-right'` → target's `target-left`. React Flow's smoothstep does the routing when the target sits on a different row.
+- The `ReactFlow` container is put in **static mode** — `panOnDrag={false}`, `zoomOnScroll={false}`, `nodesDraggable={false}`, `nodesConnectable={false}`, `elementsSelectable={false}`, `defaultViewport={{ x: 0, y: 0, zoom: 1 }}`. `proOptions={{ hideAttribution: true }}` suppresses the "React Flow" watermark. `style={{ background: 'transparent' }}` so the grid dividers underneath show through.
+- **Swimlane chrome is a CSS Grid** with four cells:
+  - `gridRow 1, col 1`: **Corner cell** ("Assignee"), `position: sticky; top: 0; left: 0; z-index: 30` — visible in both scroll directions.
+  - `gridRow 1, col 2`: **Header row** (Step 1, Step 2, …), `position: sticky; top: 0; z-index: 20` — stays at the top for vertical scroll.
+  - `gridRow 2, col 1`: **Assignee column** (role names + `Undefined`), `position: sticky; left: 0; z-index: 10` — stays at the left for horizontal scroll.
+  - `gridRow 2, col 2`: **Step area** — the React Flow container. Nodes are positioned in step-area coordinates only (`x = (column-1) * columnWidth`, `y = rowIdx * rowHeight`, no `laneLabelWidth`/`headerHeight` offset), and CSS-drawn 1px `--gray-200` dividers sit behind React Flow at each column/row boundary.
+- **Scroll model**: the outer wrapper is `overflow-auto` with `maxHeight: 480px`, so both horizontal AND vertical scrolling happen INSIDE the swimlane, not inside the surrounding spec pane. Header row + assignee column stay pinned via CSS sticky. `maxWidth: 100%` on the scroll wrapper caps the card width to its container, so wide flows scroll rather than overflow the parent.
+- Geometry (`laneLabelWidth: 160`, `columnWidth: 200`, `headerHeight: 36`, `rowHeight: 80`, `chipWidth: 152`, `chipHeight: 44`, `diamondSize: 32`) is centralised in `WF_LAYOUT`.
+- Resize behaviour is handled internally by React Flow + native browser scroll — no more `useLayoutEffect` + refs + `ResizeObserver` machinery.
+
+**Known limitation:** when a diamond has two below-targets in different rows (e.g. Expense Claim Approval's `Manager review` fanning out to both Finance review and Compliance check), both arrows exit from the same bottom vertex and their vertical segments overlap on the shared portion. The two arrowheads still land at their respective target tops so destinations are unambiguous. Future improvement: fan out with a small handle-position offset per branch to visually separate the segments — React Flow supports multiple handles on the same side which would make this a one-line change.
 
 **Modelling the branch / skip / dynamic-assignee cases:**
 

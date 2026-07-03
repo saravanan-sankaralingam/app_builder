@@ -215,9 +215,12 @@ const RETAIL_ONE_SPEC: AppSpec = {
       steps: [
         { id: 'lrw-1', name: 'Flag expiring lease', assignee: 'Real Estate Analyst', column: 1, next: ['lrw-2'] },
         { id: 'lrw-2', name: 'Draft renewal terms', assignee: 'Real Estate Analyst', column: 2, next: ['lrw-3', 'lrw-4'] },
-        { id: 'lrw-3', name: 'Senior legal review', assignee: UNDEFINED_ASSIGNEE, column: 3, next: ['lrw-4'], condition: 'if annual rent > $5M', optional: true },
-        { id: 'lrw-4', name: 'Approve terms', assignee: 'Regional Manager', column: 4, next: ['lrw-5'] },
-        { id: 'lrw-5', name: 'Acknowledge new lease', assignee: 'Store Manager', column: 5, next: [] },
+        // Branch targets share the diamond's column. lrw-3 below the diamond,
+        // lrw-4 above (Regional Manager comes before Real Estate Analyst in the
+        // role order → its row is higher in the grid).
+        { id: 'lrw-3', name: 'Senior legal review', assignee: UNDEFINED_ASSIGNEE, column: 2, next: ['lrw-4'], condition: 'if annual rent > $5M', optional: true },
+        { id: 'lrw-4', name: 'Approve terms', assignee: 'Regional Manager', column: 2, next: ['lrw-5'] },
+        { id: 'lrw-5', name: 'Acknowledge new lease', assignee: 'Store Manager', column: 3, next: [] },
       ],
     },
   ],
@@ -392,10 +395,14 @@ const INVENTORY_MANAGEMENT_SPEC: AppSpec = {
       steps: [
         { id: 'poa-1', name: 'Draft PO', assignee: 'Category Buyer', column: 1, next: ['poa-2'] },
         { id: 'poa-2', name: 'Category review', assignee: 'Category Buyer', column: 2, next: ['poa-3', 'poa-4'] },
-        { id: 'poa-3', name: 'Finance approval', assignee: 'Finance Admin', column: 3, next: ['poa-4'], condition: 'if total > $10,000' },
-        { id: 'poa-4', name: 'Send to supplier', assignee: 'Category Buyer', column: 4, next: ['poa-5'] },
-        { id: 'poa-5', name: 'Receive goods', assignee: 'Warehouse Manager', column: 5, next: ['poa-6'] },
-        { id: 'poa-6', name: 'Reconcile invoice', assignee: 'Finance Admin', column: 6, next: [] },
+        // poa-3 (Finance Admin, below the diamond) sits at the diamond's column;
+        // poa-4 keeps the same assignee as the diamond and therefore goes one
+        // column to the right (per the "same-row branch exits from the right"
+        // rule).
+        { id: 'poa-3', name: 'Finance approval', assignee: 'Finance Admin', column: 2, next: ['poa-4'], condition: 'if total > $10,000' },
+        { id: 'poa-4', name: 'Send to supplier', assignee: 'Category Buyer', column: 3, next: ['poa-5'] },
+        { id: 'poa-5', name: 'Receive goods', assignee: 'Warehouse Manager', column: 4, next: ['poa-6'] },
+        { id: 'poa-6', name: 'Reconcile invoice', assignee: 'Finance Admin', column: 5, next: [] },
       ],
     },
     {
@@ -406,7 +413,9 @@ const INVENTORY_MANAGEMENT_SPEC: AppSpec = {
       steps: [
         { id: 'sa-1', name: 'Flag discrepancy', assignee: 'Inventory Analyst', column: 1, next: ['sa-2'] },
         { id: 'sa-2', name: 'Investigate', assignee: 'Warehouse Manager', column: 2, next: ['sa-3'] },
-        { id: 'sa-3', name: 'Propose adjustment', assignee: 'Warehouse Manager', column: 3, next: ['sa-4', 'sa-5'] },
+        // Single conditional branch: no diamond, sa-4 keeps its dashed border to
+        // signal "may be skipped if the condition doesn't fire".
+        { id: 'sa-3', name: 'Propose adjustment', assignee: 'Warehouse Manager', column: 3, next: ['sa-4'] },
         { id: 'sa-4', name: 'Compliance review', assignee: UNDEFINED_ASSIGNEE, column: 4, next: ['sa-5'], condition: 'if adjustment > $50k', optional: true },
         { id: 'sa-5', name: 'Approve write-off', assignee: 'Finance Admin', column: 5, next: ['sa-6'] },
         { id: 'sa-6', name: 'Post adjustment', assignee: 'Finance Admin', column: 6, next: [] },
@@ -573,11 +582,14 @@ const EXPENSE_MANAGEMENT_SPEC: AppSpec = {
       entity: 'Expense Claim',
       steps: [
         { id: 'eca-1', name: 'Submit claim', assignee: 'Employee', column: 1, next: ['eca-2'] },
-        { id: 'eca-2', name: 'Manager review', assignee: 'Direct Manager', column: 2, next: ['eca-3', 'eca-4', 'eca-5'] },
-        { id: 'eca-3', name: 'Finance review', assignee: 'Finance Admin', column: 3, next: ['eca-5'], condition: 'if amount > $1,000' },
-        { id: 'eca-4', name: 'Compliance check', assignee: UNDEFINED_ASSIGNEE, column: 3, next: ['eca-5'], condition: 'if international travel', optional: true },
-        { id: 'eca-5', name: 'Approve', assignee: 'Finance Admin', column: 4, next: ['eca-6'] },
-        { id: 'eca-6', name: 'Reimburse', assignee: 'Finance Admin', column: 5, next: [] },
+        { id: 'eca-2', name: 'Manager review', assignee: 'Direct Manager', column: 2, next: ['eca-3', 'eca-4'] },
+        // Two conditional branches, both share the diamond's column and both
+        // sit below (Finance Admin then Undefined). Approve is not a direct
+        // branch of the diamond — it is the convergence point one column right.
+        { id: 'eca-3', name: 'Finance review', assignee: 'Finance Admin', column: 2, next: ['eca-5'], condition: 'if amount > $1,000' },
+        { id: 'eca-4', name: 'Compliance check', assignee: UNDEFINED_ASSIGNEE, column: 2, next: ['eca-5'], condition: 'if international travel', optional: true },
+        { id: 'eca-5', name: 'Approve', assignee: 'Finance Admin', column: 3, next: ['eca-6'] },
+        { id: 'eca-6', name: 'Reimburse', assignee: 'Finance Admin', column: 4, next: [] },
       ],
     },
     {

@@ -1,7 +1,17 @@
 'use client'
 
-import { useState, useEffect, useLayoutEffect, useMemo, useRef, useId, Fragment } from 'react'
-import { Users, Database, FileText, Compass, Workflow, RefreshCw, ChevronDown, ChevronUp, Split } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Users, Database, FileText, Compass, Workflow, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  ReactFlow,
+  Handle,
+  Position,
+  MarkerType,
+  type Node,
+  type Edge,
+  type NodeProps,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import { getStaticApp } from '@/lib/static-apps'
 import {
   getAppSpec,
@@ -65,8 +75,11 @@ export function AppSpecView({ appId }: { appId: string }) {
         </div>
       </div>
 
-      {/* Two-column layout: 20% quick nav (left) + 80% scrollable content (right) */}
-      <div className="flex-1 flex min-h-0">
+      {/* Two-column layout: 20% quick nav (left) + 80% scrollable content (right).
+          NOTE: every flex-1 in this chain needs `min-w-0` — without it, a wide
+          child (e.g. a workflow swimlane) forces the pane to grow past the
+          available width instead of letting the child's own scroll take over. */}
+      <div className="flex-1 flex min-h-0 min-w-0">
         {/* Left — Quick navigator (20%) */}
         <QuickNav
           sections={[
@@ -79,8 +92,8 @@ export function AppSpecView({ appId }: { appId: string }) {
         />
 
         {/* Right — Spec content (80%) enclosed in a card container matching the left */}
-        <div className="flex-1 flex pr-5 min-h-0">
-          <div className="flex-1 rounded-t-xl border border-b-0 border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-y-auto px-10 py-7 divide-y divide-gray-200 [&>*:not(:first-child)]:pt-9 [&>*:not(:last-child)]:pb-9">
+        <div className="flex-1 flex pr-5 min-h-0 min-w-0">
+          <div className="flex-1 min-w-0 rounded-t-xl border border-b-0 border-gray-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-y-auto overflow-x-hidden px-10 py-7 divide-y divide-gray-200 [&>*:not(:first-child)]:pt-9 [&>*:not(:last-child)]:pb-9">
             <Section
               id={SPEC_SECTIONS.roles}
               title="Roles"
@@ -469,30 +482,111 @@ function EntityCard({ entity }: { entity: EntitySpec }) {
 }
 
 // ─── Workflows ──────────────────────────────────────────────────────────────
-function WorkflowList({ items, roles }: { items: WorkflowSpec[]; roles: RoleSpec[] }) {
+// The swimlane diagram is rendered with @xyflow/react (React Flow). Two custom
+// node types are registered: `stepChip` for the rectangular step and `diamond`
+// for a branching decision. Edges use React Flow's built-in `smoothstep` type
+// for orthogonal routing with rounded corners; we choose source and target
+// handles per edge so a diamond exits from the top/right/bottom based on the
+// target row's position relative to its own row.
+
+// Layout geometry — kept in one place so the swimlane background grid and the
+// node positioning stay in lock-step.
+const WF_LAYOUT = {
+  laneLabelWidth: 160,
+  columnWidth: 200,
+  headerHeight: 36,
+  rowHeight: 80,
+  chipWidth: 152,
+  chipHeight: 44,
+  diamondSize: 32,
+}
+
+// Handles are functional (React Flow uses them for edge attach points) but
+// visually hidden — this is a read-only spec view, not an interactive editor.
+const HIDDEN_HANDLE_STYLE: React.CSSProperties = {
+  opacity: 0,
+  background: 'transparent',
+  border: 'none',
+}
+
+type StepChipData = { step: WorkflowSpec['steps'][number] }
+type DiamondData = { step: WorkflowSpec['steps'][number]; tooltip: string }
+
+function StepChipNode(props: NodeProps) {
+  const { step } = props.data as StepChipData
+  const isConditional = !!step.condition
   return (
-    <div className="space-y-3">
-      {items.map((wf) => (
-        <WorkflowCard key={wf.name} workflow={wf} roles={roles} />
-      ))}
+    <div
+      className={
+        'rounded-md px-2.5 py-1.5 text-[12px] font-medium leading-snug ' +
+        (step.optional ? 'border-dashed' : '')
+      }
+      style={{
+        width: WF_LAYOUT.chipWidth,
+        backgroundColor: 'var(--orange-100)',
+        border: `1px ${step.optional ? 'dashed' : 'solid'} var(--orange-300)`,
+        color: 'var(--orange-700)',
+      }}
+    >
+      <div className="flex items-center gap-1.5">
+        <span
+          className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-semibold flex-shrink-0"
+          style={{ backgroundColor: 'var(--orange-500)', color: 'white' }}
+        >
+          {step.column}
+        </span>
+        <span className="truncate">{step.name}</span>
+      </div>
+      {isConditional && (
+        <div
+          className="mt-1 text-[10px] font-normal italic leading-none"
+          style={{ color: 'var(--orange-600)' }}
+        >
+          {step.condition}
+        </div>
+      )}
+      <Handle id="target-left" type="target" position={Position.Left} style={HIDDEN_HANDLE_STYLE} />
+      <Handle id="target-top" type="target" position={Position.Top} style={HIDDEN_HANDLE_STYLE} />
+      <Handle id="target-bottom" type="target" position={Position.Bottom} style={HIDDEN_HANDLE_STYLE} />
+      <Handle id="source-right" type="source" position={Position.Right} style={HIDDEN_HANDLE_STYLE} />
     </div>
   )
 }
 
-interface Connector {
-  key: string
-  path: string
+function DiamondNode(props: NodeProps) {
+  const { step, tooltip } = props.data as DiamondData
+  return (
+    <div
+      title={tooltip}
+      className="relative flex items-center justify-center cursor-help"
+      style={{ width: WF_LAYOUT.diamondSize, height: WF_LAYOUT.diamondSize }}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-0"
+        style={{
+          backgroundColor: 'var(--orange-100)',
+          border: `1.5px ${step.optional ? 'dashed' : 'solid'} var(--orange-500)`,
+          clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+        }}
+      />
+      <span
+        className="relative text-[13px] font-bold leading-none"
+        style={{ color: 'var(--orange-500)' }}
+      >
+        ?
+      </span>
+      <Handle id="target-left" type="target" position={Position.Left} style={HIDDEN_HANDLE_STYLE} />
+      <Handle id="source-right" type="source" position={Position.Right} style={HIDDEN_HANDLE_STYLE} />
+      <Handle id="source-top" type="source" position={Position.Top} style={HIDDEN_HANDLE_STYLE} />
+      <Handle id="source-bottom" type="source" position={Position.Bottom} style={HIDDEN_HANDLE_STYLE} />
+    </div>
+  )
 }
 
-// Orthogonal (right-angle) path between two points. Same-row pairs get a
-// straight horizontal line; cross-row pairs get a Z-shape with the vertical
-// leg at the midpoint between the two columns.
-function orthPath(x1: number, y1: number, x2: number, y2: number): string {
-  if (Math.abs(y1 - y2) < 4) {
-    return `M ${x1} ${y1} L ${x2} ${y2}`
-  }
-  const xMid = x1 + (x2 - x1) * 0.5
-  return `M ${x1} ${y1} L ${xMid} ${y1} L ${xMid} ${y2} L ${x2} ${y2}`
+const workflowNodeTypes = {
+  stepChip: StepChipNode,
+  diamond: DiamondNode,
 }
 
 // Native tooltip text for a branching step — enumerates every next step and
@@ -510,64 +604,121 @@ function buildBranchTooltip(step: WorkflowSpec['steps'][number], workflow: Workf
   return `Condition\n${lines.join('\n')}`
 }
 
-function WorkflowCard({ workflow, roles }: { workflow: WorkflowSpec; roles: RoleSpec[] }) {
-  const gridWrapperRef = useRef<HTMLDivElement>(null)
-  const stepRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
-  const [connectors, setConnectors] = useState<Connector[]>([])
-  const [svgSize, setSvgSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 })
-  const markerId = `wf-arrow-${useId().replace(/:/g, '')}`
+interface WorkflowLayout {
+  nodes: Node[]
+  edges: Edge[]
+  rowOrder: string[]
+  maxColumn: number
+  stepAreaWidth: number
+  stepAreaHeight: number
+}
 
-  // Precomputed layout: max column across steps and the ordered row list.
-  const { maxColumn, rowOrder } = useMemo(() => {
-    const maxCol = workflow.steps.reduce((m, s) => Math.max(m, s.column), 1)
-    const usedAssignees = new Set(workflow.steps.map((s) => s.assignee))
-    const roleOrder = roles.map((r) => r.name).filter((n) => usedAssignees.has(n))
-    const rows = [
-      ...roleOrder,
-      ...(usedAssignees.has(UNDEFINED_ASSIGNEE) ? [UNDEFINED_ASSIGNEE] : []),
-    ]
-    return { maxColumn: maxCol, rowOrder: rows }
-  }, [workflow, roles])
+function buildWorkflowLayout(workflow: WorkflowSpec, roles: RoleSpec[]): WorkflowLayout {
+  const { columnWidth, rowHeight, chipWidth, chipHeight, diamondSize } = WF_LAYOUT
 
-  // Recompute the SVG connector line list from live step-box positions.
-  // Runs after paint (useLayoutEffect) so getBoundingClientRect returns final
-  // positions, and again on any container resize via ResizeObserver below.
-  const recomputeConnectors = () => {
-    const wrapper = gridWrapperRef.current
-    if (!wrapper) return
-    const wrapperRect = wrapper.getBoundingClientRect()
-    const lines: Connector[] = []
-    for (const step of workflow.steps) {
-      const fromEl = stepRefs.current.get(step.id)
-      if (!fromEl) continue
-      const fromRect = fromEl.getBoundingClientRect()
-      const x1 = fromRect.right - wrapperRect.left
-      const y1 = fromRect.top + fromRect.height / 2 - wrapperRect.top
-      for (const nextId of step.next) {
-        const toEl = stepRefs.current.get(nextId)
-        if (!toEl) continue
-        const toRect = toEl.getBoundingClientRect()
-        const x2 = toRect.left - wrapperRect.left
-        const y2 = toRect.top + toRect.height / 2 - wrapperRect.top
-        lines.push({ key: `${step.id}->${nextId}`, path: orthPath(x1, y1, x2, y2) })
-      }
+  const usedAssignees = new Set(workflow.steps.map((s) => s.assignee))
+  const rowOrder = [
+    ...roles.map((r) => r.name).filter((n) => usedAssignees.has(n)),
+    ...(usedAssignees.has(UNDEFINED_ASSIGNEE) ? [UNDEFINED_ASSIGNEE] : []),
+  ]
+  const rowIdx = new Map(rowOrder.map((a, i) => [a, i]))
+  const maxColumn = workflow.steps.reduce((m, s) => Math.max(m, s.column), 1)
+
+  // Node positions are relative to the STEP AREA only (0,0 = top-left of the
+  // step area, not the whole swimlane). The assignee column and header row
+  // live in separate sticky cells outside React Flow's container.
+  const stepAreaWidth = maxColumn * columnWidth
+  const stepAreaHeight = rowOrder.length * rowHeight
+
+  const nodes: Node[] = workflow.steps.map((step) => {
+    const isBranching = step.next.length > 1
+    const rIdx = rowIdx.get(step.assignee) ?? 0
+    const nodeWidth = isBranching ? diamondSize : chipWidth
+    const nodeHeight = isBranching ? diamondSize : chipHeight
+    const x = (step.column - 1) * columnWidth + (columnWidth - nodeWidth) / 2
+    const y = rIdx * rowHeight + (rowHeight - nodeHeight) / 2
+    return {
+      id: step.id,
+      type: isBranching ? 'diamond' : 'stepChip',
+      position: { x, y },
+      data: isBranching
+        ? { step, tooltip: buildBranchTooltip(step, workflow) }
+        : { step },
+      draggable: false,
+      selectable: false,
     }
-    setConnectors(lines)
-    setSvgSize({ w: wrapper.scrollWidth, h: wrapper.scrollHeight })
+  })
+
+  const edges: Edge[] = []
+  for (const step of workflow.steps) {
+    const isBranching = step.next.length > 1
+    const sourceRow = rowIdx.get(step.assignee) ?? 0
+    for (const nextId of step.next) {
+      const target = workflow.steps.find((s) => s.id === nextId)
+      if (!target) continue
+      const targetRow = rowIdx.get(target.assignee) ?? 0
+
+      let sourceHandle: string
+      let targetHandle: string
+
+      if (targetRow === sourceRow) {
+        sourceHandle = 'source-right'
+        targetHandle = 'target-left'
+      } else if (targetRow < sourceRow) {
+        // Target is ABOVE — diamond exits top, chip still exits right.
+        sourceHandle = isBranching ? 'source-top' : 'source-right'
+        targetHandle = isBranching ? 'target-bottom' : 'target-left'
+      } else {
+        // Target is BELOW — diamond exits bottom, chip still exits right.
+        sourceHandle = isBranching ? 'source-bottom' : 'source-right'
+        targetHandle = isBranching ? 'target-top' : 'target-left'
+      }
+
+      edges.push({
+        id: `${step.id}->${nextId}`,
+        source: step.id,
+        target: nextId,
+        sourceHandle,
+        targetHandle,
+        type: 'smoothstep',
+        style: { stroke: 'var(--orange-500)', strokeWidth: 1.5 },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: 'var(--orange-500)',
+          width: 16,
+          height: 16,
+        },
+      })
+    }
   }
 
-  useLayoutEffect(() => {
-    recomputeConnectors()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflow])
+  return { nodes, edges, rowOrder, maxColumn, stepAreaWidth, stepAreaHeight }
+}
 
-  useEffect(() => {
-    if (!gridWrapperRef.current) return
-    const observer = new ResizeObserver(() => recomputeConnectors())
-    observer.observe(gridWrapperRef.current)
-    return () => observer.disconnect()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflow])
+// WorkflowList — thin wrapper that just maps to WorkflowCard.
+function WorkflowList({ items, roles }: { items: WorkflowSpec[]; roles: RoleSpec[] }) {
+  return (
+    <div className="space-y-3">
+      {items.map((wf) => (
+        <WorkflowCard key={wf.name} workflow={wf} roles={roles} />
+      ))}
+    </div>
+  )
+}
+
+// WorkflowCard — the swimlane is a CSS-Grid table:
+//   Row 1  = sticky-top header row (Assignee corner + Step 1, Step 2, …)
+//   Row 2  = body (sticky-left assignee column + React Flow step area)
+// The outer wrapper is `overflow-auto` with a max-height so the scroll
+// happens INSIDE the card. The corner cell is sticky in both directions,
+// the header row sticks to the top for vertical scroll, the assignee
+// column sticks to the left for horizontal scroll, and the React Flow
+// canvas is confined to the step area only (no more laneLabelWidth offset).
+function WorkflowCard({ workflow, roles }: { workflow: WorkflowSpec; roles: RoleSpec[] }) {
+  const layout = useMemo(() => buildWorkflowLayout(workflow, roles), [workflow, roles])
+  const { laneLabelWidth, columnWidth, headerHeight, rowHeight } = WF_LAYOUT
+  const { rowOrder, maxColumn, stepAreaWidth, stepAreaHeight, nodes, edges } = layout
+  const totalWidth = laneLabelWidth + stepAreaWidth
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all">
@@ -595,203 +746,161 @@ function WorkflowCard({ workflow, roles }: { workflow: WorkflowSpec; roles: Role
         </div>
       </div>
 
-      {/* Swimlane grid with SVG connector overlay */}
-      <div className="mt-4 border border-gray-200 rounded-lg overflow-x-auto bg-white">
-        <div
-          ref={gridWrapperRef}
-          className="relative min-w-max"
-        >
+      {/* Swimlane */}
+      <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <div className="overflow-auto max-w-full" style={{ maxHeight: 480 }}>
           <div
-            className="grid text-[12px] leading-snug"
             style={{
-              gridTemplateColumns: `minmax(160px, max-content) repeat(${maxColumn}, minmax(160px, 1fr))`,
+              display: 'grid',
+              gridTemplateColumns: `${laneLabelWidth}px ${stepAreaWidth}px`,
+              gridTemplateRows: `${headerHeight}px ${stepAreaHeight}px`,
+              width: totalWidth,
             }}
           >
-            {/* Header row */}
-            <div className="bg-gray-100 border-b border-r border-gray-200 px-3 py-2 font-medium text-gray-700">
+            {/* Corner cell — sticky top AND left */}
+            <div
+              className="flex items-center px-3 text-[12px] font-medium text-gray-700 bg-gray-100"
+              style={{
+                position: 'sticky',
+                top: 0,
+                left: 0,
+                zIndex: 30,
+                gridRow: 1,
+                gridColumn: 1,
+                borderRight: '1px solid var(--gray-200)',
+                borderBottom: '1px solid var(--gray-200)',
+              }}
+            >
               Assignee
             </div>
-            {Array.from({ length: maxColumn }).map((_, i) => (
-              <div
-                key={i}
-                className={
-                  'bg-gray-100 border-b border-gray-200 px-3 py-2 font-medium text-gray-700 ' +
-                  (i < maxColumn - 1 ? 'border-r' : '')
-                }
-              >
-                Step {i + 1}
-              </div>
-            ))}
 
-            {/* Body rows */}
-            {rowOrder.map((assignee, rowIdx) => {
-              const notLastRow = rowIdx < rowOrder.length - 1
-              const isUndefined = assignee === UNDEFINED_ASSIGNEE
-              return (
-                <Fragment key={assignee}>
+            {/* Step header row — sticky top only */}
+            <div
+              className="flex bg-gray-100"
+              style={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 20,
+                gridRow: 1,
+                gridColumn: 2,
+                borderBottom: '1px solid var(--gray-200)',
+                width: stepAreaWidth,
+                height: headerHeight,
+              }}
+            >
+              {Array.from({ length: maxColumn }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center px-3 text-[12px] font-medium text-gray-700"
+                  style={{
+                    width: columnWidth,
+                    height: headerHeight,
+                    borderRight: i < maxColumn - 1 ? '1px solid var(--gray-200)' : undefined,
+                  }}
+                >
+                  Step {i + 1}
+                </div>
+              ))}
+            </div>
+
+            {/* Assignee column — sticky left only */}
+            <div
+              className="bg-white"
+              style={{
+                position: 'sticky',
+                left: 0,
+                zIndex: 10,
+                gridRow: 2,
+                gridColumn: 1,
+                width: laneLabelWidth,
+                height: stepAreaHeight,
+                borderRight: '1px solid var(--gray-200)',
+              }}
+            >
+              {rowOrder.map((assignee, r) => {
+                const isUndefined = assignee === UNDEFINED_ASSIGNEE
+                return (
                   <div
+                    key={assignee}
                     className={
-                      'border-r border-gray-200 px-3 py-4 text-gray-900 font-medium ' +
-                      (notLastRow ? 'border-b ' : '') +
-                      (isUndefined ? 'italic text-gray-600' : '')
+                      'flex items-center px-3 text-[12px] font-medium ' +
+                      (isUndefined ? 'italic text-gray-600' : 'text-gray-900')
                     }
+                    style={{
+                      height: rowHeight,
+                      borderBottom: r < rowOrder.length - 1 ? '1px solid var(--gray-200)' : undefined,
+                    }}
+                    title={isUndefined ? 'Assignee resolved at runtime by a condition' : undefined}
                   >
-                    {isUndefined ? (
-                      <span title="Assignee resolved at runtime by a condition">
-                        {assignee}
-                      </span>
-                    ) : (
-                      assignee
-                    )}
+                    {assignee}
                   </div>
-                  {Array.from({ length: maxColumn }).map((_, colIdx) => {
-                    const col = colIdx + 1
-                    const notLastCol = colIdx < maxColumn - 1
-                    const stepAtCell = workflow.steps.find(
-                      (s) => s.assignee === assignee && s.column === col,
-                    )
-                    return (
-                      <div
-                        key={col}
-                        className={
-                          'px-3 py-4 ' +
-                          (notLastCol ? 'border-r border-gray-200 ' : '') +
-                          (notLastRow ? 'border-b border-gray-200' : '')
-                        }
-                      >
-                        {stepAtCell && (
-                          <StepChip
-                            step={stepAtCell}
-                            registerRef={(el) => stepRefs.current.set(stepAtCell.id, el)}
-                            branchTooltip={buildBranchTooltip(stepAtCell, workflow)}
-                          />
-                        )}
-                      </div>
-                    )
-                  })}
-                </Fragment>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
 
-          {/* Connector overlay */}
-          <svg
-            className="absolute inset-0 pointer-events-none"
-            width={svgSize.w}
-            height={svgSize.h}
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <defs>
-              <marker
-                id={markerId}
-                markerWidth="8"
-                markerHeight="8"
-                refX="7"
-                refY="4"
-                orient="auto"
-                markerUnits="strokeWidth"
-              >
-                <path d="M0,0 L8,4 L0,8 Z" fill="var(--orange-500)" />
-              </marker>
-            </defs>
-            {connectors.map((c) => (
-              <path
-                key={c.key}
-                d={c.path}
-                fill="none"
-                stroke="var(--orange-500)"
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                markerEnd={`url(#${markerId})`}
+            {/* Step area — React Flow + grid dividers */}
+            <div
+              style={{
+                gridRow: 2,
+                gridColumn: 2,
+                position: 'relative',
+                width: stepAreaWidth,
+                height: stepAreaHeight,
+              }}
+            >
+              {/* Vertical column dividers */}
+              {Array.from({ length: maxColumn - 1 }).map((_, i) => (
+                <div
+                  key={`vdiv-${i}`}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: (i + 1) * columnWidth - 1,
+                    top: 0,
+                    width: 1,
+                    height: stepAreaHeight,
+                    background: 'var(--gray-200)',
+                  }}
+                />
+              ))}
+              {/* Horizontal row dividers */}
+              {Array.from({ length: rowOrder.length - 1 }).map((_, i) => (
+                <div
+                  key={`hdiv-${i}`}
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: (i + 1) * rowHeight - 1,
+                    left: 0,
+                    width: stepAreaWidth,
+                    height: 1,
+                    background: 'var(--gray-200)',
+                  }}
+                />
+              ))}
+
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                nodeTypes={workflowNodeTypes}
+                nodesDraggable={false}
+                nodesConnectable={false}
+                nodesFocusable={false}
+                edgesFocusable={false}
+                elementsSelectable={false}
+                panOnDrag={false}
+                zoomOnScroll={false}
+                zoomOnDoubleClick={false}
+                zoomOnPinch={false}
+                panOnScroll={false}
+                preventScrolling={false}
+                fitView={false}
+                proOptions={{ hideAttribution: true }}
+                defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+                style={{ background: 'transparent' }}
               />
-            ))}
-          </svg>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function StepChip({
-  step,
-  registerRef,
-  branchTooltip,
-}: {
-  step: WorkflowSpec['steps'][number]
-  registerRef: (el: HTMLDivElement | null) => void
-  branchTooltip?: string
-}) {
-  const isBranching = step.next.length > 1
-  const isConditional = !!step.condition
-
-  // Branching cell → full-cell diamond via clip-path. Native tooltip on hover
-  // shows the routing with each target's condition.
-  if (isBranching) {
-    return (
-      <div
-        ref={registerRef}
-        title={branchTooltip}
-        className="relative w-full flex items-center justify-center cursor-help min-h-[72px]"
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundColor: 'var(--orange-100)',
-            border: `1.5px ${step.optional ? 'dashed' : 'solid'} var(--orange-500)`,
-            clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-          }}
-          aria-hidden="true"
-        />
-        <div className="relative flex items-center gap-1.5 max-w-[62%] justify-center px-2">
-          <Split
-            className="w-3.5 h-3.5 flex-shrink-0"
-            strokeWidth={2}
-            style={{ color: 'var(--orange-500)' }}
-          />
-          <span
-            className="text-[12px] font-medium leading-tight text-center"
-            style={{ color: 'var(--orange-700)' }}
-          >
-            {step.name}
-          </span>
-        </div>
-      </div>
-    )
-  }
-
-  // Regular step chip (unchanged shape, added strokes for optional/conditional)
-  return (
-    <div
-      ref={registerRef}
-      className={
-        'rounded-md px-2.5 py-1.5 text-[12px] font-medium leading-snug ' +
-        (step.optional ? 'border-dashed' : '')
-      }
-      style={{
-        backgroundColor: 'var(--orange-100)',
-        border: `1px ${step.optional ? 'dashed' : 'solid'} var(--orange-300)`,
-        color: 'var(--orange-700)',
-      }}
-    >
-      <div className="flex items-center gap-1.5">
-        <span
-          className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-semibold flex-shrink-0"
-          style={{ backgroundColor: 'var(--orange-500)', color: 'white' }}
-        >
-          {step.column}
-        </span>
-        <span className="truncate">{step.name}</span>
-      </div>
-      {isConditional && (
-        <div
-          className="mt-1 text-[10px] font-normal italic leading-none"
-          style={{ color: 'var(--orange-600)' }}
-        >
-          {step.condition}
-        </div>
-      )}
     </div>
   )
 }
