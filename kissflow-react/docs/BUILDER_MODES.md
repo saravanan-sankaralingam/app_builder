@@ -87,10 +87,69 @@ The AppSpecView outer container is `bg-white/75 backdrop-blur-2xl rounded-t-xl b
 interface AppSpec {
   roles: RoleSpec[]         // { name, description: string }  (single-line prose, not bullets)
   entities: EntitySpec[]    // { name, description, fields: EntityField[], permissions: EntityPermission[] }
+  workflows: WorkflowSpec[] // see the Workflows section below
   pages: PageSpec[]         // { name, description }
   navigations: NavigationSpec[]  // { title, sharedWith: string[], menu: NavMenuItem[] }
 }
 ```
+
+### Workflows
+
+Each workflow renders as a swimlane diagram — rows are assignees, columns are step positions, and SVG lines connect steps to show flow.
+
+```ts
+export const UNDEFINED_ASSIGNEE = 'Undefined'  // dynamic-assignee swimlane (bottom row)
+
+interface WorkflowStep {
+  id: string
+  name: string
+  assignee: string   // role name OR UNDEFINED_ASSIGNEE
+  column: number     // 1-based; multiple steps may share a column (parallel branches)
+  next: string[]     // ids of the next step(s); multi = parallel/conditional branch; empty = terminal
+  condition?: string // e.g. "if amount > $1,000" — rendered as a caption on the step chip
+  optional?: boolean // true → dashed border to signal "may be skipped"
+}
+
+interface WorkflowSpec {
+  name: string
+  description: string
+  entity?: string                  // which entity this workflow governs
+  steps: WorkflowStep[]
+}
+```
+
+**Layout algorithm** (`WorkflowCard` in `AppSpecView.tsx`):
+1. Rows = the app's `roles` in declared order, filtered to roles that own at least one step, plus **`Undefined`** appended at the bottom if any step uses it. The Undefined row label renders italic gray-600 as a soft hint that the assignee is decided at runtime.
+2. Columns = `1..maxColumn` where `maxColumn = max(step.column)`. Header row shows `Step 1`, `Step 2`, ….
+3. CSS Grid: `gridTemplateColumns: "minmax(160px, max-content) repeat(maxColumn, minmax(160px, 1fr))"`. `overflow-x-auto` on the wrapper so long flows scroll horizontally.
+4. For each `(assignee, column)` cell, place the matching step chip if one exists — otherwise leave empty. Multiple steps at the same column (parallel branches) sit in different assignee rows.
+
+**Step chip — two variants** (both in `StepChip` inside `AppSpecView.tsx`):
+
+1. **Regular** (`step.next.length <= 1`) — `bg-orange-100 border-orange-300 text-orange-700` rounded-md rectangle with a filled orange-500 badge showing the step's `column` number. If `step.optional` is true, border becomes dashed. If `step.condition` is set, a small italic `text-orange-600` caption sits under the name showing the condition text.
+2. **Diamond** (`step.next.length > 1` — the step branches) — the whole cell becomes a rhombus via `clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)` on a full-cell `absolute inset-0` layer, `bg-orange-100` fill and `1.5px solid` (or dashed if optional) `orange-500` border. Content inside: a lucide **`Split`** icon + the step name, both centered in the diamond's widest strip via `max-w-[62%]` so text doesn't clip the pointed edges. `min-h-[72px]` on the container so the diamond has enough vertical room; the grid row height picks this up and every row in that workflow inherits the same height. A native `title` tooltip on the container enumerates the branch targets and their conditions — `Condition\n→ Finance review: if amount > $1,000\n→ Compliance check: if international travel\n→ Approve: default path` — built by `buildBranchTooltip(step, workflow)`.
+
+**Connector lines** — SVG overlay absolutely positioned over the grid.
+- `useLayoutEffect` measures each rendered step element via `stepRefs` (a `Map<stepId, HTMLDivElement>`) after paint. One ref map covers both chip and diamond variants — both types register the same callback, and `getBoundingClientRect()` returns the same right-middle / left-middle attach points for both shapes (the diamond's right vertex sits exactly at `(rect.right, rect.top + rect.height/2)`).
+- Path routing via `orthPath(x1, y1, x2, y2)`:
+  - Same-row transition (`|y1 - y2| < 4`) → straight horizontal `M x1 y1 L x2 y2`.
+  - Cross-row → Z-shape `M x1 y1 L xMid y1 L xMid y2 L x2 y2` where `xMid` is the midpoint between the two columns. This is the standard flowchart routing pattern and reads much more cleanly than diagonals when arrows fan out from a diamond.
+- Stroke: **`orange-500`** at 1.5px with `strokeLinecap="round"` + `strokeLinejoin="round"` so the corners on Z-paths look intentional. Arrowhead via a `<marker>` with `orient="auto"` (correctly rotates for the final segment).
+- `ResizeObserver` recomputes on container resize so lines stay in sync during horizontal scroll or window resize.
+- Marker id is `useId()`-scoped so multiple workflow cards on the same page don't collide.
+
+**Modelling the branch / skip / dynamic-assignee cases:**
+
+| Scenario | Data pattern |
+|---|---|
+| Linear flow | `next: [nextId]` on every step, columns 1..N |
+| Conditional branch (fork) | Predecessor's `next: [a, b]` — a and b are two conditional steps, each with a `condition` |
+| Convergence | Multiple steps' `next` arrays all point at the same successor step |
+| Skip step | A single step with `condition` set and, on its predecessor, both `next: [skipStep, nextStep]` — reader interprets: "if condition matches, go through the skip step; otherwise straight to nextStep" |
+| Dynamic-assignee step | `assignee: UNDEFINED_ASSIGNEE` — routes to the Undefined swimlane at the bottom of the grid |
+| Optional step | `optional: true` — dashed border signals it may be skipped even when the condition matches |
+
+The Expense Claim Approval workflow (Expense Management app) exercises all four capabilities and is the canonical example in the codebase.
 
 **Adding a new static app to Spec:**
 1. Register the app in `lib/static-apps.ts`.

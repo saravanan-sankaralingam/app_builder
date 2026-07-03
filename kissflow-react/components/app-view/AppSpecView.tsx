@@ -1,11 +1,14 @@
 'use client'
 
-import { Users, Database, FileText, Compass } from 'lucide-react'
+import { useState, useEffect, useLayoutEffect, useMemo, useRef, useId, Fragment } from 'react'
+import { Users, Database, FileText, Compass, Workflow, RefreshCw, ChevronDown, ChevronUp, Split } from 'lucide-react'
 import { getStaticApp } from '@/lib/static-apps'
 import {
   getAppSpec,
+  UNDEFINED_ASSIGNEE,
   type RoleSpec,
   type EntitySpec,
+  type WorkflowSpec,
   type PageSpec,
   type NavigationSpec,
   type NavMenuItem,
@@ -69,6 +72,7 @@ export function AppSpecView({ appId }: { appId: string }) {
           sections={[
             { id: SPEC_SECTIONS.roles, label: 'Roles', icon: Users },
             { id: SPEC_SECTIONS.entities, label: 'Data entities', icon: Database },
+            { id: SPEC_SECTIONS.workflows, label: 'Workflows', icon: Workflow },
             { id: SPEC_SECTIONS.pages, label: 'Pages', icon: FileText },
             { id: SPEC_SECTIONS.navigation, label: 'Navigation', icon: Compass },
           ]}
@@ -84,7 +88,7 @@ export function AppSpecView({ appId }: { appId: string }) {
               count={String(spec.roles.length)}
               accentColor="var(--magenta-500)"
             >
-              <RoleList items={spec.roles} />
+              <RoleList items={spec.roles} entities={spec.entities} />
             </Section>
 
             <Section
@@ -99,6 +103,16 @@ export function AppSpecView({ appId }: { appId: string }) {
                   <EntityCard key={entity.name} entity={entity} />
                 ))}
               </div>
+            </Section>
+
+            <Section
+              id={SPEC_SECTIONS.workflows}
+              title="Workflows"
+              subtitle="Process paths across roles, laid out as swimlanes"
+              count={String(spec.workflows.length)}
+              accentColor="var(--orange-500)"
+            >
+              <WorkflowList items={spec.workflows} roles={spec.roles} />
             </Section>
 
             <Section
@@ -131,6 +145,7 @@ export function AppSpecView({ appId }: { appId: string }) {
 const SPEC_SECTIONS = {
   roles: 'spec-section-roles',
   entities: 'spec-section-entities',
+  workflows: 'spec-section-workflows',
   pages: 'spec-section-pages',
   navigation: 'spec-section-navigation',
 } as const
@@ -183,9 +198,23 @@ function AppIdentity({ name, description }: { name: string; description: string 
   const displayDescription = trimmed.length > 60 ? trimmed : FALLBACK_DESCRIPTION
   return (
     <div>
-      <h3 className="text-[16px] font-semibold text-gray-900 tracking-tight leading-snug">
-        {name}
-      </h3>
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="text-[16px] font-semibold text-gray-900 tracking-tight leading-snug min-w-0 truncate">
+          {name}
+        </h3>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-[12px] text-gray-600 leading-none">
+            Last updated 5 mins ago
+          </span>
+          <button
+            type="button"
+            className="flex items-center gap-1 text-[12px] font-medium text-blue-600 hover:underline leading-none"
+          >
+            <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.75} />
+            Refresh
+          </button>
+        </div>
+      </div>
       <p className="mt-1.5 text-[13px] text-gray-600 leading-relaxed whitespace-pre-line">
         {displayDescription}
       </p>
@@ -279,32 +308,94 @@ function PermissionChip({ level }: { level: PermissionLevel }) {
 }
 
 // ─── Roles ──────────────────────────────────────────────────────────────────
-function RoleList({ items }: { items: RoleSpec[] }) {
+function RoleList({ items, entities }: { items: RoleSpec[]; entities: EntitySpec[] }) {
   return (
     <ul className="space-y-3">
       {items.map((item) => (
-        <li
-          key={item.name}
-          className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all"
-        >
-          <div className="flex items-start gap-2.5">
-            <Users
-              className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
-              strokeWidth={1.75}
-              style={{ color: 'var(--magenta-500)' }}
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-semibold text-gray-900 leading-snug">
-                {item.name}
-              </p>
-              <p className="text-[13px] text-gray-600 leading-relaxed mt-1">
-                {item.description}
-              </p>
-            </div>
-          </div>
-        </li>
+        <RoleCard key={item.name} role={item} entities={entities} />
       ))}
     </ul>
+  )
+}
+
+function RoleCard({ role, entities }: { role: RoleSpec; entities: EntitySpec[] }) {
+  const [expanded, setExpanded] = useState(false)
+
+  // Build the role's per-entity permission list. Entities where this role has
+  // no explicit permission are shown as "No access" so the table is complete.
+  const rolePermissions = entities.map((entity) => {
+    const perm = entity.permissions.find((p) => p.role === role.name)
+    return { entity: entity.name, level: perm?.level ?? null }
+  })
+
+  return (
+    <li className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all">
+      <div className="flex items-start gap-2.5">
+        <Users
+          className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
+          strokeWidth={1.75}
+          style={{ color: 'var(--magenta-500)' }}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-[14px] font-semibold text-gray-900 leading-snug">
+            {role.name}
+          </p>
+          <p className="text-[13px] text-gray-600 leading-relaxed mt-1">
+            {role.description}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="mt-3 ml-[26px] flex items-center gap-1 text-[12px] font-medium text-blue-600 hover:underline leading-none"
+        aria-expanded={expanded}
+      >
+        {expanded ? 'Hide permissions' : 'View permissions'}
+        {expanded ? (
+          <ChevronUp className="w-3.5 h-3.5" strokeWidth={1.75} />
+        ) : (
+          <ChevronDown className="w-3.5 h-3.5" strokeWidth={1.75} />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="mt-3 ml-[26px] border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <table className="w-full text-[12px] leading-snug">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
+                  Data entity
+                </th>
+                <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
+                  Permission
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rolePermissions.map((p, i) => (
+                <tr
+                  key={p.entity}
+                  className={i < rolePermissions.length - 1 ? 'border-b border-gray-100' : ''}
+                >
+                  <td className="px-3 py-2 text-gray-900">{p.entity}</td>
+                  <td className="px-3 py-2">
+                    {p.level ? (
+                      <PermissionChip level={p.level} />
+                    ) : (
+                      <span className="text-[11px] text-gray-500 font-medium leading-none">
+                        No access
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </li>
   )
 }
 
@@ -345,9 +436,6 @@ function EntityCard({ entity }: { entity: EntitySpec }) {
               <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
                 Type
               </th>
-              <th className="text-center px-3 py-2 font-medium text-gray-700 border-b border-gray-200 w-[80px]">
-                Required
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -356,18 +444,19 @@ function EntityCard({ entity }: { entity: EntitySpec }) {
                 key={field.id}
                 className={i < entity.fields.length - 1 ? 'border-b border-gray-100' : ''}
               >
-                <td className="px-3 py-2 text-gray-900">{field.name}</td>
-                <td className="px-3 py-2">
-                  <FieldTypeBadge type={field.type} />
-                </td>
-                <td className="px-3 py-2 text-center">
+                <td className="px-3 py-2 text-gray-900">
+                  {field.name}
                   {field.required && (
                     <span
-                      className="inline-block w-2 h-2 rounded-full"
-                      style={{ backgroundColor: 'var(--green-500)' }}
+                      className="text-red-500 ml-0.5"
                       aria-label="Required"
-                    />
+                    >
+                      *
+                    </span>
                   )}
+                </td>
+                <td className="px-3 py-2">
+                  <FieldTypeBadge type={field.type} />
                 </td>
               </tr>
             ))}
@@ -375,39 +464,334 @@ function EntityCard({ entity }: { entity: EntitySpec }) {
         </table>
       </div>
 
-      {/* Permissions */}
-      <p className="text-[13px] text-gray-600 mt-5 mb-2 leading-relaxed">
-        <span className="font-semibold text-gray-900">Permissions</span>
-        {' — '}
-        Who can view, edit, or fully manage {entity.name} records.
-      </p>
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-        <table className="w-full text-[12px] leading-snug">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
-                Role
-              </th>
-              <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
-                Permission
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {entity.permissions.map((perm, i) => (
-              <tr
-                key={perm.role}
-                className={i < entity.permissions.length - 1 ? 'border-b border-gray-100' : ''}
-              >
-                <td className="px-3 py-2 text-gray-900">{perm.role}</td>
-                <td className="px-3 py-2">
-                  <PermissionChip level={perm.level} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    </div>
+  )
+}
+
+// ─── Workflows ──────────────────────────────────────────────────────────────
+function WorkflowList({ items, roles }: { items: WorkflowSpec[]; roles: RoleSpec[] }) {
+  return (
+    <div className="space-y-3">
+      {items.map((wf) => (
+        <WorkflowCard key={wf.name} workflow={wf} roles={roles} />
+      ))}
+    </div>
+  )
+}
+
+interface Connector {
+  key: string
+  path: string
+}
+
+// Orthogonal (right-angle) path between two points. Same-row pairs get a
+// straight horizontal line; cross-row pairs get a Z-shape with the vertical
+// leg at the midpoint between the two columns.
+function orthPath(x1: number, y1: number, x2: number, y2: number): string {
+  if (Math.abs(y1 - y2) < 4) {
+    return `M ${x1} ${y1} L ${x2} ${y2}`
+  }
+  const xMid = x1 + (x2 - x1) * 0.5
+  return `M ${x1} ${y1} L ${xMid} ${y1} L ${xMid} ${y2} L ${x2} ${y2}`
+}
+
+// Native tooltip text for a branching step — enumerates every next step and
+// the condition (if any) that gates the branch.
+function buildBranchTooltip(step: WorkflowSpec['steps'][number], workflow: WorkflowSpec): string {
+  if (step.next.length <= 1) return ''
+  const lines = step.next
+    .map((nextId) => {
+      const target = workflow.steps.find((s) => s.id === nextId)
+      if (!target) return null
+      const cond = target.condition ?? 'default path'
+      return `→ ${target.name}: ${cond}`
+    })
+    .filter(Boolean)
+  return `Condition\n${lines.join('\n')}`
+}
+
+function WorkflowCard({ workflow, roles }: { workflow: WorkflowSpec; roles: RoleSpec[] }) {
+  const gridWrapperRef = useRef<HTMLDivElement>(null)
+  const stepRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
+  const [connectors, setConnectors] = useState<Connector[]>([])
+  const [svgSize, setSvgSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 })
+  const markerId = `wf-arrow-${useId().replace(/:/g, '')}`
+
+  // Precomputed layout: max column across steps and the ordered row list.
+  const { maxColumn, rowOrder } = useMemo(() => {
+    const maxCol = workflow.steps.reduce((m, s) => Math.max(m, s.column), 1)
+    const usedAssignees = new Set(workflow.steps.map((s) => s.assignee))
+    const roleOrder = roles.map((r) => r.name).filter((n) => usedAssignees.has(n))
+    const rows = [
+      ...roleOrder,
+      ...(usedAssignees.has(UNDEFINED_ASSIGNEE) ? [UNDEFINED_ASSIGNEE] : []),
+    ]
+    return { maxColumn: maxCol, rowOrder: rows }
+  }, [workflow, roles])
+
+  // Recompute the SVG connector line list from live step-box positions.
+  // Runs after paint (useLayoutEffect) so getBoundingClientRect returns final
+  // positions, and again on any container resize via ResizeObserver below.
+  const recomputeConnectors = () => {
+    const wrapper = gridWrapperRef.current
+    if (!wrapper) return
+    const wrapperRect = wrapper.getBoundingClientRect()
+    const lines: Connector[] = []
+    for (const step of workflow.steps) {
+      const fromEl = stepRefs.current.get(step.id)
+      if (!fromEl) continue
+      const fromRect = fromEl.getBoundingClientRect()
+      const x1 = fromRect.right - wrapperRect.left
+      const y1 = fromRect.top + fromRect.height / 2 - wrapperRect.top
+      for (const nextId of step.next) {
+        const toEl = stepRefs.current.get(nextId)
+        if (!toEl) continue
+        const toRect = toEl.getBoundingClientRect()
+        const x2 = toRect.left - wrapperRect.left
+        const y2 = toRect.top + toRect.height / 2 - wrapperRect.top
+        lines.push({ key: `${step.id}->${nextId}`, path: orthPath(x1, y1, x2, y2) })
+      }
+    }
+    setConnectors(lines)
+    setSvgSize({ w: wrapper.scrollWidth, h: wrapper.scrollHeight })
+  }
+
+  useLayoutEffect(() => {
+    recomputeConnectors()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflow])
+
+  useEffect(() => {
+    if (!gridWrapperRef.current) return
+    const observer = new ResizeObserver(() => recomputeConnectors())
+    observer.observe(gridWrapperRef.current)
+    return () => observer.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflow])
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all">
+      {/* Header */}
+      <div className="flex items-start gap-2.5">
+        <Workflow
+          className="w-[18px] h-[18px] flex-shrink-0 mt-0.5"
+          strokeWidth={1.75}
+          style={{ color: 'var(--orange-500)' }}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-3">
+            <h4 className="text-[14px] font-semibold text-gray-900 leading-snug">
+              {workflow.name}
+            </h4>
+            {workflow.entity && (
+              <span className="text-[11px] text-gray-500 font-medium whitespace-nowrap">
+                on {workflow.entity}
+              </span>
+            )}
+          </div>
+          <p className="text-[13px] text-gray-600 mt-1 leading-relaxed">
+            {workflow.description}
+          </p>
+        </div>
       </div>
+
+      {/* Swimlane grid with SVG connector overlay */}
+      <div className="mt-4 border border-gray-200 rounded-lg overflow-x-auto bg-white">
+        <div
+          ref={gridWrapperRef}
+          className="relative min-w-max"
+        >
+          <div
+            className="grid text-[12px] leading-snug"
+            style={{
+              gridTemplateColumns: `minmax(160px, max-content) repeat(${maxColumn}, minmax(160px, 1fr))`,
+            }}
+          >
+            {/* Header row */}
+            <div className="bg-gray-100 border-b border-r border-gray-200 px-3 py-2 font-medium text-gray-700">
+              Assignee
+            </div>
+            {Array.from({ length: maxColumn }).map((_, i) => (
+              <div
+                key={i}
+                className={
+                  'bg-gray-100 border-b border-gray-200 px-3 py-2 font-medium text-gray-700 ' +
+                  (i < maxColumn - 1 ? 'border-r' : '')
+                }
+              >
+                Step {i + 1}
+              </div>
+            ))}
+
+            {/* Body rows */}
+            {rowOrder.map((assignee, rowIdx) => {
+              const notLastRow = rowIdx < rowOrder.length - 1
+              const isUndefined = assignee === UNDEFINED_ASSIGNEE
+              return (
+                <Fragment key={assignee}>
+                  <div
+                    className={
+                      'border-r border-gray-200 px-3 py-4 text-gray-900 font-medium ' +
+                      (notLastRow ? 'border-b ' : '') +
+                      (isUndefined ? 'italic text-gray-600' : '')
+                    }
+                  >
+                    {isUndefined ? (
+                      <span title="Assignee resolved at runtime by a condition">
+                        {assignee}
+                      </span>
+                    ) : (
+                      assignee
+                    )}
+                  </div>
+                  {Array.from({ length: maxColumn }).map((_, colIdx) => {
+                    const col = colIdx + 1
+                    const notLastCol = colIdx < maxColumn - 1
+                    const stepAtCell = workflow.steps.find(
+                      (s) => s.assignee === assignee && s.column === col,
+                    )
+                    return (
+                      <div
+                        key={col}
+                        className={
+                          'px-3 py-4 ' +
+                          (notLastCol ? 'border-r border-gray-200 ' : '') +
+                          (notLastRow ? 'border-b border-gray-200' : '')
+                        }
+                      >
+                        {stepAtCell && (
+                          <StepChip
+                            step={stepAtCell}
+                            registerRef={(el) => stepRefs.current.set(stepAtCell.id, el)}
+                            branchTooltip={buildBranchTooltip(stepAtCell, workflow)}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </Fragment>
+              )
+            })}
+          </div>
+
+          {/* Connector overlay */}
+          <svg
+            className="absolute inset-0 pointer-events-none"
+            width={svgSize.w}
+            height={svgSize.h}
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <defs>
+              <marker
+                id={markerId}
+                markerWidth="8"
+                markerHeight="8"
+                refX="7"
+                refY="4"
+                orient="auto"
+                markerUnits="strokeWidth"
+              >
+                <path d="M0,0 L8,4 L0,8 Z" fill="var(--orange-500)" />
+              </marker>
+            </defs>
+            {connectors.map((c) => (
+              <path
+                key={c.key}
+                d={c.path}
+                fill="none"
+                stroke="var(--orange-500)"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                markerEnd={`url(#${markerId})`}
+              />
+            ))}
+          </svg>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StepChip({
+  step,
+  registerRef,
+  branchTooltip,
+}: {
+  step: WorkflowSpec['steps'][number]
+  registerRef: (el: HTMLDivElement | null) => void
+  branchTooltip?: string
+}) {
+  const isBranching = step.next.length > 1
+  const isConditional = !!step.condition
+
+  // Branching cell → full-cell diamond via clip-path. Native tooltip on hover
+  // shows the routing with each target's condition.
+  if (isBranching) {
+    return (
+      <div
+        ref={registerRef}
+        title={branchTooltip}
+        className="relative w-full flex items-center justify-center cursor-help min-h-[72px]"
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundColor: 'var(--orange-100)',
+            border: `1.5px ${step.optional ? 'dashed' : 'solid'} var(--orange-500)`,
+            clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-1.5 max-w-[62%] justify-center px-2">
+          <Split
+            className="w-3.5 h-3.5 flex-shrink-0"
+            strokeWidth={2}
+            style={{ color: 'var(--orange-500)' }}
+          />
+          <span
+            className="text-[12px] font-medium leading-tight text-center"
+            style={{ color: 'var(--orange-700)' }}
+          >
+            {step.name}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // Regular step chip (unchanged shape, added strokes for optional/conditional)
+  return (
+    <div
+      ref={registerRef}
+      className={
+        'rounded-md px-2.5 py-1.5 text-[12px] font-medium leading-snug ' +
+        (step.optional ? 'border-dashed' : '')
+      }
+      style={{
+        backgroundColor: 'var(--orange-100)',
+        border: `1px ${step.optional ? 'dashed' : 'solid'} var(--orange-300)`,
+        color: 'var(--orange-700)',
+      }}
+    >
+      <div className="flex items-center gap-1.5">
+        <span
+          className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-semibold flex-shrink-0"
+          style={{ backgroundColor: 'var(--orange-500)', color: 'white' }}
+        >
+          {step.column}
+        </span>
+        <span className="truncate">{step.name}</span>
+      </div>
+      {isConditional && (
+        <div
+          className="mt-1 text-[10px] font-normal italic leading-none"
+          style={{ color: 'var(--orange-600)' }}
+        >
+          {step.condition}
+        </div>
+      )}
     </div>
   )
 }

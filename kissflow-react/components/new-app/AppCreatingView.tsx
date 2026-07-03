@@ -114,7 +114,7 @@ const AGENTS: Agent[] = [
   },
   {
     id: 'designer',
-    name: 'Designer agent',
+    name: 'Interface Designer agent',
     sectionTitle: 'Design',
     icon: Palette,
     color: 'cyan',
@@ -126,7 +126,7 @@ const AGENTS: Agent[] = [
   },
   {
     id: 'publisher',
-    name: 'Publisher agent',
+    name: 'App Publisher agent',
     sectionTitle: 'Publish',
     icon: Rocket,
     color: 'green',
@@ -750,7 +750,7 @@ function AgentRow({
             </p>
             {/* Line 2: "working on it" + animated dot trail */}
             <p className="text-[13px] leading-snug whitespace-nowrap mt-0.5">
-              <span className="text-gray-600">working on it</span>
+              <span className="text-gray-600">is working on it</span>
               <DotTrail color={accentColor} />
             </p>
 
@@ -1310,10 +1310,7 @@ function RightPane({
           <Section
             title="Data entities"
             subtitle="Schema definitions with field types and per-role permissions"
-            count={`${MOCK_ENTITIES.length} entities · ${MOCK_ENTITIES.reduce(
-              (acc, e) => acc + e.fields.length,
-              0,
-            )} fields`}
+            count={String(MOCK_ENTITIES.length)}
             accentColor="var(--green-500)"
             icon={Database}
             status={entitiesResolved ? 'done' : 'generating'}
@@ -1442,7 +1439,7 @@ function Section({
             aria-hidden="true"
           />
         )}
-        <h3 className="text-[18px] font-semibold text-gray-900 tracking-tight leading-snug">
+        <h3 className="text-[16px] font-semibold text-gray-900 tracking-tight leading-snug">
           {title}
         </h3>
         {count !== undefined && <CountBadge>{count}</CountBadge>}
@@ -1477,7 +1474,7 @@ function Section({
 // Small gray pill showing a count in the section heading.
 function CountBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-full font-medium leading-none">
+    <span className="text-[11px] bg-gray-100 text-gray-700 px-1.5 py-1 rounded-full font-medium leading-none">
       {children}
     </span>
   )
@@ -1528,7 +1525,7 @@ function PermissionChip({ level }: { level: PermissionLevel }) {
 // longer surfaced here (see role editor for the full breakdown).
 function RoleList({ items }: { items: RoleSpec[] }) {
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-3">
       {items.map((item, i) => (
         <li
           key={item.name}
@@ -1540,7 +1537,7 @@ function RoleList({ items }: { items: RoleSpec[] }) {
             strokeWidth={3}
             style={{ color: 'var(--green-500)' }}
           />
-          <span className="text-[14px] text-gray-900 leading-snug">
+          <span className="text-[13px] text-gray-900 leading-snug">
             {item.name}
           </span>
         </li>
@@ -1570,7 +1567,7 @@ function WorkflowList({ items }: { items: WorkflowSpec[] }) {
             style={{ color: 'var(--green-500)' }}
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] text-gray-900 leading-snug">
+            <p className="text-[13px] text-gray-900 leading-snug">
               {workflow.name}
             </p>
             <p className="text-[13px] text-gray-600 leading-relaxed mt-1">
@@ -1588,7 +1585,7 @@ function WorkflowList({ items }: { items: WorkflowSpec[] }) {
 // the page editor rather than here so this section stays scannable.
 function PageList({ items }: { items: PageSpec[] }) {
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-3">
       {items.map((item, i) => (
         <li
           key={item.name}
@@ -1600,7 +1597,7 @@ function PageList({ items }: { items: PageSpec[] }) {
             strokeWidth={3}
             style={{ color: 'var(--green-500)' }}
           />
-          <span className="text-[14px] text-gray-900 leading-snug">
+          <span className="text-[13px] text-gray-900 leading-snug">
             {item.name}
           </span>
         </li>
@@ -1627,7 +1624,7 @@ function EntityList({ items }: { items: EntitySpec[] }) {
             style={{ color: 'var(--green-500)' }}
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] text-gray-900 leading-snug">
+            <p className="text-[13px] text-gray-900 leading-snug">
               {entity.name}
             </p>
             <p className="text-[13px] text-gray-600 leading-relaxed mt-1">
@@ -1654,7 +1651,7 @@ function RowListSkeleton({
   lines?: number
 }) {
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-3">
       {Array.from({ length: count }).map((_, i) => (
         <li key={i} className="flex items-start gap-2">
           <Circle
@@ -1929,7 +1926,7 @@ function EntityTable({
 // and the menu tree are surfaced in the navigation editor rather than here.
 function NavSitemap({ items }: { items: NavigationSpec[] }) {
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-3">
       {items.map((nav, i) => (
         <li
           key={nav.title}
@@ -1941,7 +1938,7 @@ function NavSitemap({ items }: { items: NavigationSpec[] }) {
             strokeWidth={3}
             style={{ color: 'var(--green-500)' }}
           />
-          <span className="text-[14px] text-gray-900 leading-snug">
+          <span className="text-[13px] text-gray-900 leading-snug">
             {nav.title}
           </span>
         </li>

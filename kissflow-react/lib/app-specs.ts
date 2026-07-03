@@ -33,6 +33,37 @@ export interface EntitySpec {
   permissions: EntityPermission[]
 }
 
+// Special assignee value for steps whose owning role is decided at runtime by
+// a condition (e.g. "compliance check by any senior manager based on region").
+// Rendered in its own "Undefined" swimlane row at the bottom.
+export const UNDEFINED_ASSIGNEE = 'Undefined'
+
+export interface WorkflowStep {
+  id: string
+  name: string
+  /** Role name (must match a `RoleSpec.name`) or `UNDEFINED_ASSIGNEE`. */
+  assignee: string
+  /** 1-based column position in the swimlane. Multiple steps may share a column (parallel branches). */
+  column: number
+  /** IDs of the next step(s). Multiple values = parallel/conditional branch. Empty = terminal step. */
+  next: string[]
+  /**
+   * Optional condition text — shown as a caption on the step chip. Presence
+   * indicates the step runs only when the condition is true (a conditional
+   * branch or skip point).
+   */
+  condition?: string
+  /** If true, the step is drawn with a dashed border to signal "may be skipped". */
+  optional?: boolean
+}
+
+export interface WorkflowSpec {
+  name: string
+  description: string
+  entity?: string    // optional: which entity this workflow governs
+  steps: WorkflowStep[]
+}
+
 export interface PageSpec {
   name: string
   description: string
@@ -53,6 +84,7 @@ export interface NavigationSpec {
 export interface AppSpec {
   roles: RoleSpec[]
   entities: EntitySpec[]
+  workflows: WorkflowSpec[]
   pages: PageSpec[]
   navigations: NavigationSpec[]
 }
@@ -157,6 +189,35 @@ const RETAIL_ONE_SPEC: AppSpec = {
         { role: 'Rollout Coordinator', level: 'manage' },
         { role: 'Regional Manager', level: 'edit' },
         { role: 'Real Estate Analyst', level: 'read' },
+      ],
+    },
+  ],
+  workflows: [
+    {
+      name: 'Store Rollout',
+      description:
+        'Sourcing a candidate site, evaluating it, negotiating a lease, and opening a store — with sign-off from Regional Manager at the commit points.',
+      entity: 'Rollout Project',
+      steps: [
+        { id: 'srw-1', name: 'Source site', assignee: 'Real Estate Analyst', column: 1, next: ['srw-2'] },
+        { id: 'srw-2', name: 'Score evaluation', assignee: 'Real Estate Analyst', column: 2, next: ['srw-3'] },
+        { id: 'srw-3', name: 'Approve for lease', assignee: 'Regional Manager', column: 3, next: ['srw-4'] },
+        { id: 'srw-4', name: 'Kick off rollout', assignee: 'Rollout Coordinator', column: 4, next: ['srw-5'] },
+        { id: 'srw-5', name: 'Fit-out complete', assignee: 'Rollout Coordinator', column: 5, next: ['srw-6'] },
+        { id: 'srw-6', name: 'Open store', assignee: 'Store Manager', column: 6, next: [] },
+      ],
+    },
+    {
+      name: 'Lease Renewal',
+      description:
+        'Renewal path for expiring leases. High-value leases route through an additional legal review by a senior counsel — assignee is decided by the counsel routing table at runtime, so it lands in the Undefined swimlane.',
+      entity: 'Store Lease',
+      steps: [
+        { id: 'lrw-1', name: 'Flag expiring lease', assignee: 'Real Estate Analyst', column: 1, next: ['lrw-2'] },
+        { id: 'lrw-2', name: 'Draft renewal terms', assignee: 'Real Estate Analyst', column: 2, next: ['lrw-3', 'lrw-4'] },
+        { id: 'lrw-3', name: 'Senior legal review', assignee: UNDEFINED_ASSIGNEE, column: 3, next: ['lrw-4'], condition: 'if annual rent > $5M', optional: true },
+        { id: 'lrw-4', name: 'Approve terms', assignee: 'Regional Manager', column: 4, next: ['lrw-5'] },
+        { id: 'lrw-5', name: 'Acknowledge new lease', assignee: 'Store Manager', column: 5, next: [] },
       ],
     },
   ],
@@ -322,6 +383,36 @@ const INVENTORY_MANAGEMENT_SPEC: AppSpec = {
       ],
     },
   ],
+  workflows: [
+    {
+      name: 'Purchase Order Approval',
+      description:
+        'From PO draft through category and Finance approvals, receipt at the warehouse, up to invoice reconciliation. Finance approval only kicks in for high-value POs.',
+      entity: 'Purchase Order',
+      steps: [
+        { id: 'poa-1', name: 'Draft PO', assignee: 'Category Buyer', column: 1, next: ['poa-2'] },
+        { id: 'poa-2', name: 'Category review', assignee: 'Category Buyer', column: 2, next: ['poa-3', 'poa-4'] },
+        { id: 'poa-3', name: 'Finance approval', assignee: 'Finance Admin', column: 3, next: ['poa-4'], condition: 'if total > $10,000' },
+        { id: 'poa-4', name: 'Send to supplier', assignee: 'Category Buyer', column: 4, next: ['poa-5'] },
+        { id: 'poa-5', name: 'Receive goods', assignee: 'Warehouse Manager', column: 5, next: ['poa-6'] },
+        { id: 'poa-6', name: 'Reconcile invoice', assignee: 'Finance Admin', column: 6, next: [] },
+      ],
+    },
+    {
+      name: 'Stock Adjustment',
+      description:
+        'When an analyst flags a discrepancy, the warehouse investigates and proposes an adjustment. High-value adjustments trigger an optional compliance review, then Finance signs off before posting.',
+      entity: 'Stock Balance',
+      steps: [
+        { id: 'sa-1', name: 'Flag discrepancy', assignee: 'Inventory Analyst', column: 1, next: ['sa-2'] },
+        { id: 'sa-2', name: 'Investigate', assignee: 'Warehouse Manager', column: 2, next: ['sa-3'] },
+        { id: 'sa-3', name: 'Propose adjustment', assignee: 'Warehouse Manager', column: 3, next: ['sa-4', 'sa-5'] },
+        { id: 'sa-4', name: 'Compliance review', assignee: UNDEFINED_ASSIGNEE, column: 4, next: ['sa-5'], condition: 'if adjustment > $50k', optional: true },
+        { id: 'sa-5', name: 'Approve write-off', assignee: 'Finance Admin', column: 5, next: ['sa-6'] },
+        { id: 'sa-6', name: 'Post adjustment', assignee: 'Finance Admin', column: 6, next: [] },
+      ],
+    },
+  ],
   pages: [
     {
       name: 'Dashboard',
@@ -471,6 +562,34 @@ const EXPENSE_MANAGEMENT_SPEC: AppSpec = {
         { role: 'Finance Admin', level: 'manage' },
         { role: 'Cost Centre Owner', level: 'read' },
         { role: 'Direct Manager', level: 'read' },
+      ],
+    },
+  ],
+  workflows: [
+    {
+      name: 'Expense Claim Approval',
+      description:
+        'End-to-end claim flow. High-value claims route through an additional Finance review, and international-travel claims trigger a compliance check — the compliance approver is decided at runtime by the region routing table (Undefined swimlane). All paths converge back to Approve → Reimburse.',
+      entity: 'Expense Claim',
+      steps: [
+        { id: 'eca-1', name: 'Submit claim', assignee: 'Employee', column: 1, next: ['eca-2'] },
+        { id: 'eca-2', name: 'Manager review', assignee: 'Direct Manager', column: 2, next: ['eca-3', 'eca-4', 'eca-5'] },
+        { id: 'eca-3', name: 'Finance review', assignee: 'Finance Admin', column: 3, next: ['eca-5'], condition: 'if amount > $1,000' },
+        { id: 'eca-4', name: 'Compliance check', assignee: UNDEFINED_ASSIGNEE, column: 3, next: ['eca-5'], condition: 'if international travel', optional: true },
+        { id: 'eca-5', name: 'Approve', assignee: 'Finance Admin', column: 4, next: ['eca-6'] },
+        { id: 'eca-6', name: 'Reimburse', assignee: 'Finance Admin', column: 5, next: [] },
+      ],
+    },
+    {
+      name: 'Cost Centre Reforecast',
+      description:
+        'Quarterly reforecast — the cost-centre owner drafts the number, their manager reviews, and Finance signs off before it is applied.',
+      entity: 'Cost Centre',
+      steps: [
+        { id: 'ccr-1', name: 'Draft reforecast', assignee: 'Cost Centre Owner', column: 1, next: ['ccr-2'] },
+        { id: 'ccr-2', name: 'Manager review', assignee: 'Direct Manager', column: 2, next: ['ccr-3'] },
+        { id: 'ccr-3', name: 'Finance approval', assignee: 'Finance Admin', column: 3, next: ['ccr-4'] },
+        { id: 'ccr-4', name: 'Apply to budget', assignee: 'Finance Admin', column: 4, next: [] },
       ],
     },
   ],
