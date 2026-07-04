@@ -25,7 +25,7 @@ Builder is the authoring tool. App authors use it to define data layers, fields,
 
 ```
 ┌─────────────────────────────────────────────────┐
-│ BuilderTopBar  (mode toggle: Play/X/Y/Build)    │
+│ BuilderTopBar  (mode toggle: Play / Spec / Build)│
 ├─────────────────────────────────────────────────┤
 │ BuilderTabBar  (open tabs across the app)       │
 ├─────────────────────────────────────────────────┤
@@ -60,7 +60,9 @@ Implication: when fixing a view-rendering bug, the fix usually lives in `compone
 
 ## Conventions
 
-- All Builder UI must respect the active mode. Anything that *edits* config goes only in Build mode. Spec X / Spec Y are read-only prose; Play is live preview.
+- All Builder UI must respect the active mode. Anything that *edits* config goes only in Build mode. Spec is a read-only spec document; Play is live runtime preview.
+- Spec-mode workflow diagrams use `@xyflow/react` (React Flow). If you touch the swimlane, also touch `BUILDER_MODES.md` § Workflows — the doc has the sticky-grid contract (corner sticky top+left, header sticky top, assignee column sticky left), the handle-selection rules (`source-right` for same row, `source-top` for above, `source-bottom` for below), and the `WF_LAYOUT` geometry constants.
+- **The right-pane flex chain needs `min-w-0` at every level** — outer split, right-pane outer, and right-pane card. Missing this makes a wide child (a swimlane, a big table) stretch the whole pane past the available width instead of triggering its own scroll. See BUILDER_MODES.md § Spec "Layout gotcha".
 - Property panel styling follows `ComponentsProperties.md` — don't freelance, the spec is precise about spacing/typography
 - Utility bar visibility follows the per-tab-type table in the root `CLAUDE.md` (and `ComponentsProperties.md`). Adding a new tab type means updating that table.
 - Don't import from `app/(main)/` here — Builder must not depend on Platform routes

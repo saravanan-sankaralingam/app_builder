@@ -208,12 +208,12 @@ Other active-state avatar variants we explored (`pulse-halo`, `orbit-border`, `p
 | State | Content |
 |---|---|
 | **Queued** | Two skeleton bars stacked (`space-y-2.5`): a 60% × 14px name bar and an 85% × 10px description bar, both `shimmering`. |
-| **Active** | **Line 1**: `{agent.name}` in `text-[13px] font-semibold gray-900`. **Line 2**: `working on it` in `text-[13px] gray-600` + a `<DotTrail color={accentColor}>` (three pulsing dots using `dot-pulse-i`). Below the two lines, a `mt-2 rounded-md p-2.5 space-y-1.5` checklist box (`bg: var(--gray-50)`, `border: 1px solid var(--gray-100)`) showing the agent's **past + current** phase rows. Past = green `<Check>` + faded `gray-500` text. Current = blue radar ping (a 10×10 ring expanding via `ai-pulse-ping` around a solid `var(--blue-500)` dot) + bold `gray-900` text. Future phases are **not rendered** until promoted to current — the box grows as the agent progresses. |
+| **Active** | **Line 1**: `{agent.name}` in `text-[13px] font-semibold gray-900`. **Line 2**: `is working on it` in `text-[13px] gray-600` + a `<DotTrail color={accentColor}>` (three pulsing dots using `dot-pulse-i`). Below the two lines, a `mt-2 rounded-md p-2.5 space-y-1.5` checklist box (`bg: var(--gray-50)`, `border: 1px solid var(--gray-100)`) showing the agent's **past + current** phase rows. Past = green `<Check>` + faded `gray-500` text. Current = blue radar ping (a 10×10 ring expanding via `ai-pulse-ping` around a solid `var(--blue-500)` dot) + bold `gray-900` text. Future phases are **not rendered** until promoted to current — the box grows as the agent progresses. |
 | **Done** | **Line 1**: `{agent.name}` in `text-[13px] font-semibold gray-900`. **Line 2**: `{agent.successPhrase}` in `text-[13px] gray-600` + an inline `<CheckCheck>` (green-500, `strokeWidth 2.5`, `align-middle`, `ml-1.5`). Each agent owns its own success sentence (`has captured the requirements`, `has drafted the app blueprint`, `has built the app structure`, `has designed the interface`, `has published the app`). Row carries `opacity-90` as a subtle "settled" cue. |
 
 **Completion CTA** — the "App generated successfully" message + Open app button has moved from an inline slot on the `LeftPane` to a **modal popover** (`AppCreatedDialog`) rendered by `AppCreatingView` itself. See "Completion dialog" below. The `LeftPane`'s `completedAction` prop still exists on the interface (kept for potential future inline use) but is unused by both current screens.
 
-**Completion dialog** (`AppCreatedDialog`, defined near the top of `AppCreatingView.tsx`) — aesthetic modal that opens on top of the building screen the moment the Publisher agent finishes.
+**Completion dialog** (`AppCreatedDialog`, defined near the top of `AppCreatingView.tsx`) — aesthetic modal that opens on top of the building screen the moment the App Publisher agent finishes.
 
 - **Backdrop**: `fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px]`. The resolved right-pane spec is glimpsed but muted behind the popup.
 - **Outer card**: 460px wide gradient hairline ring (`p-[1.5px]`, `linear-gradient(246.77deg, purple-200 → magenta-200)`) — same brand ring language as the agent timeline and Section chrome — wrapping a solid-white inner surface. `ai-fade-up` entrance + deep drop-shadow (`0 24px 60px rgba(34,42,59,0.18)`) so the modal lifts clearly off the backdrop.
@@ -240,14 +240,15 @@ A **glassmorphic card** (`bg-white/75 backdrop-blur-2xl rounded-3xl border borde
 **Scrollable content**: `flex-1 overflow-y-auto px-10 py-7 divide-y divide-gray-200 [&>*]:py-[18px] [&>*:first-child]:pt-0 [&>*:last-child]:pb-0`. **Five sections**; a 1px `gray-200` separator is auto-inserted between adjacent sections via `divide-y`, with 18px equal breathing room on either side.
 
 **Section chrome** (`<Section>` component):
-- Header row: 16×16 lucide `icon` in the section's `accentColor` + section title (18px semibold gray-900) + optional count badge + a status pill on the right (see below).
+- Header row: 16×16 lucide `icon` in the section's `accentColor` + section title (**16px semibold gray-900**) + optional count badge + a status pill on the right (see below).
 - Subtitle sits below at `ml-[26px]` (16px icon + 10px `gap-2.5`), `text-[12px] gray-700`.
 - Content: `<div className="pl-[26px]">{children}</div>` — every list, resolved or skeleton, aligns under the title text.
+- **Count badge** (`CountBadge`): `text-[11px]` medium `gray-700` on a `bg-gray-100` pill, `px-1.5 py-1 rounded-full`. Every section chip shows a bare integer (Roles 3, Data entities 3, Workflows 4, Pages 4, Navigation 2) — the previous "3 entities · 15 fields" composite on Data entities was simplified to match the others.
 - **Status pills** are solid, no borders:
   - **Generating** — `bg-magenta-500 text-white` with a white pulsing dot (`bg-white` inner + `ai-pulse-ping` ring).
   - **Generated** — `bg-green-500 text-white` with a white inline `<Check>`.
 
-**Sequential reveal** — only one section is in the **Generating** state at a time. Each section's shown/resolved logic keys off two phase indexes: `builderPhase` (App Builder agent, 6 sub-items covering the data/logic layer) and `designerPhase` (Designer agent, 2 sub-items covering the interface). Publisher (1 sub-item) doesn't gate any section — by then everything is resolved.
+**Sequential reveal** — only one section is in the **Generating** state at a time. Each section's shown/resolved logic keys off two phase indexes: `builderPhase` (App Builder agent, 6 sub-items covering the data/logic layer) and `designerPhase` (Interface Designer agent, 2 sub-items covering the interface). App Publisher (1 sub-item) doesn't gate any section — by then everything is resolved.
 
 | # | Section | Icon (accent) | Shown from | Resolved at | Loading window |
 |---|---|---|---|---|---|
@@ -264,7 +265,7 @@ Each `*Shown` gate corresponds to the previous section resolving, so the pane gr
 - Each row: 16×16 `<Circle>` in `gray-300` (placeholder for the tick) + a shimmering `<SkeletonBar>` for the text. Widths vary slightly per row (`60 + (i*7)%25 %`) so the skeleton doesn't look mechanically repeated.
 - `lines > 1`: adds N−1 finer 8px bars for multi-line rows (used for Data entities + Workflows: `lines={2}` for name + fields/steps).
 
-**Resolved content — checklist style**. All five resolved lists use the same tick + name pattern (14px gray-900, staggered `ai-fade-up` 80ms/row):
+**Resolved content — checklist style**. All five resolved lists use the same tick + name pattern (**13px** gray-900 on both lines, `<ul className="space-y-3">` = **12px** vertical gap between rows, staggered `ai-fade-up` 80ms/row). Loading skeletons (`RowListSkeleton`) also use `space-y-3` so there's no vertical shift when a section flips from Generating → Generated.
 
 | Section | Resolved row |
 |---|---|
@@ -278,14 +279,14 @@ Each `*Shown` gate corresponds to the previous section resolving, so the pane gr
 
 ### Timing
 
-Post-review roster is **5 agents** total: **2 pre-run** (Requirements Analyst + Solutions Architect, both shown as `done` from mount thanks to `INITIAL_TICK_COUNT`) + **3 running** (App Builder + Designer + Publisher).
+Post-review roster is **5 agents** total: **2 pre-run** (Requirements Analyst + Solutions Architect, both shown as `done` from mount thanks to `INITIAL_TICK_COUNT`) + **3 running** (App Builder + Interface Designer + App Publisher).
 
-- `AGENT_PHASE_DURATIONS_MS = [3_000, 5_000, 5_000, 5_000, 5_000]` — first two entries are shape-completeness placeholders (their agents never fire); App Builder = 5s/sub-item, Designer = 5s/sub-item, Publisher = 5s/sub-item.
-- `CUMULATIVE_TICKS = [2, 9, 15, 17, 18]` — Reqs Analyst owns ticks 0–1, Sol Architect 2–8, App Builder 9–14, Designer 15–16, Publisher tick 17.
+- `AGENT_PHASE_DURATIONS_MS = [3_000, 5_000, 5_000, 5_000, 5_000]` — first two entries are shape-completeness placeholders (their agents never fire); App Builder = 5s/sub-item, Interface Designer = 5s/sub-item, App Publisher = 5s/sub-item.
+- `CUMULATIVE_TICKS = [2, 9, 15, 17, 18]` — Reqs Analyst owns ticks 0–1, Sol Architect 2–8, App Builder 9–14, Interface Designer 15–16, App Publisher tick 17.
 - `INITIAL_TICK_COUNT = CUMULATIVE_TICKS[APP_BUILDER_AGENT_IDX - 1] = 9` — `useState` starts here so the two scanning agents read as `done` on mount.
-- `TICK_SCHEDULE = [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000]` — 9 ticks × 5s covering App Builder's 6 phases + Designer's 2 + Publisher's 1. `useEffect` maps this into individual `setTimeout` calls that bump `tickCount` by `INITIAL_TICK_COUNT + idx + 1`, so ticks advance from 9 → 18.
-- **Total build sequence: ~45 seconds** — App Builder 30s + Designer 10s + Publisher 5s.
-- The right-pane sequence has finished by the time Designer wraps (all five sections resolved); the Publisher phase (5s) is purely a left-pane narrative beat before the `AppCreatedDialog` opens.
+- `TICK_SCHEDULE = [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000]` — 9 ticks × 5s covering App Builder's 6 phases + Interface Designer's 2 + App Publisher's 1. `useEffect` maps this into individual `setTimeout` calls that bump `tickCount` by `INITIAL_TICK_COUNT + idx + 1`, so ticks advance from 9 → 18.
+- **Total build sequence: ~45 seconds** — App Builder 30s + Interface Designer 10s + App Publisher 5s.
+- The right-pane sequence has finished by the time Interface Designer wraps (all five sections resolved); the App Publisher phase (5s) is purely a left-pane narrative beat before the `AppCreatedDialog` opens.
 - `AppCreatedDialog` opens automatically the moment `allAgentsDone` becomes true (i.e., all 5 agents `done`). `onComplete` still fires only when the user clicks **Open app** — not on auto-open.
 
 ## Mock data summary
@@ -296,7 +297,7 @@ Post-review roster is **5 agents** total: **2 pre-run** (Requirements Analyst + 
 | `MOCK_APP_DESCRIPTION` (250-char polished 2-line summary) | `BuildWithAIView.tsx` | Same path |
 | `FALLBACK_DESCRIPTION` (safety net if appDescription < 60 chars) | `AppCreatingView.tsx` | AppIdentity description slot |
 | `SCANNING_AGENTS` array (2 entries: **Requirements Analyst agent** — 2 sub-items × 3s; **Solutions Architect agent** — 7 sub-items × 5s). Each carries `id`, `name`, `sectionTitle`, `icon`, `color`, `phases: string[]` (variable length), `successPhrase`. | `AgentScanningView.tsx` | Pre-review LeftPane timeline (no right pane on this screen) |
-| `AGENTS` array (5 entries: **Requirements Analyst agent** (magenta / `ClipboardCheck`, 2 phases — pre-run, done from mount), **Solutions Architect agent** (purple / `Layers`, 7 phases — pre-run, done from mount), **App Builder agent** (blue / `Wand2`, 6 phases × 5s = 30s), **Designer agent** (cyan / `Palette`, 2 phases × 5s = 10s), **Publisher agent** (green / `Rocket`, 1 phase × 5s)). | `AppCreatingView.tsx` | Post-review LeftPane timeline. First two carried over from the scanning screen so the user sees the full narrative. RightPane sections key off `builderPhase` (App Builder) + `designerPhase` (Designer). |
+| `AGENTS` array (5 entries: **Requirements Analyst agent** (magenta / `ClipboardCheck`, 2 phases — pre-run, done from mount), **Solutions Architect agent** (purple / `Layers`, 7 phases — pre-run, done from mount), **App Builder agent** (blue / `Wand2`, 6 phases × 5s = 30s), **Interface Designer agent** (cyan / `Palette`, 2 phases × 5s = 10s), **App Publisher agent** (green / `Rocket`, 1 phase × 5s)). | `AppCreatingView.tsx` | Post-review LeftPane timeline. First two carried over from the scanning screen so the user sees the full narrative. RightPane sections key off `builderPhase` (App Builder) + `designerPhase` (Interface Designer). |
 | `APP_BUILDER_AGENT_IDX = 2`, `DESIGNER_AGENT_IDX = 3` | `AppCreatingView.tsx` | Ticker constants — the two agents that actually drive the right-pane sequential reveal. |
 | `AVATAR_PATH_D` — rounded square path (`'M 12 0 H 20 A 12 12 0 0 1 32 12 V 20 A 12 12 0 0 1 20 32 H 12 A 12 12 0 0 1 0 20 V 12 A 12 12 0 0 1 12 0 Z'`), 32×32 coords. Replaced the earlier octagon-squircle path. | `AppCreatingView.tsx` | Every agent avatar (active + done) |
 | `MOCK_ROLES` (3 roles: Vendor Manager, Procurement Lead, Compliance Officer) | `AppCreatingView.tsx` | RightPane Roles section |
@@ -308,13 +309,13 @@ Post-review roster is **5 agents** total: **2 pre-run** (Requirements Analyst + 
 
 ## Loader assets
 
-Three animated SVGs served from `kissflow-react/public/`. Each is a self-contained SVG (SMIL + inline `<style>` keyframes) — no React state, no CSS wiring needed. All three use the brand AI gradient palette: primary accents driven by `<linearGradient id="aig">` with stops `#DE1F8E` (magenta-500) → `#6D2BF0` (purple-500) → `#0565FF` (blue-500).
+Three animated SVGs served from `kissflow-react/public/`. Each is a self-contained SVG (SMIL + inline `<style>` keyframes) — no React state, no CSS wiring needed. The three assets are hot-swappable — drop a fresh SVG at the same public path with the same viewBox and the render is proportional automatically. The current set was refreshed from `Downloads/doc_scan.svg`, `Downloads/blue_print_gen.svg`, and `Downloads/app-builder.svg`.
 
 | File | Used on | Render size | Notes |
 |---|---|---|---|
-| `/agent-scanning-loader.svg` | `AgentScanningView`, when `currentIdx === 0` (Requirements Analyst) | 176×160 | Scan-animation mockup, 286×260 viewBox |
-| `/doc-generation-loader.svg` | `AgentScanningView`, when `currentIdx >= 1` (Solutions Architect + post-completion) | 176×160 | Doc-generation mockup, 286×260 viewBox — same aspect as the scan loader so no layout shift on swap |
-| `/app-builder-loader.svg` | `AppCreatingView` hero (full duration) | 180×145 | Browser-frame mockup that shape-shifts Dashboard → Table → Form. 231×186 viewBox. Shimmer sweep gradient uses light AI-tinted stops (`#F5F5FD` → `#FEE2EE` → `#EADEFC` → `#E5EFFF` → `#F5F5FD`) so the placeholder blocks shimmer magenta → purple → blue as the sweep moves. |
+| `/agent-scanning-loader.svg` | `AgentScanningView`, when `currentIdx === 0` (Requirements Analyst active) | 176×160 | Document-scan animation, 286×260 viewBox |
+| `/doc-generation-loader.svg` | `AgentScanningView`, when `currentIdx >= 1` (Solutions Architect active + post-completion) | 176×160 | Blueprint-generation animation, 286×260 viewBox — same aspect as the scan loader so no layout shift on swap |
+| `/app-builder-loader.svg` | `AppCreatingView` hero (full duration — plays through App Builder + Interface Designer + App Publisher) | 180×145 | App-builder animation, 231×186 viewBox |
 
 **Two-stage hero swap** — `AgentScanningView` renders a keyed `<img>` where the `key` is `'scan' | 'doc-gen'`. When `currentIdx` transitions from 0 → 1 the element remounts, forcing the browser to restart the new SVG's SMIL animation from frame 0 instead of picking up mid-cycle.
 
@@ -327,7 +328,7 @@ All keyframes are inlined inside the `<InlineKeyframes>` component in `AppCreati
 | `ai-fade-up` | AppIdentity, every spec `<Section>`, every agent `<li>` row, the completion CTA block, the active-row checklist box | 8px slide + opacity from 0 — 0.55s out-expo easing |
 | `skeleton-shimmer-i` | `SkeletonBar` overlay in the right-pane skeleton loaders | White highlight band sweep across each bar — 1.8s |
 | `text-shimmer-i` | Available; not currently used (previously drove the active-row single-sentence shimmer that was replaced by the checklist box). | `background-position: 200% 0% → -200% 0%` — 4.5s linear |
-| `dot-pulse-i` | The three dots after `working on it` on the active row's title line (`<DotTrail>`) | Opacity 0.25 ↔ 1 + scale 0.85 ↔ 1.1 — 1.4s, staggered 0 / 200 / 400ms across the three dots |
+| `dot-pulse-i` | The three dots after `is working on it` on the active row's title line (`<DotTrail>`) | Opacity 0.25 ↔ 1 + scale 0.85 ↔ 1.1 — 1.4s, staggered 0 / 200 / 400ms across the three dots |
 | `ai-pulse-ping` | The blue radar ring around the **current** sub-item dot in the active-row checklist box | scale 1 → 2.2 + opacity 1 → 0 — 3.2s loop |
 | `mat-spin-rotate-i` / `mat-spin-dash-i` | Material-style indeterminate spinner — defined but **not currently used** since the current sub-item state now renders the radar ping instead. Kept for revival. | Rotation + dash-array pulse — 2.2s |
 | `ai-liquid-i` | The `.flat-liquid` class — used by `LeftPane`'s fallback hero (sparkle-on-blob composition). Neither current screen exercises that branch since both pass a custom `hero` SVG loader. Kept for revival. | Border-radius morph — 6s |
@@ -340,7 +341,9 @@ All keyframes are inlined inside the `<InlineKeyframes>` component in `AppCreati
 **Avatar gradients are inline per-agent.** Each avatar's `<svg>` declares its own `<linearGradient id="agent-grad-{color}">` — magenta / green (post-review roster) or magenta / purple (pre-review roster). Active uses a 3-stop rotating gradient (`-300 → -600 → -300`); done uses the static 2-stop (`-400 → -500`).
 
 **Removed / superseded in recent iterations**:
-- **5-agent post-review roster** (Role / Flow / Entity / Page / Navigation creator, 4s×4 phases each = 80s) → then **2-agent** (App Builder + Validator) → now **5-agent** (Requirements Analyst + Solutions Architect pre-run, App Builder + Designer + Publisher running). App Builder gained a "Wiring up the workflows" phase (now 6 phases total). Validator replaced by **Publisher** (`Rocket` / green, 1 phase — "Publishing the app").
+- **5-agent post-review roster** (Role / Flow / Entity / Page / Navigation creator, 4s×4 phases each = 80s) → then **2-agent** (App Builder + Validator) → now **5-agent** (Requirements Analyst + Solutions Architect pre-run, App Builder + **Interface Designer** + **App Publisher** running). App Builder gained a "Wiring up the workflows" phase (now 6 phases total). Validator replaced by **App Publisher** (`Rocket` / green, 1 phase — "Publishing the app"). Designer / Publisher were renamed to **Interface Designer** / **App Publisher** to better describe their scope.
+- **Right-pane typography compression** — section title 18px → 16px, list content 14px → 13px on both lines, list row gap `space-y-2` (8px) → `space-y-3` (12px), count-badge padding `py-0.5` → `py-1`, Data entities count went from `"3 entities · 15 fields"` → bare `"3"` to match the other sections.
+- **Active row's `working on it`** → `is working on it` (small copy tweak so the sentence flows as `{name}` on line 1, `is working on it ●●●` on line 2).
 - **6-agent pre-review roster** (Requirement Validator → Entity enricher, 1.2s×4 phases each = 29s) → replaced by 2-agent roster (Requirements Analyst 2×3s + Solutions Architect 7×5s = ~41s).
 - **Single-line agent rows** (`{name} {tag}` on one row) → replaced by **two-line stack** (name on line 1, tag/success on line 2). Both lines `whitespace-nowrap`; row top-aligns naturally against the 32px avatar without special padding.
 - **Single-agent-index right-pane logic** (`builderPhase` alone drove all 4 sections) → replaced by **two-agent-index** logic (`builderPhase` drives Roles + Data entities + Workflows; `designerPhase` drives Pages + Navigation).
@@ -367,7 +370,7 @@ All keyframes are inlined inside the `<InlineKeyframes>` component in `AppCreati
 | `AgentScanningView.tsx` | new | Pre-review screen reusing `AppCreatingView`'s `LeftPane`. Replaces the hex-centric scanning popover. **2-agent roster** (Requirements Analyst 2×3s → Solutions Architect 7×5s), ~41s total, per-agent phase durations via `TICK_SCHEDULE`. Two-stage hero SVG (scan → doc-gen) keyed on `currentIdx`. |
 | `AIScanningDialog.tsx` | `components/create/AIScanningDialog.tsx` | **No longer rendered in this flow** (replaced by `AgentScanningView`). File kept for reference. |
 | `AppReviewDialog.tsx` | `components/create/AppReviewDialog.tsx` | Icon picker removed, gradient title at 24px, callback signature trimmed to `{name, description}`, sized to `w-[550px] h-[460px] p-8` |
-| `AppCreatingView.tsx` | new | Two-pane (5:7) layout with agent timeline + spec artifact. **5-agent roster** (2 pre-run + App Builder 6×5s + Designer 2×5s + Publisher 1×5s = ~45s of runtime). Sequential right-pane reveal driven by `builderPhase` (Roles / Data entities / Workflows) + `designerPhase` (Pages / Navigation). Custom `/app-builder-loader.svg` hero. Completion `AppCreatedDialog` popover (aesthetic — gradient ring, pulsing badge, confetti loop) opens on `allAgentsDone`, gated by `HOLD_COMPLETION_DIALOG` (currently `false` — popover is live) and `dialogClosed` local state. Exports `LeftPane`, `BackgroundAtmosphere`, `InlineKeyframes`, and the `Agent` interface so `AgentScanningView` can compose the same shell. |
+| `AppCreatingView.tsx` | new | Two-pane (5:7) layout with agent timeline + spec artifact. **5-agent roster** (2 pre-run + App Builder 6×5s + Interface Designer 2×5s + App Publisher 1×5s = ~45s of runtime). Sequential right-pane reveal driven by `builderPhase` (Roles / Data entities / Workflows) + `designerPhase` (Pages / Navigation). Custom `/app-builder-loader.svg` hero. Completion `AppCreatedDialog` popover (aesthetic — gradient ring, pulsing badge, confetti loop) opens on `allAgentsDone`, gated by `HOLD_COMPLETION_DIALOG` (currently `false` — popover is live) and `dialogClosed` local state. Exports `LeftPane`, `BackgroundAtmosphere`, `InlineKeyframes`, and the `Agent` interface so `AgentScanningView` can compose the same shell. |
 
 The Explorer's `components/create/*` flow is **untouched** while this flow iterates. When the design here is signed off, the plan is to retire `/create` and `/create/app` and route the left-nav AND the Explorer's Create button through `/new/app`.
 

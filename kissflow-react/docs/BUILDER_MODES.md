@@ -59,15 +59,18 @@ The AppSpecView outer container is `bg-white/75 backdrop-blur-2xl rounded-t-xl b
 
 **Inner structure** (`components/app-view/AppSpecView.tsx`):
 
-1. **Pinned identity header** (`p-5`) — app name + description on a purple/magenta gradient card (`linear-gradient(135deg, var(--purple-100) 0%, var(--magenta-100) 100%)` with `var(--purple-300)` border).
+1. **Pinned identity header** (`p-5`) — app name + description on a purple/magenta gradient card (`linear-gradient(135deg, var(--purple-100) 0%, var(--magenta-100) 100%)` with `var(--purple-300)` border). Header row also carries a **"Last updated N mins ago"** timestamp and a **`Refresh`** link (lucide `RefreshCw`) on the right, aligned baseline-with the app name.
 2. **Two-column body** (below the identity header):
-   - **Left 20%** — QuickNav card, `w-1/5 flex-shrink-0 px-5 flex` outer + `rounded-t-xl border border-b-0 border-gray-200 bg-white` inner, stretches to full height. Header **"IN THIS SPEC"** in `text-[11px] font-normal uppercase tracking-wide text-gray-700`, then 4 button entries — each renders an icon + label:
+   - **Left 20%** — QuickNav card, `w-1/5 flex-shrink-0 px-5 flex` outer + `rounded-t-xl border border-b-0 border-gray-200 bg-white` inner, stretches to full height. Header **"IN THIS SPEC"** in `text-[11px] font-normal uppercase tracking-wide text-gray-700`, then **5** button entries — each renders an icon + label:
      - **Roles** — `Users` icon
      - **Data entities** — `Database` icon
+     - **Workflows** — `Workflow` icon
      - **Pages** — `FileText` icon
      - **Navigation** — `Compass` icon
      - Icons are `w-4 h-4` with `strokeWidth={1.75}` in `text-gray-700`. Labels are `text-[13px] font-medium text-gray-900`. Clicking scrolls the right pane to the matching section via `scrollIntoView({ behavior: 'smooth' })`.
    - **Right 80%** — content card, `flex-1 flex pr-5` outer + `rounded-t-xl border border-b-0 border-gray-200 bg-white` inner. Uses `divide-y divide-gray-200` + `[&>*:not(:first-child)]:pt-9 [&>*:not(:last-child)]:pb-9` — a 1px gray-200 separator sits between each section with 36px of breathing room on both sides.
+
+**⚠️ Layout gotcha — `min-w-0` on the flex chain.** The right pane sits inside three nested `flex-1` containers (outer split row → right-pane outer → right-pane card). **Every one of them must have `min-w-0`.** Flex items default to `min-width: auto`, which means they refuse to shrink below their content's intrinsic minimum — so a wide child (e.g. a workflow swimlane with `width: 1200px`) stretches every ancestor past the available space instead of triggering the child's own scroll. The card also has `overflow-x-hidden` to belt-and-brace clip any residual overflow.
 
 **Section header** — each section starts with:
 - **Vertical accent bar** — `w-[3px] h-5 rounded-sm` in the section's accent color (magenta / green / blue / purple)
@@ -76,8 +79,9 @@ The AppSpecView outer container is `bg-white/75 backdrop-blur-2xl rounded-t-xl b
 - **Subtitle** — one line prose describing the section
 
 **Per-section content:**
-- **Roles** — role cards with just `Users` icon + name + one-line description (no bullet list of responsibilities anymore; simpler read).
-- **Data entities** — entity cards with `Database` icon + name + inline stats ("X fields · Y required") + description, then a fields table (name / type badge / required dot) and a per-role permission chip table.
+- **Roles** — role cards with `Users` icon + name + one-line description. Each card has a **"View permissions"** link (blue-600, chevron toggle) that expands into a 2-column table showing every entity and this role's permission chip (`Read-only` / `Edit` / `Manage`, or `No access` for entities the role doesn't touch). Permission data is inverted from the entities on the fly — each role sees only its own row.
+- **Data entities** — entity cards with `Database` icon + name + inline stats ("X fields · Y required") + description, then a **2-column** fields table (name with a red `*` next to required field names, then type badge). No permissions table on the entity — that's now delivered from the Role side.
+- **Workflows** — one card per workflow, each with a swimlane diagram rendered by React Flow. See the Workflows section below.
 - **Pages** — page cards with `FileText` icon + name + description.
 - **Navigation** — one card per navigation with `Compass` icon + title + "Shared with: {role names}" + an indented menu tree.
 
