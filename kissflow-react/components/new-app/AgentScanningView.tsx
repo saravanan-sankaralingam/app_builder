@@ -35,7 +35,7 @@ const AGENT_PHASE_DURATIONS_MS = [3_000, 5_000]
 const SCANNING_AGENTS: Agent[] = [
   {
     id: 'requirements-analyst',
-    name: 'Requirements Analyst agent',
+    name: 'Requirements Analyst',
     sectionTitle: 'Requirements',
     icon: ClipboardCheck,
     color: 'magenta',
@@ -47,7 +47,7 @@ const SCANNING_AGENTS: Agent[] = [
   },
   {
     id: 'solutions-architect',
-    name: 'Solutions Architect agent',
+    name: 'Solutions Architect',
     sectionTitle: 'Architecture',
     icon: Layers,
     color: 'purple',
@@ -154,7 +154,7 @@ export function AgentScanningView({
           phaseIdx={phaseIdx}
           agents={SCANNING_AGENTS}
           title="Decoding your requirements"
-          description="Our Requirements Analyst and Solutions Architect agents are interpreting your prompt and drafting the blueprint for your app."
+          description="Our Requirements Analyst and Solutions Architect are interpreting your prompt and drafting the blueprint for your app."
           hero={
             // Two-stage pre-review loader — the hero swaps out based on
             // which of the two scanning agents is active. The scan-animation

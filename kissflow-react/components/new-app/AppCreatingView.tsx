@@ -69,7 +69,7 @@ export interface Agent {
 const AGENTS: Agent[] = [
   {
     id: 'requirements-analyst',
-    name: 'Requirements Analyst agent',
+    name: 'Requirements Analyst',
     sectionTitle: 'Requirements',
     icon: ClipboardCheck,
     color: 'magenta',
@@ -81,7 +81,7 @@ const AGENTS: Agent[] = [
   },
   {
     id: 'solutions-architect',
-    name: 'Solutions Architect agent',
+    name: 'Solutions Architect',
     sectionTitle: 'Architecture',
     icon: Layers,
     color: 'purple',
@@ -98,7 +98,7 @@ const AGENTS: Agent[] = [
   },
   {
     id: 'app-builder',
-    name: 'App Builder agent',
+    name: 'App Builder',
     sectionTitle: 'App',
     icon: Wand2,
     color: 'blue',
@@ -114,19 +114,25 @@ const AGENTS: Agent[] = [
   },
   {
     id: 'designer',
-    name: 'Interface Designer agent',
+    name: 'Interface Designer',
     sectionTitle: 'Design',
     icon: Palette,
     color: 'cyan',
+    // Per-role generation — Interface Designer works through each role one at
+    // a time, composing that role's pages and navigation before moving on to
+    // the next. Phase order matches DESIGNER_ROLE_ORDER below. Sub-item text
+    // is intentionally role-agnostic so it reads cleanly as the checklist
+    // progresses; the role being worked on is surfaced elsewhere in the UI.
     phases: [
-      'Composing the page layouts',
-      'Building the navigation menus',
+      'Composing pages and navigation',
+      'Composing pages and navigation',
+      'Composing pages and navigation',
     ],
     successPhrase: 'has designed the interface',
   },
   {
     id: 'publisher',
-    name: 'App Publisher agent',
+    name: 'App Publisher',
     sectionTitle: 'Publish',
     icon: Rocket,
     color: 'green',
@@ -142,11 +148,28 @@ const AGENTS: Agent[] = [
 const APP_BUILDER_AGENT_IDX = 2
 const DESIGNER_AGENT_IDX = 3
 
-// Per-agent phase duration (ms). Order matches AGENTS. Only App Builder
-// (5s × 5 = 25s), Designer (5s × 2 = 10s), and Publisher (5s × 1 = 5s)
-// actually run — the first two entries are populated for shape completeness
-// but never fire since those agents are already 'done' when the screen mounts.
-const AGENT_PHASE_DURATIONS_MS = [3_000, 5_000, 5_000, 5_000, 5_000]
+// Per-phase duration (ms) for each agent. Order matches AGENTS; each entry
+// is an array with one duration per phase. Only App Builder (5s × 6 = 30s),
+// Designer (15s + 45s + 45s = 105s, one role at a time), and Publisher
+// (5s × 1 = 5s) actually run — the first two entries are populated for
+// shape completeness but never fire since those agents are already 'done'
+// when the screen mounts.
+const AGENT_PHASE_DURATIONS_MS: number[][] = [
+  [3_000, 3_000],
+  [5_000, 5_000, 5_000, 5_000, 5_000, 5_000, 5_000],
+  [5_000, 5_000, 5_000, 5_000, 5_000, 5_000],
+  [15_000, 45_000, 45_000],
+  [5_000],
+]
+
+// Order in which Designer generates each role's interface. Index matches
+// the per-role Designer phase; also drives which role's pages / navigation
+// appear next in the right pane, and which "Ready to preview" card unlocks.
+const DESIGNER_ROLE_ORDER = [
+  'Vendor Manager',
+  'Procurement Lead',
+  'Compliance Officer',
+]
 
 // Confetti burst around the success tick — 12 particles fanned across the
 // full compass, colours pulled from the AI brand palette + green. Kept as a
@@ -201,9 +224,9 @@ const TICK_SCHEDULE: number[] = (() => {
   const schedule: number[] = []
   let cumulativeMs = 0
   for (let agentIdx = APP_BUILDER_AGENT_IDX; agentIdx < AGENTS.length; agentIdx++) {
-    const phaseDuration = AGENT_PHASE_DURATIONS_MS[agentIdx]
+    const phaseDurations = AGENT_PHASE_DURATIONS_MS[agentIdx]
     for (let p = 0; p < AGENTS[agentIdx].phases.length; p++) {
-      cumulativeMs += phaseDuration
+      cumulativeMs += phaseDurations[p]
       schedule.push(cumulativeMs)
     }
   }
@@ -1024,6 +1047,9 @@ interface EntitySpec {
 interface PageSpec {
   name: string
   description: string
+  // Roles that see this page. Used by the right pane to progressively reveal
+  // pages as Interface Designer completes each role's phase.
+  roles: string[]
 }
 
 interface NavMenuItem {
@@ -1147,63 +1173,134 @@ const MOCK_WORKFLOWS: WorkflowSpec[] = [
   },
 ]
 
+// Each role gets its own set of 3–4 pages. Assignments are exclusive so the
+// right pane reveals a clean set of new pages every time Interface Designer
+// finishes a role's phase.
 const MOCK_PAGES: PageSpec[] = [
+  // Vendor Manager — vendor lifecycle, coordination, performance.
   {
     name: 'Vendor Dashboard',
     description:
-      'Real-time overview of vendor status, active contracts, and upcoming renewals. Surfaces quick-filter widgets, alerts for expiring agreements, and a snapshot of pending approvals across the team.',
+      'Real-time overview of every vendor in your portfolio — active contracts, upcoming renewals, and pending approvals across the team.',
+    roles: ['Vendor Manager'],
+  },
+  {
+    name: 'Vendor Directory',
+    description:
+      'Searchable directory of all vendors with quick filters by category, status, and relationship tier.',
+    roles: ['Vendor Manager'],
   },
   {
     name: 'Vendor Profile',
     description:
-      'Complete profile, history, documents, and contract details for a single vendor. Combines basic information, performance metrics, and the full timeline of interactions and document submissions in one scrollable view.',
+      'Full profile for a single vendor — contact info, active contracts, documents, performance metrics, and the complete interaction timeline.',
+    roles: ['Vendor Manager'],
   },
   {
-    name: 'Onboarding Form',
+    name: 'Performance Reviews',
     description:
-      'Multi-step intake form for new vendor registration. Captures company details, banking info, certifications, and supporting documents — then routes the submission through Procurement and Compliance approvals.',
+      'Quarterly scorecards tracking each vendor’s SLA adherence, delivery quality, and relationship health over time.',
+    roles: ['Vendor Manager'],
+  },
+  // Procurement Lead — new vendor requests, RFPs, contracts, escalations.
+  {
+    name: 'Procurement Requests',
+    description:
+      'Pipeline of incoming vendor requests awaiting approval, with requesting team, category, and commercial terms clearly listed.',
+    roles: ['Procurement Lead'],
   },
   {
-    name: 'Renewal Tracker',
+    name: 'RFP Comparison',
     description:
-      'Calendar view of upcoming contract renewals with action items. Highlights agreements approaching expiry, contracts pending review, and renewals needing manager sign-off across the vendor portfolio.',
+      'Side-by-side comparison of vendor proposals covering pricing, capabilities, and SLA commitments to guide selection.',
+    roles: ['Procurement Lead'],
   },
   {
-    name: 'Reports',
+    name: 'Contract Terms',
     description:
-      'Analytics, KPIs, and exportable insights across all vendors. Includes spend trends, performance scorecards, compliance status, and renewal forecasts with custom filters and downloadable exports.',
+      'Draft, review, and negotiate contract clauses — payment terms, SLAs, penalties, and renewal conditions — in a single workspace.',
+    roles: ['Procurement Lead'],
+  },
+  {
+    name: 'Vendor Escalations',
+    description:
+      'Active escalations from internal teams, with vendor response tracking, resolution status, and owner assignments.',
+    roles: ['Procurement Lead'],
+  },
+  // Compliance Officer — legal docs, risk, audits.
+  {
+    name: 'Compliance Dashboard',
+    description:
+      'Snapshot of certifications expiring soon, pending document reviews, and vendors flagged for policy or regulatory breaches.',
+    roles: ['Compliance Officer'],
+  },
+  {
+    name: 'Risk Register',
+    description:
+      'All active vendor risks with severity ratings, mitigation plans, and owner assignments — filtered by category and status.',
+    roles: ['Compliance Officer'],
+  },
+  {
+    name: 'Document Vault',
+    description:
+      'Central store for legal documents, insurance certificates, compliance attestations, and signed audit trails.',
+    roles: ['Compliance Officer'],
+  },
+  {
+    name: 'Audit Reports',
+    description:
+      'Historical audit findings and remediation tracking across the vendor portfolio, exportable for regulators and board reviews.',
+    roles: ['Compliance Officer'],
   },
 ]
 
+// One unique navigation per role. `sharedWith[0]` acts as the owning role
+// used to reveal the nav in the right pane as each Designer phase completes.
 const MOCK_NAV: NavigationSpec[] = [
   {
-    title: 'Buyer Navigation',
-    sharedWith: ['Vendor Manager', 'Procurement Lead'],
+    title: 'Vendor Manager Navigation',
+    sharedWith: ['Vendor Manager'],
     menu: [
       { label: 'Home', page: 'Vendor Dashboard' },
       {
         label: 'Vendors',
         children: [
-          { label: 'All Vendors', page: 'Vendor Profile' },
-          { label: 'Add Vendor', page: 'Onboarding Form' },
+          { label: 'All Vendors', page: 'Vendor Directory' },
+          { label: 'Vendor Detail', page: 'Vendor Profile' },
         ],
       },
-      { label: 'Renewals', page: 'Renewal Tracker' },
+      { label: 'Performance', page: 'Performance Reviews' },
+    ],
+  },
+  {
+    title: 'Procurement Navigation',
+    sharedWith: ['Procurement Lead'],
+    menu: [
+      { label: 'Home', page: 'Procurement Requests' },
+      {
+        label: 'Sourcing',
+        children: [
+          { label: 'Requests', page: 'Procurement Requests' },
+          { label: 'RFPs', page: 'RFP Comparison' },
+        ],
+      },
+      { label: 'Contracts', page: 'Contract Terms' },
+      { label: 'Escalations', page: 'Vendor Escalations' },
     ],
   },
   {
     title: 'Compliance Navigation',
     sharedWith: ['Compliance Officer'],
     menu: [
-      { label: 'Home', page: 'Vendor Dashboard' },
+      { label: 'Home', page: 'Compliance Dashboard' },
+      { label: 'Risk', page: 'Risk Register' },
       {
         label: 'Documents',
         children: [
-          { label: 'Pending Review', page: 'Vendor Profile' },
-          { label: 'Approved', page: 'Vendor Profile' },
+          { label: 'Vault', page: 'Document Vault' },
+          { label: 'Audits', page: 'Audit Reports' },
         ],
       },
-      { label: 'Reports', page: 'Reports' },
     ],
   },
 ]
@@ -1247,9 +1344,10 @@ function RightPane({
   //   4 Creating fields, views and reports → Entities resolve when phase >= 5
   //   5 Wiring up the workflows            → Workflow loader appears; resolves when phase >= 6
   //
-  // Designer phase index reference:
-  //   0 Composing the page layouts         → Pages loader appears; resolves when phase >= 1
-  //   1 Building the navigation menus      → Nav loader appears; resolves when phase >= 2
+  // Designer phase index reference (one phase per role):
+  //   0 Composing pages and navigation for Vendor Manager     → completes at phase >= 1
+  //   1 Composing pages and navigation for Procurement Lead   → completes at phase >= 2
+  //   2 Composing pages and navigation for Compliance Officer → completes at phase >= 3
   //
   // Sequential reveal: only one section is generating at a time. As each
   // section flips to Generated, the next one appears with its skeleton and
@@ -1261,9 +1359,21 @@ function RightPane({
   const workflowsShown = entitiesResolved
   const workflowsResolved = builderPhase >= 6
   const pagesShown = workflowsResolved
-  const pagesResolved = designerPhase >= 1
-  const navShown = pagesResolved
-  const navResolved = designerPhase >= 2
+  // Roles for which Interface Designer has finished composing pages+nav.
+  // Empty until phase 0 completes; grows one at a time per Designer phase.
+  const completedRoles = DESIGNER_ROLE_ORDER.slice(0, designerPhase)
+  const completedRoleSet = new Set(completedRoles)
+  // A page is revealed once any of the roles that see it has been completed.
+  // Shared pages therefore appear as soon as their first sharing role finishes.
+  const readyPages = MOCK_PAGES.filter((p) =>
+    p.roles.some((r) => completedRoleSet.has(r)),
+  )
+  const pagesResolved = designerPhase >= DESIGNER_ROLE_ORDER.length
+  const navShown = designerPhase >= 1
+  // A navigation is revealed once the first role in its sharedWith list is
+  // completed (that role is the "owner" for reveal purposes).
+  const readyNav = MOCK_NAV.filter((n) => completedRoleSet.has(n.sharedWith[0]))
+  const navResolved = designerPhase >= DESIGNER_ROLE_ORDER.length
 
   return (
     <div className="bg-white/75 backdrop-blur-2xl rounded-3xl border border-white/90 shadow-[0_12px_40px_rgba(34,42,59,0.06),0_1px_3px_rgba(34,42,59,0.04)] flex flex-col min-h-0 overflow-hidden">
@@ -1341,7 +1451,9 @@ function RightPane({
           </Section>
         )}
 
-        {/* 4. Pages — appears once Workflows resolves. */}
+        {/* 4. Pages — appears once Workflows resolves. Pages are revealed
+            role by role as Interface Designer completes each phase; the
+            remaining slots stay as skeleton rows until the last role is done. */}
         {pagesShown && (
           <Section
             title="Pages"
@@ -1351,15 +1463,16 @@ function RightPane({
             icon={FileText}
             status={pagesResolved ? 'done' : 'generating'}
           >
-            {pagesResolved ? (
-              <PageList items={MOCK_PAGES} />
-            ) : (
-              <RowListSkeleton count={MOCK_PAGES.length} />
-            )}
+            <PartialPageList
+              ready={readyPages}
+              pending={MOCK_PAGES.length - readyPages.length}
+            />
           </Section>
         )}
 
-        {/* 5. Navigation — appears once Pages resolves. */}
+        {/* 5. Navigation — appears once Interface Designer completes its
+            first role. Each nav is revealed as the role it belongs to is
+            finished; a skeleton row stands in for still-generating navs. */}
         {navShown && (
           <Section
             title="Navigation"
@@ -1369,14 +1482,27 @@ function RightPane({
             icon={Compass}
             status={navResolved ? 'done' : 'generating'}
           >
-            {navResolved ? (
-              <NavSitemap items={MOCK_NAV} />
-            ) : (
-              <RowListSkeleton count={MOCK_NAV.length} />
-            )}
+            <PartialNavSitemap
+              ready={readyNav}
+              pending={MOCK_NAV.length - readyNav.length}
+            />
           </Section>
         )}
+
       </div>
+
+      {/* Pinned success message — sits outside the scroll area so the CTA
+          stays in view even while the user is scrolling through the sections
+          above. Shows a single card for the most recently completed role;
+          when the next role's interface finishes, the content swaps in place
+          rather than stacking. */}
+      {completedRoles.length > 0 && (
+        <div
+          className="flex-shrink-0 p-5 border-t border-gray-200 bg-white/70 backdrop-blur-sm"
+        >
+          <RolePreviewReadyCard roles={completedRoles} />
+        </div>
+      )}
     </div>
   )
 }
@@ -1384,7 +1510,7 @@ function RightPane({
 // Meaningful default copy for the demo when the upstream description is empty
 // or too thin to read as a real "AI summary". Renders as ~2 lines in the spec card.
 const FALLBACK_DESCRIPTION =
-  'An intelligent application crafted by our AI agents to match your business needs. The blueprint covers roles, data, workflows, pages, and navigation — ready for your team to start using right away.'
+  'An intelligent application crafted by our AI to match your business needs. The blueprint covers roles, data, workflows, pages, and navigation — ready for your team to start using right away.'
 
 function AppIdentity({ name, description }: { name: string; description: string }) {
   const trimmed = description?.trim() ?? ''
@@ -1944,6 +2070,160 @@ function NavSitemap({ items }: { items: NavigationSpec[] }) {
         </li>
       ))}
     </ul>
+  )
+}
+
+// Fixed skeleton row count for the Pages section — the loader always shows
+// 3 shimmering rows regardless of how many pages are still pending, so the
+// footprint stays stable as the section grows.
+const PAGES_SKELETON_ROW_COUNT = 3
+
+// Partial page list — resolved page rows on top (green tick + name), then
+// a fixed set of skeleton rows underneath standing in for pages that are
+// still being generated. Skeleton rows are hidden once every page has been
+// generated.
+function PartialPageList({
+  ready,
+  pending,
+}: {
+  ready: PageSpec[]
+  pending: number
+}) {
+  const skeletonRows = pending > 0 ? PAGES_SKELETON_ROW_COUNT : 0
+  return (
+    <ul className="space-y-3">
+      {ready.map((item, i) => (
+        <li
+          key={item.name}
+          className="flex items-center gap-2 ai-fade-up"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          <Check
+            className="w-4 h-4 flex-shrink-0"
+            strokeWidth={3}
+            style={{ color: 'var(--green-500)' }}
+          />
+          <span className="text-[13px] text-gray-900 leading-snug">
+            {item.name}
+          </span>
+        </li>
+      ))}
+      {Array.from({ length: skeletonRows }).map((_, i) => (
+        <li key={`skeleton-${i}`} className="flex items-center gap-2">
+          <Circle
+            className="w-4 h-4 flex-shrink-0 text-gray-300"
+            strokeWidth={1.75}
+          />
+          <div className="flex-1 flex items-center py-1">
+            <SkeletonBar
+              width={`${60 + ((i * 7) % 25)}%`}
+              height="10px"
+              shimmering
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Partial navigation list — mirror of PartialPageList but for navigation
+// groups. Each nav belongs to a role; skeleton rows fill the slots for
+// navigations whose owner role is still in progress.
+function PartialNavSitemap({
+  ready,
+  pending,
+}: {
+  ready: NavigationSpec[]
+  pending: number
+}) {
+  return (
+    <ul className="space-y-3">
+      {ready.map((nav, i) => (
+        <li
+          key={nav.title}
+          className="flex items-center gap-2 ai-fade-up"
+          style={{ animationDelay: `${i * 80}ms` }}
+        >
+          <Check
+            className="w-4 h-4 flex-shrink-0"
+            strokeWidth={3}
+            style={{ color: 'var(--green-500)' }}
+          />
+          <span className="text-[13px] text-gray-900 leading-snug">
+            {nav.title}
+          </span>
+        </li>
+      ))}
+      {Array.from({ length: pending }).map((_, i) => (
+        <li key={`nav-skeleton-${i}`} className="flex items-center gap-2">
+          <Circle
+            className="w-4 h-4 flex-shrink-0 text-gray-300"
+            strokeWidth={1.75}
+          />
+          <div className="flex-1 flex items-center py-1">
+            <SkeletonBar
+              width={`${55 + ((i * 9) % 25)}%`}
+              height="10px"
+              shimmering
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Ready-to-preview card — single success card pinned to the bottom of the
+// right pane. Content is driven by which roles' interfaces have finished
+// generating. To keep the message compact we only ever call out the first
+// completed role by name and summarise the rest as a count. `key` re-mounts
+// the card each time the roll changes so the copy gets a subtle fade-in.
+function RolePreviewReadyCard({ roles }: { roles: string[] }) {
+  const [first, ...rest] = roles
+  const others = rest.length
+  return (
+    <div
+      key={roles.join('|')}
+      className="ai-fade-up rounded-xl border flex items-center gap-3 p-3 shadow-[0_2px_6px_rgba(34,42,59,0.06),0_1px_2px_rgba(34,42,59,0.04)]"
+      style={{
+        borderColor: 'var(--gray-200)',
+        backgroundColor: 'var(--gray-50)',
+      }}
+    >
+      <span
+        className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center"
+        style={{ backgroundColor: 'var(--green-500)' }}
+      >
+        <Check
+          className="w-4 h-4 text-white"
+          strokeWidth={3}
+        />
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] text-gray-900 leading-snug truncate">
+          {others === 0 ? (
+            <>
+              <span className="font-semibold">{first} interface</span> is ready — see how they&rsquo;ll experience the app
+            </>
+          ) : (
+            <>
+              <span className="font-semibold">
+                {first} and {others} other {others === 1 ? 'interface' : 'interfaces'}
+              </span>{' '}
+              ready — jump in to preview
+            </>
+          )}
+        </p>
+      </div>
+      <Button
+        size="sm"
+        className="flex-shrink-0 h-8 text-[12px] gap-1.5 shadow-sm"
+      >
+        Preview app
+        <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
+      </Button>
+    </div>
   )
 }
 
