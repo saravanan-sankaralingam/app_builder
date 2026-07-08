@@ -11,6 +11,7 @@ import {
   Store,
   ShoppingBag,
   Boxes,
+  Building2,
   Receipt,
   ChevronRight,
   Pin,
@@ -52,6 +53,7 @@ const topItems: NavItem[] = [
 // Persistence is not yet wired — refreshing resets to these initial values.
 const initialPinnedApps: NavItem[] = []
 const initialRecentApps: NavItem[] = [
+  { icon: Building2, label: 'Vendor Onboarding and Management', href: '/app/vendor-onboarding-and-management' },
   { icon: ShoppingBag, label: 'Retail One', href: '/app/retail-one' },
   { icon: Boxes, label: 'Inventory Management', href: '/app/inventory-management' },
   { icon: Receipt, label: 'Expense Management', href: '/app/expense-management' },

@@ -19,6 +19,25 @@ const SYSTEM_USER = {
 const FROZEN_TS = '2026-06-30T00:00:00.000Z'
 
 export const staticApps: Record<string, App> = {
+  'vendor-onboarding-and-management': {
+    id: 'vendor-onboarding-and-management',
+    name: 'Vendor Onboarding and Management',
+    slug: 'vendor-onboarding-and-management',
+    description:
+      'Track vendors end-to-end from onboarding through renewal. Coordinate procurement, legal, and compliance sign-offs, and manage documents, contracts, and performance reviews in one place.',
+    icon: 'Building2',
+    iconBg: '#F7F2FF',
+    type: 'app',
+    status: 'live',
+    isPublic: false,
+    version: 1,
+    createdById: SYSTEM_USER.id,
+    createdAt: FROZEN_TS,
+    updatedById: SYSTEM_USER.id,
+    updatedAt: FROZEN_TS,
+    createdBy: SYSTEM_USER,
+    updatedBy: SYSTEM_USER,
+  },
   'retail-one': {
     id: 'retail-one',
     name: 'Retail One',

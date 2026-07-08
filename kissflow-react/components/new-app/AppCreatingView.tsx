@@ -22,6 +22,14 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useGeneration } from '@/context/GenerationContext'
+import {
+  AGENTS,
+  APP_BUILDER_AGENT_IDX,
+  DESIGNER_AGENT_IDX,
+  DESIGNER_ROLE_ORDER,
+  type Agent,
+} from '@/lib/generation-spec'
 
 // Post-create screen for the /new/app flow.
 //
@@ -41,135 +49,9 @@ interface AppCreatingViewProps {
   onComplete: () => void
 }
 
-export interface Agent {
-  id: string
-  name: string
-  sectionTitle: string
-  icon: LucideIcon
-  // Brand colour family used for the agent's avatar gradient (-400 → -500)
-  color: 'magenta' | 'purple' | 'blue' | 'cyan' | 'green'
-  // Verb phrases surfaced as sub-items in the active-agent checklist box.
-  // Length is variable — the post-review AGENTS use 4 phrases each; the
-  // pre-review SCANNING_AGENTS use different counts per agent.
-  phases: string[]
-  // Success verb phrase shown alongside the green double-tick when the agent
-  // transitions to Done (or during the final 3s of its active window).
-  successPhrase: string
-}
-
-// Post-review roster — four agents. Requirements Analyst and Solutions
-// Architect already completed on the pre-review scanning screen, so they
-// render as 'done' from the moment this screen mounts. App Builder and
-// Validator are the two new agents that actually run here.
-//
-// Keeping all four in one array (rather than passing pre-done ones as
-// props) means the LeftPane timeline reads as one continuous narrative
-// across both screens — the user sees the completed steps carried over,
-// and the App Builder appears as the *third* agent in sequence.
-const AGENTS: Agent[] = [
-  {
-    id: 'requirements-analyst',
-    name: 'Requirements Analyst',
-    sectionTitle: 'Requirements',
-    icon: ClipboardCheck,
-    color: 'magenta',
-    phases: [
-      'Reading your prompt and attachments',
-      'Distilling intent and success criteria',
-    ],
-    successPhrase: 'has captured the requirements',
-  },
-  {
-    id: 'solutions-architect',
-    name: 'Solutions Architect',
-    sectionTitle: 'Architecture',
-    icon: Layers,
-    color: 'purple',
-    phases: [
-      'Framing the app scope and boundaries',
-      'Mapping roles to jobs-to-be-done',
-      'Modelling the data entities',
-      'Architecting fields and constraints',
-      'Composing pages and end-user flows',
-      'Enriching entities with context',
-      'Weaving it into a cohesive blueprint',
-    ],
-    successPhrase: 'has drafted the app blueprint',
-  },
-  {
-    id: 'app-builder',
-    name: 'App Builder',
-    sectionTitle: 'App',
-    icon: Wand2,
-    color: 'blue',
-    phases: [
-      'Creating the user roles',
-      'Allocating stable identifiers',
-      'Creating the master lists',
-      'Creating the data entities',
-      'Creating fields, views and reports',
-      'Wiring up the workflows',
-    ],
-    successPhrase: 'has built the app structure',
-  },
-  {
-    id: 'designer',
-    name: 'Interface Designer',
-    sectionTitle: 'Design',
-    icon: Palette,
-    color: 'cyan',
-    // Per-role generation — Interface Designer works through each role one at
-    // a time, composing that role's pages and navigation before moving on to
-    // the next. Phase order matches DESIGNER_ROLE_ORDER below. Sub-item text
-    // is intentionally role-agnostic so it reads cleanly as the checklist
-    // progresses; the role being worked on is surfaced elsewhere in the UI.
-    phases: [
-      'Composing pages and navigation',
-      'Composing pages and navigation',
-      'Composing pages and navigation',
-    ],
-    successPhrase: 'has designed the interface',
-  },
-  {
-    id: 'publisher',
-    name: 'App Publisher',
-    sectionTitle: 'Publish',
-    icon: Rocket,
-    color: 'green',
-    phases: ['Publishing the app'],
-    successPhrase: 'has published the app',
-  },
-]
-
-// Indexes of the three post-review agents in AGENTS. The two agents before
-// App Builder (Requirements Analyst and Solutions Architect) already ran on
-// the pre-review screen, so we start the tick counter at the boundary
-// between them and App Builder.
-const APP_BUILDER_AGENT_IDX = 2
-const DESIGNER_AGENT_IDX = 3
-
-// Per-phase duration (ms) for each agent. Order matches AGENTS; each entry
-// is an array with one duration per phase. Only App Builder (5s × 6 = 30s),
-// Designer (15s + 45s + 45s = 105s, one role at a time), and Publisher
-// (5s × 1 = 5s) actually run — the first two entries are populated for
-// shape completeness but never fire since those agents are already 'done'
-// when the screen mounts.
-const AGENT_PHASE_DURATIONS_MS: number[][] = [
-  [3_000, 3_000],
-  [5_000, 5_000, 5_000, 5_000, 5_000, 5_000, 5_000],
-  [5_000, 5_000, 5_000, 5_000, 5_000, 5_000],
-  [15_000, 45_000, 45_000],
-  [5_000],
-]
-
-// Order in which Designer generates each role's interface. Index matches
-// the per-role Designer phase; also drives which role's pages / navigation
-// appear next in the right pane, and which "Ready to preview" card unlocks.
-const DESIGNER_ROLE_ORDER = [
-  'Vendor Manager',
-  'Procurement Lead',
-  'Compliance Officer',
-]
+// Agent roster, per-phase durations, and derived tick schedule now live in
+// `lib/generation-spec.ts` so the root-level GenerationContext (which owns
+// the tick loop) and this screen consume the same source of truth.
 
 // Confetti burst around the success tick — 12 particles fanned across the
 // full compass, colours pulled from the AI brand palette + green. Kept as a
@@ -204,35 +86,6 @@ const CONFETTI_PARTICLES: Array<{
 // Now `false` — the popover is the primary CTA at the end of the flow.
 const HOLD_COMPLETION_DIALOG = false
 
-// Cumulative tick boundaries — agent i owns ticks [cumulativeTicks[i-1],
-// cumulativeTicks[i]). Last entry is the total tick count (18 for this roster).
-const CUMULATIVE_TICKS = AGENTS.reduce<number[]>((acc, agent) => {
-  const last = acc[acc.length - 1] ?? 0
-  acc.push(last + agent.phases.length)
-  return acc
-}, [])
-
-// Initial tick count on mount — set past the two pre-run agents' ticks so
-// they read as 'done' and App Builder starts at its phase 0.
-const INITIAL_TICK_COUNT = CUMULATIVE_TICKS[APP_BUILDER_AGENT_IDX - 1]
-
-// TICK_SCHEDULE[i] is the wall-clock ms at which `tickCount` advances from
-// `INITIAL_TICK_COUNT + i` to `INITIAL_TICK_COUNT + i + 1`. Only App Builder
-// and Validator phases contribute — the pre-run agents don't schedule any
-// ticks since they're already done.
-const TICK_SCHEDULE: number[] = (() => {
-  const schedule: number[] = []
-  let cumulativeMs = 0
-  for (let agentIdx = APP_BUILDER_AGENT_IDX; agentIdx < AGENTS.length; agentIdx++) {
-    const phaseDurations = AGENT_PHASE_DURATIONS_MS[agentIdx]
-    for (let p = 0; p < AGENTS[agentIdx].phases.length; p++) {
-      cumulativeMs += phaseDurations[p]
-      schedule.push(cumulativeMs)
-    }
-  }
-  return schedule
-})()
-
 type AgentState = 'queued' | 'active' | 'done'
 
 function stateFor(idx: number, currentIdx: number): AgentState {
@@ -247,31 +100,37 @@ export function AppCreatingView({
   onBack,
   onComplete,
 }: AppCreatingViewProps) {
-  // Single counter — starts at INITIAL_TICK_COUNT so the two pre-run agents
-  // read as 'done' immediately, then advances on the schedule in TICK_SCHEDULE
-  // (which covers only the App Builder + Validator phases).
-  const [tickCount, setTickCount] = useState(INITIAL_TICK_COUNT)
   // Local dismiss flag — once the user closes the completion popover, keep
   // it closed so they can inspect the resolved spec without it re-opening.
   const [dialogClosed, setDialogClosed] = useState(false)
 
-  useEffect(() => {
-    setTickCount(INITIAL_TICK_COUNT)
-    // One setTimeout per tick advance — lets each agent's phases run at their
-    // own pace (App Builder 5s, Validator 5s) rather than a global interval.
-    const timeouts = TICK_SCHEDULE.map((delayMs, idx) =>
-      setTimeout(() => setTickCount(INITIAL_TICK_COUNT + idx + 1), delayMs),
-    )
-    return () => timeouts.forEach(clearTimeout)
-  }, [onComplete])
+  // Tick loop is owned by the root-level GenerationContext so the phase
+  // progression survives when the user clicks "Preview app" and we navigate
+  // into the Builder mid-generation. This screen just kicks the loop off on
+  // mount and reads the current state.
+  const {
+    appId,
+    currentIdx,
+    phaseIdx,
+    allDone: allAgentsDone,
+    startGeneration,
+  } = useGeneration()
 
-  // Which agent + phase are we on right now?
-  const activeIdx = CUMULATIVE_TICKS.findIndex((c) => c > tickCount)
-  const currentIdx = activeIdx === -1 ? AGENTS.length : activeIdx
-  const priorCumulative =
-    currentIdx === 0 ? 0 : CUMULATIVE_TICKS[currentIdx - 1]
-  const phaseIdx = tickCount - priorCumulative
-  const allAgentsDone = currentIdx >= AGENTS.length
+  useEffect(() => {
+    // AppCreatingView is the "app is being created" screen — every time it
+    // mounts we start a fresh tick loop. `startGeneration` clears any
+    // pending timeouts and resets tickCount, so it's safe to call
+    // unconditionally. Without this, a second pass through the AI Create
+    // flow (or a hot-reload) would inherit `allDone: true` from the prior
+    // run and render every agent as already finished.
+    startGeneration({
+      appId: 'vendor-onboarding-and-management',
+      appName,
+      appDescription,
+    })
+    // Only on mount — subsequent prop changes don't restart the tick loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="relative h-[calc(100vh-3.5rem)] bg-[#FDF8FC] overflow-hidden flex flex-col">
@@ -328,6 +187,11 @@ export function AppCreatingView({
           phaseIdx={phaseIdx}
           appName={appName}
           appDescription={appDescription}
+          onPreviewApp={
+            appId
+              ? () => window.open('/builder/' + appId, '_blank')
+              : undefined
+          }
         />
       </div>
 
@@ -525,6 +389,7 @@ export function LeftPane({
   description,
   completedAction,
   hero,
+  compact = false,
 }: {
   currentIdx: number
   phaseIdx: number
@@ -539,14 +404,34 @@ export function LeftPane({
   // AppCreatingView passes an animated app-mock loader here; AgentScanningView
   // leaves it undefined, so the default sparkle composition renders.
   hero?: React.ReactNode
+  // Compact mode strips the hero, tightens padding, and drops the inner
+  // max-width so the pane fits a narrow slot (e.g. the Builder's 320px
+  // chat rail). The agent-timeline card itself renders identically.
+  compact?: boolean
 }) {
   return (
-    <div className="flex flex-col items-center justify-start py-10 px-8 overflow-y-auto">
-      <div className="w-full max-w-[540px]">
+    <div
+      className={
+        compact
+          ? 'flex flex-col items-stretch justify-start py-5 px-4 overflow-y-auto'
+          : 'flex flex-col items-center justify-start py-10 px-8 overflow-y-auto'
+      }
+    >
+      <div className={compact ? 'w-full' : 'w-full max-w-[540px]'}>
         {/* Title block — pinned to the top of the pane */}
-        <div className="flex flex-col items-center text-center mb-8">
+        <div
+          className={
+            compact
+              ? 'flex flex-col items-start text-left mb-4'
+              : 'flex flex-col items-center text-center mb-8'
+          }
+        >
           <h1
-            className="text-[24px] leading-[1.15] font-semibold bg-clip-text text-transparent tracking-tight"
+            className={
+              compact
+                ? 'text-[16px] leading-[1.2] font-semibold bg-clip-text text-transparent tracking-tight'
+                : 'text-[24px] leading-[1.15] font-semibold bg-clip-text text-transparent tracking-tight'
+            }
             style={{
               backgroundImage:
                 'linear-gradient(265deg, var(--magenta-500), var(--purple-500))',
@@ -556,7 +441,13 @@ export function LeftPane({
           </h1>
 
           {/* Description — gray-900, app name highlighted in semibold */}
-          <p className="mt-3 text-[13px] text-gray-900 max-w-[440px] leading-relaxed">
+          <p
+            className={
+              compact
+                ? 'mt-1.5 text-[12px] text-gray-700 leading-relaxed'
+                : 'mt-3 text-[13px] text-gray-900 max-w-[440px] leading-relaxed'
+            }
+          >
             {description}
           </p>
         </div>
@@ -566,7 +457,9 @@ export function LeftPane({
             the default composition: a custom AI sparkle from
             /Downloads/ai_icon.svg on top of a settled liquid-morph blob
             (soft AI-gradient halo). A periodic diagonal white shine sweeps
-            across the icon silhouette via SVG SMIL. */}
+            across the icon silhouette via SVG SMIL. Suppressed in compact
+            mode — the narrow Builder slot has no room for it. */}
+        {!compact && (
         <div className="flex justify-center mb-8">
         {hero ?? (
           <div className="relative w-[88px] h-[88px] flex items-center justify-center">
@@ -670,20 +563,31 @@ export function LeftPane({
           </div>
         )}
         </div>
+        )}
 
         {/* Agent timeline — AI-gradient border ring around a flat white-50 surface */}
         <div
-          className="rounded-[24px] p-[1.5px] w-full max-w-[520px] mx-auto"
+          className={
+            compact
+              ? 'rounded-[18px] p-[1.5px] w-full'
+              : 'rounded-[24px] p-[1.5px] w-full max-w-[520px] mx-auto'
+          }
           style={{
             background:
               'linear-gradient(246.77deg, var(--purple-200) 0%, var(--magenta-200) 100%)',
           }}
         >
           <div
-            className="rounded-[22.5px] p-9"
+            className={compact ? 'rounded-[16.5px] p-4' : 'rounded-[22.5px] p-9'}
             style={{ background: 'color-mix(in srgb, var(--white) 90%, transparent)' }}
           >
-            <ol className="relative space-y-4 max-w-[360px] mx-auto">
+            <ol
+              className={
+                compact
+                  ? 'relative space-y-3 w-full'
+                  : 'relative space-y-4 max-w-[360px] mx-auto'
+              }
+            >
               {/* Vertical connector line */}
               <div
                 className="absolute left-[16px] top-3 bottom-3 w-px"
@@ -1310,11 +1214,13 @@ function RightPane({
   phaseIdx,
   appName,
   appDescription,
+  onPreviewApp,
 }: {
   currentIdx: number
   phaseIdx: number
   appName: string
   appDescription: string
+  onPreviewApp?: () => void
 }) {
   // Post-review flow has five agents: two pre-run scanning agents (already
   // 'done') + App Builder (agent 2, 5 sub-items) + Designer (agent 3, 2
@@ -1500,7 +1406,10 @@ function RightPane({
         <div
           className="flex-shrink-0 p-5 border-t border-gray-200 bg-white/70 backdrop-blur-sm"
         >
-          <RolePreviewReadyCard roles={completedRoles} />
+          <RolePreviewReadyCard
+            roles={completedRoles}
+            onPreview={onPreviewApp}
+          />
         </div>
       )}
     </div>
@@ -2179,7 +2088,13 @@ function PartialNavSitemap({
 // generating. To keep the message compact we only ever call out the first
 // completed role by name and summarise the rest as a count. `key` re-mounts
 // the card each time the roll changes so the copy gets a subtle fade-in.
-function RolePreviewReadyCard({ roles }: { roles: string[] }) {
+function RolePreviewReadyCard({
+  roles,
+  onPreview,
+}: {
+  roles: string[]
+  onPreview?: () => void
+}) {
   const [first, ...rest] = roles
   const others = rest.length
   return (
@@ -2219,6 +2134,7 @@ function RolePreviewReadyCard({ roles }: { roles: string[] }) {
       <Button
         size="sm"
         className="flex-shrink-0 h-8 text-[12px] gap-1.5 shadow-sm"
+        onClick={onPreview}
       >
         Preview app
         <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />

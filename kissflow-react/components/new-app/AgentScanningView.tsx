@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ClipboardCheck, Layers } from 'lucide-react'
 import {
-  type Agent,
   LeftPane,
   BackgroundAtmosphere,
   InlineKeyframes,
 } from './AppCreatingView'
+import { type Agent } from '@/lib/generation-spec'
 
 // AI-at-work screen for the /new/app flow. Shows the same shared LeftPane as
 // AppCreatingView but with the pre-review roster: two agents (Requirements

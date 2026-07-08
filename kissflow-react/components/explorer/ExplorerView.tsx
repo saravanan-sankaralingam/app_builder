@@ -8,7 +8,7 @@ import { AppsGroupedByType } from './AppsGroupedByType'
 import { listApps, App, AppStatus } from '@/lib/api/apps'
 import { getIconByName } from '@/lib/icons'
 import { AppData, AppGroupType, APP_GROUP_TYPES } from '@/types/app'
-import { Loader2, ShoppingBag, Boxes, Receipt } from 'lucide-react'
+import { Loader2, ShoppingBag, Boxes, Receipt, Building2 } from 'lucide-react'
 
 type FilterType = 'live' | 'managed' | 'others'
 type ViewMode = 'grid' | 'list'
@@ -56,6 +56,16 @@ export function ExplorerView() {
   const filteredApps = useMemo(() => {
     // Static apps that always appear
     const staticApps: AppData[] = [
+      {
+        id: 'vendor-onboarding-and-management',
+        name: 'Vendor Onboarding and Management',
+        description:
+          'Track vendors end-to-end from onboarding through renewal. Coordinate procurement, legal, and compliance sign-offs, and manage documents, contracts, and performance reviews in one place.',
+        icon: Building2,
+        iconBg: '#F7F2FF',
+        createdBy: 'System',
+        type: 'Application',
+      },
       {
         id: 'retail-one',
         name: 'Retail One',

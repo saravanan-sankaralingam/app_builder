@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Play, Rocket, HelpCircle, MessageSquareText, Pencil, Search, RotateCcw, Loader2, ChevronDown, LayoutGrid, Hammer } from 'lucide-react'
+import { Play, Rocket, HelpCircle, MessageSquareText, Pencil, Search, RotateCcw, Loader2, ChevronDown, LayoutGrid, Hammer, FileText, Download, X } from 'lucide-react'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -12,6 +13,8 @@ import {
 import * as LucideIcons from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { iconColorFromBg } from '@/lib/icon-color'
+import { AppSpecView } from '@/components/app-view/AppSpecView'
+import { getAppSpec } from '@/lib/app-specs'
 
 interface RecentApp {
   id: string
@@ -21,6 +24,7 @@ interface RecentApp {
 }
 
 interface BuilderTopBarProps {
+  appId: string
   appName: string
   appIcon: string
   appIconBg: string
@@ -78,13 +82,31 @@ const iconCategories = [
   }
 ]
 
-export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onColorChange, onNameChange, recentApps = [], onAppSwitch, onGoToExplorer, mode = 'build', onModeChange }: BuilderTopBarProps) {
+export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange, onColorChange, onNameChange, recentApps = [], onAppSwitch, onGoToExplorer, mode = 'build', onModeChange }: BuilderTopBarProps) {
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false)
   const [isAppSwitcherOpen, setIsAppSwitcherOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'icons' | 'custom'>('icons')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedIcon, setSelectedIcon] = useState(appIcon)
   const [selectedColor, setSelectedColor] = useState(appIconBg)
+
+  // App Spec popover
+  const [isSpecOpen, setIsSpecOpen] = useState(false)
+
+  // Download the app spec as a JSON file.
+  const handleDownloadSpec = () => {
+    const spec = getAppSpec(appId)
+    if (!spec) return
+    const blob = new Blob([JSON.stringify(spec, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${appName.trim().toLowerCase().replace(/\s+/g, '-') || 'app'}-spec.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
 
   // App name editing state
   const [isEditingName, setIsEditingName] = useState(false)
@@ -431,9 +453,9 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
           </Popover>
         </div>
 
-        {/* Center - Play/Spec X/Spec Y/Build Toggle */}
+        {/* Center - Play/Build Toggle */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
-          <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+          <div className="flex items-center bg-white border border-gray-200 rounded-lg p-0.5 gap-0.5">
             <button
               onClick={() => onModeChange?.('play')}
               className={cn(
@@ -444,17 +466,6 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
               )}
             >
               Play
-            </button>
-            <button
-              onClick={() => onModeChange?.('spec')}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
-                mode === 'spec'
-                  ? "bg-blue-500 text-white"
-                  : "text-gray-900 hover:bg-gray-200"
-              )}
-            >
-              Spec
             </button>
             <button
               onClick={() => onModeChange?.('build')}
@@ -472,6 +483,55 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
 
         {/* Right Side - Actions */}
         <div className="flex items-center gap-4 pr-4">
+          {/* App Spec — opens a read-only spec modal (sourced from lib/app-specs.ts) */}
+          <DialogPrimitive.Root open={isSpecOpen} onOpenChange={setIsSpecOpen}>
+            <DialogPrimitive.Trigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              >
+                <FileText className="h-[16px] w-[16px]" strokeWidth={1.5} />
+                <span>Spec</span>
+              </button>
+            </DialogPrimitive.Trigger>
+            <DialogPrimitive.Portal>
+              <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-gray-900/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+              <DialogPrimitive.Content
+                aria-describedby={undefined}
+                className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[90vh] flex flex-col overflow-hidden rounded-lg bg-white shadow-xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+              >
+                {/* Header — title left, download + close right */}
+                <div className="flex items-center justify-between px-4 h-12 border-b border-gray-200 flex-shrink-0">
+                  <DialogPrimitive.Title className="text-sm font-semibold text-gray-900">
+                    App Spec
+                  </DialogPrimitive.Title>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={handleDownloadSpec}
+                      className="flex items-center gap-1.5 h-7 px-2 rounded-md text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <Download className="h-[15px] w-[15px]" strokeWidth={1.5} />
+                      <span>Download</span>
+                    </button>
+                    <DialogPrimitive.Close asChild>
+                      <button
+                        type="button"
+                        aria-label="Close"
+                        className="flex items-center justify-center h-7 w-7 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                      >
+                        <X className="h-[16px] w-[16px]" strokeWidth={1.5} />
+                      </button>
+                    </DialogPrimitive.Close>
+                  </div>
+                </div>
+                {/* Spec body — AppSpecView fills the remaining height */}
+                <div className="flex-1 min-h-0 flex flex-col bg-gray-50 [&>*]:flex-1 [&>*]:min-h-0">
+                  <AppSpecView appId={appId} />
+                </div>
+              </DialogPrimitive.Content>
+            </DialogPrimitive.Portal>
+          </DialogPrimitive.Root>
           <Button
             variant="ghost"
             size="sm"
@@ -487,6 +547,14 @@ export function BuilderTopBar({ appName, appIcon, appIconBg, onIconChange, onCol
             <MessageSquareText className="!h-[16px] !w-[16px]" strokeWidth={1.5} />
           </Button>
           <div className="h-4 w-px bg-gray-400/50 mx-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-[28px] px-3 cursor-pointer bg-white text-green-600 hover:bg-green-50 hover:text-green-600 border border-green-500 gap-1.5"
+          >
+            <Play className="size-3" fill="currentColor" />
+            <span className="text-xs font-medium">Run</span>
+          </Button>
           <Button
             variant="ghost"
             size="sm"

@@ -30,6 +30,16 @@ const colors = {
 
 export const appsData: AppData[] = [
   {
+    id: 'vendor-onboarding-and-management',
+    name: 'Vendor Onboarding and Management',
+    description:
+      'Track vendors end-to-end from onboarding through renewal. Coordinate procurement, legal, and compliance sign-offs, and manage documents, contracts, and performance reviews in one place.',
+    icon: Building2,
+    iconBg: colors.purple,
+    createdBy: 'Saravanan',
+    tabs: ['Home', 'Vendors', 'Contracts', 'Compliance'],
+  },
+  {
     id: 'ap-ar-management',
     name: 'AP & AR Management',
     description: 'No description added',

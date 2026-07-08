@@ -35,7 +35,9 @@ import { ReportCard } from './ReportCard'
 import { DataFormShareEditor } from './DataFormShareEditor'
 import { DataFormSettingsEditor } from './DataFormSettingsEditor'
 import { CopilotPanel } from './CopilotPanel'
+import { GenerationLoadingPane } from './GenerationLoadingPane'
 import { AppRuntimePreview } from './AppRuntimePreview'
+import { useGeneration } from '@/context/GenerationContext'
 import { PlatformAppPreview, hasPlatformAppPage } from '@/components/app-view/PlatformAppPreview'
 import { AppSpecView } from '@/components/app-view/AppSpecView'
 import { ViewsSection, getViewTypeIcon } from './ViewsSection'
@@ -652,6 +654,12 @@ export function BuilderLayout({
 
   // Mode state: 'play' | 'spec' | 'build'
   const [mode, setMode] = useState<'play' | 'spec' | 'build'>('play')
+
+  // While the app is still being generated (user clicked "Preview app" from
+  // /new/app before all agents finished), swap the CopilotPanel for the
+  // GenerationLoadingPane so the timeline stays visible. Same 320px slot —
+  // no reflow of AppRuntimePreview/AppSpecView on the right.
+  const { isGenerating } = useGeneration()
 
   const handleTabClick = (tabId: string) => {
     setActiveTabId(tabId)
@@ -1600,6 +1608,7 @@ export function BuilderLayout({
       <header className="flex-shrink-0">
         <div className="h-11">
           <BuilderTopBar
+            appId={appId}
             appName={appName}
             appIcon={appIcon}
             appIconBg={appIconBg}
@@ -1624,15 +1633,20 @@ export function BuilderLayout({
         {mode === 'play' ? (
           // Play Mode Layout
           <>
-            {/* Copilot Panel - 320px with spacing */}
-            <CopilotPanel
-              appName={appName}
-              appDescription={appDescription}
-              appIcon={appIcon}
-              appIconBg={appIconBg}
-              onAddPageToPreview={addNavItemCallback}
-              onSwitchToPage={switchToPageCallback}
-            />
+            {/* Left rail — 320px. Copilot chat by default, or the agent
+                timeline while the app is still being generated. */}
+            {isGenerating ? (
+              <GenerationLoadingPane />
+            ) : (
+              <CopilotPanel
+                appName={appName}
+                appDescription={appDescription}
+                appIcon={appIcon}
+                appIconBg={appIconBg}
+                onAddPageToPreview={addNavItemCallback}
+                onSwitchToPage={switchToPageCallback}
+              />
+            )}
 
             {/* Runtime Preview - remaining space */}
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -1653,16 +1667,20 @@ export function BuilderLayout({
           </>
         ) : mode === 'spec' ? (
           // Spec Mode — read-only per-app spec panel, sourced from lib/app-specs.ts.
-          // Layout mirrors Play: CopilotPanel (left) + AppSpecView (right, fills).
+          // Layout mirrors Play: left rail (chat or generation timeline) + AppSpecView.
           <>
-            <CopilotPanel
-              appName={appName}
-              appDescription={appDescription}
-              appIcon={appIcon}
-              appIconBg={appIconBg}
-              onAddPageToPreview={addNavItemCallback}
-              onSwitchToPage={switchToPageCallback}
-            />
+            {isGenerating ? (
+              <GenerationLoadingPane />
+            ) : (
+              <CopilotPanel
+                appName={appName}
+                appDescription={appDescription}
+                appIcon={appIcon}
+                appIconBg={appIconBg}
+                onAddPageToPreview={addNavItemCallback}
+                onSwitchToPage={switchToPageCallback}
+              />
+            )}
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 flex flex-col overflow-hidden rounded-tl-lg bg-transparent pr-3">
                 <AppSpecView appId={appId} />
