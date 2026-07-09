@@ -170,10 +170,14 @@ function NavButton({
       </div>
       <span
         className={cn(
-          'text-sm whitespace-nowrap transition-opacity duration-150',
+          'text-sm transition-opacity duration-150',
           isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none',
-          isPrimary && 'text-gray-800 ml-2'
+          // Regular nav items: take the remaining row width but truncate with
+          // an ellipsis so a long app name can't push the pin/unpin button out.
+          // `min-w-0` is required for truncate to work inside a flex row.
+          isPrimary ? 'whitespace-nowrap text-gray-800 ml-2' : 'flex-1 min-w-0 truncate'
         )}
+        title={item.label}
       >
         {item.label}
       </span>

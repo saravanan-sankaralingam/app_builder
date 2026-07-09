@@ -6,6 +6,8 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { ManageView } from '@/components/app-view/ManageView'
+import { useAppPreview } from '@/components/app-view/AppPreviewContext'
+import { AppNavRoleSwitcher } from '@/components/app-view/AppNavRoleSwitcher'
 
 type ViewType = 'dashboard' | 'inventory' | 'master'
 type MasterTab = 'items' | 'warehouses' | 'suppliers' | 'categories' | 'uom'
@@ -13,6 +15,7 @@ type MasterTab = 'items' | 'warehouses' | 'suppliers' | 'categories' | 'uom'
 export default function InventoryManagementPage() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard')
   const [isManaging, setIsManaging] = useState(false)
+  const { inBuilderPlay } = useAppPreview()
   const [masterTab, setMasterTab] = useState<MasterTab>('items')
 
   const stockByCategory = [
@@ -141,40 +144,50 @@ export default function InventoryManagementPage() {
               <Boxes className="h-5 w-5 text-orange-500" strokeWidth={1.25} />
               <h1 className="text-lg font-semibold text-gray-900">Inventory Management</h1>
 
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                <Pin className="h-4 w-4 text-gray-500" />
-              </Button>
+              {!inBuilderPlay && (
+                <>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
+                    <Pin className="h-4 w-4 text-gray-500" />
+                  </Button>
 
-              <div className="flex items-center -space-x-2">
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-medium ring-2 ring-white">
-                  SS
-                </div>
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xs font-medium ring-2 ring-white">
-                  JD
-                </div>
-                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-medium ring-2 ring-white">
-                  AK
-                </div>
-              </div>
+                  <div className="flex items-center -space-x-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-medium ring-2 ring-white">
+                      SS
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xs font-medium ring-2 ring-white">
+                      JD
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-medium ring-2 ring-white">
+                      AK
+                    </div>
+                  </div>
 
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                <UserPlus className="h-4 w-4 text-gray-500" />
-              </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
+                    <UserPlus className="h-4 w-4 text-gray-500" />
+                  </Button>
+                </>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="gap-2 h-8 text-[13px]"
-                onClick={() => setIsManaging(true)}
-              >
-                <Settings className="h-3 w-3" />
-                Manage
-              </Button>
-              <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+              {inBuilderPlay ? (
+                <AppNavRoleSwitcher />
+              ) : (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="gap-2 h-8 text-[13px]"
+                    onClick={() => setIsManaging(true)}
+                  >
+                    <Settings className="h-3 w-3" />
+                    Manage
+                  </Button>
+                  <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 

@@ -661,11 +661,221 @@ const EXPENSE_MANAGEMENT_SPEC: AppSpec = {
   ],
 }
 
+// ─── Vendor Onboarding and Management ───────────────────────────────────────
+const VENDOR_ONBOARDING_SPEC: AppSpec = {
+  roles: [
+    {
+      name: 'Vendor Manager',
+      description:
+        'Owns the vendor lifecycle — reviews onboarding requests, approves new vendors, manages the directory, and drives contract renewals.',
+    },
+    {
+      name: 'Requester',
+      description:
+        'Raises new vendor onboarding requests with a business justification and estimated spend, then tracks each request through approval.',
+    },
+    {
+      name: 'Finance Approver',
+      description:
+        'Signs off on the financial commitment for high-value onboarding requests and contract renewals, and monitors spend across vendors.',
+    },
+    {
+      name: 'Administrator',
+      description:
+        'Configures the app — roles and access, categories, and integrations — and oversees vendor governance and data quality.',
+    },
+  ],
+  entities: [
+    {
+      name: 'Vendor',
+      description:
+        'A supplier record created once onboarding is approved. Carries identity, category, tier, ownership, SLA score, and total active contract value.',
+      fields: [
+        { id: 'V001', name: 'Vendor Code', type: 'Text', required: true },
+        { id: 'V002', name: 'Name', type: 'Text', required: true },
+        { id: 'V003', name: 'Category', type: 'Dropdown', required: true },
+        { id: 'V004', name: 'Status', type: 'Status', required: true },
+        { id: 'V005', name: 'Tier', type: 'Dropdown', required: true },
+        { id: 'V006', name: 'Owner', type: 'User', required: true },
+        { id: 'V007', name: 'Onboarded On', type: 'Date', required: false },
+        { id: 'V008', name: 'SLA Score', type: 'Number', required: false },
+        { id: 'V009', name: 'Contract Value', type: 'Currency', required: false },
+        { id: 'V010', name: 'Contact Email', type: 'Text', required: true },
+      ],
+      permissions: [
+        { role: 'Vendor Manager', level: 'manage' },
+        { role: 'Administrator', level: 'manage' },
+        { role: 'Finance Approver', level: 'read' },
+        { role: 'Requester', level: 'read' },
+      ],
+    },
+    {
+      name: 'Onboarding Request',
+      description:
+        'The intake record raised when a team wants to bring on a new vendor. Captures the ask, justification, and estimated spend, then moves through the Vendor Onboarding Approval workflow before a Vendor record is created.',
+      fields: [
+        { id: 'OR001', name: 'Request ID', type: 'Text', required: true },
+        { id: 'OR002', name: 'Requested Vendor Name', type: 'Text', required: true },
+        { id: 'OR003', name: 'Requester', type: 'User', required: true },
+        { id: 'OR004', name: 'Category', type: 'Dropdown', required: true },
+        { id: 'OR005', name: 'Estimated Annual Spend', type: 'Currency', required: true },
+        { id: 'OR006', name: 'Business Justification', type: 'Text', required: true },
+        { id: 'OR007', name: 'Status', type: 'Status', required: true },
+      ],
+      permissions: [
+        { role: 'Requester', level: 'edit' },
+        { role: 'Vendor Manager', level: 'manage' },
+        { role: 'Finance Approver', level: 'edit' },
+        { role: 'Administrator', level: 'read' },
+      ],
+    },
+    {
+      name: 'Contract',
+      description:
+        'A signed agreement tied to a vendor. Tracks the term, value, and status, and drives renewal reminders as the end date approaches.',
+      fields: [
+        { id: 'C001', name: 'Contract ID', type: 'Text', required: true },
+        { id: 'C002', name: 'Vendor', type: 'Reference', required: true },
+        { id: 'C003', name: 'Start Date', type: 'Date', required: true },
+        { id: 'C004', name: 'End Date', type: 'Date', required: true },
+        { id: 'C005', name: 'Value', type: 'Currency', required: true },
+        { id: 'C006', name: 'Status', type: 'Status', required: true },
+      ],
+      permissions: [
+        { role: 'Vendor Manager', level: 'manage' },
+        { role: 'Finance Approver', level: 'edit' },
+        { role: 'Administrator', level: 'read' },
+      ],
+    },
+    {
+      name: 'Performance Review',
+      description:
+        'A periodic scorecard for an active vendor — SLA adherence, quality, and responsiveness — used to inform renewals and tiering.',
+      fields: [
+        { id: 'PR001', name: 'Review ID', type: 'Text', required: true },
+        { id: 'PR002', name: 'Vendor', type: 'Reference', required: true },
+        { id: 'PR003', name: 'Period', type: 'Text', required: true },
+        { id: 'PR004', name: 'SLA Score', type: 'Number', required: true },
+        { id: 'PR005', name: 'Quality Score', type: 'Number', required: true },
+        { id: 'PR006', name: 'Reviewer', type: 'User', required: true },
+      ],
+      permissions: [
+        { role: 'Vendor Manager', level: 'manage' },
+        { role: 'Finance Approver', level: 'read' },
+        { role: 'Administrator', level: 'read' },
+      ],
+    },
+  ],
+  workflows: [
+    {
+      name: 'Vendor Onboarding Approval',
+      description:
+        'From request to active vendor. The Vendor Manager reviews the request; high-value asks route through a Finance approval, and regulated-category asks trigger a legal review whose approver is decided at runtime (Undefined swimlane). Both paths converge back to Approve → Create vendor record.',
+      entity: 'Onboarding Request',
+      steps: [
+        { id: 'von-1', name: 'Submit request', assignee: 'Requester', column: 1, next: ['von-2'] },
+        { id: 'von-2', name: 'Manager review', assignee: 'Vendor Manager', column: 2, next: ['von-3', 'von-4'] },
+        { id: 'von-3', name: 'Finance approval', assignee: 'Finance Approver', column: 2, next: ['von-5'], condition: 'if est. spend > $50k' },
+        { id: 'von-4', name: 'Legal review', assignee: UNDEFINED_ASSIGNEE, column: 2, next: ['von-5'], condition: 'if regulated category', optional: true },
+        { id: 'von-5', name: 'Approve onboarding', assignee: 'Vendor Manager', column: 3, next: ['von-6'] },
+        { id: 'von-6', name: 'Create vendor record', assignee: 'Vendor Manager', column: 4, next: [] },
+      ],
+    },
+    {
+      name: 'Contract Renewal',
+      description:
+        'Renewal path for contracts nearing their end date. The Vendor Manager reviews the terms, Finance approves the renewed commitment, and the contract is renewed.',
+      entity: 'Contract',
+      steps: [
+        { id: 'vcr-1', name: 'Flag expiring contract', assignee: 'Vendor Manager', column: 1, next: ['vcr-2'] },
+        { id: 'vcr-2', name: 'Review terms', assignee: 'Vendor Manager', column: 2, next: ['vcr-3'] },
+        { id: 'vcr-3', name: 'Finance approval', assignee: 'Finance Approver', column: 3, next: ['vcr-4'] },
+        { id: 'vcr-4', name: 'Renew contract', assignee: 'Vendor Manager', column: 4, next: [] },
+      ],
+    },
+  ],
+  pages: [
+    {
+      name: 'Dashboard',
+      description:
+        'Operational overview for the Vendor Manager — active vendors, upcoming renewals, pending approvals, and average SLA, with category and contract-value charts.',
+    },
+    {
+      name: 'My Requests',
+      description:
+        "The Requester's home — a Raise onboarding request action and a list of their own submissions with live status pills.",
+    },
+    {
+      name: 'Spend Overview',
+      description:
+        'Finance-facing dashboard — total annual spend, high-value vendors, a spend-by-category chart, and a financial approvals queue flagging spend that needs sign-off.',
+    },
+    {
+      name: 'Governance',
+      description:
+        'Administrator view — vendor counts by status, roles and access, and owner workload across the directory.',
+    },
+    {
+      name: 'Vendor Directory',
+      description:
+        'Searchable, filterable list of all vendors by category, status, and tier, with drill-down into a vendor profile.',
+    },
+    {
+      name: 'Vendor Profile',
+      description:
+        "A single vendor's detail — contacts, contracts, documents, onboarding timeline, and performance reviews.",
+    },
+    {
+      name: 'Performance Reviews',
+      description:
+        'Scorecards across active vendors — SLA and quality trends used to inform renewals and tiering.',
+    },
+  ],
+  navigations: [
+    {
+      title: 'Vendor Manager Nav',
+      sharedWith: ['Vendor Manager'],
+      menu: [
+        { label: 'Home', page: 'Dashboard' },
+        { label: 'Vendor Directory', page: 'Vendor Directory' },
+        { label: 'Performance Reviews', page: 'Performance Reviews' },
+      ],
+    },
+    {
+      title: 'Requester Nav',
+      sharedWith: ['Requester'],
+      menu: [
+        { label: 'My Requests', page: 'My Requests' },
+        { label: 'Browse Vendors', page: 'Vendor Directory' },
+      ],
+    },
+    {
+      title: 'Finance Nav',
+      sharedWith: ['Finance Approver'],
+      menu: [
+        { label: 'Spend Overview', page: 'Spend Overview' },
+        { label: 'Vendor Directory', page: 'Vendor Directory' },
+        { label: 'Performance Reviews', page: 'Performance Reviews' },
+      ],
+    },
+    {
+      title: 'Administrator Nav',
+      sharedWith: ['Administrator'],
+      menu: [
+        { label: 'Governance', page: 'Governance' },
+        { label: 'Vendor Directory', page: 'Vendor Directory' },
+        { label: 'Performance Reviews', page: 'Performance Reviews' },
+      ],
+    },
+  ],
+}
+
 // ─── Registry ───────────────────────────────────────────────────────────────
 export const APP_SPECS: Record<string, AppSpec> = {
   'retail-one': RETAIL_ONE_SPEC,
   'inventory-management': INVENTORY_MANAGEMENT_SPEC,
   'expense-management': EXPENSE_MANAGEMENT_SPEC,
+  'vendor-onboarding-and-management': VENDOR_ONBOARDING_SPEC,
 }
 
 export function getAppSpec(id: string): AppSpec | null {

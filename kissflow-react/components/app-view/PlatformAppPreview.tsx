@@ -1,8 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import RetailOnePage from '@/app/(main)/app/retail-one/page'
 import InventoryManagementPage from '@/app/(main)/app/inventory-management/page'
 import ExpenseManagementPage from '@/app/(main)/app/expense-management/page'
+import VendorOnboardingPage from '@/app/(main)/app/vendor-onboarding-and-management/page'
+import { AppPreviewProvider } from './AppPreviewContext'
+import { resolveAppRoles } from './app-roles'
 
 /**
  * Maps a static-app slug to the same Platform page component that renders at
@@ -17,6 +21,7 @@ const PLATFORM_APP_PAGES: Record<string, React.ComponentType> = {
   'retail-one': RetailOnePage,
   'inventory-management': InventoryManagementPage,
   'expense-management': ExpenseManagementPage,
+  'vendor-onboarding-and-management': VendorOnboardingPage,
 }
 
 export function hasPlatformAppPage(appId: string): boolean {
@@ -25,6 +30,7 @@ export function hasPlatformAppPage(appId: string): boolean {
 
 export function PlatformAppPreview({ appId }: { appId: string }) {
   const PageComponent = PLATFORM_APP_PAGES[appId]
+  const [selectedRole, setSelectedRole] = useState(() => resolveAppRoles(appId)[0])
   if (!PageComponent) return null
   // Inside the Builder, strip the Platform-side chrome that only makes sense
   // when the page renders at the full viewport:
@@ -37,7 +43,9 @@ export function PlatformAppPreview({ appId }: { appId: string }) {
   // card at Level 3) is untouched — its typography and spacing stay identical.
   return (
     <div className="flex-1 overflow-auto [&>div]:!bg-transparent [&>div]:!min-h-0 [&>div>div]:!p-0 [&>div>div+div]:!pt-3 [&>div>div+div]:!px-2">
-      <PageComponent />
+      <AppPreviewProvider value={{ inBuilderPlay: true, appId, selectedRole, setSelectedRole }}>
+        <PageComponent />
+      </AppPreviewProvider>
     </div>
   )
 }

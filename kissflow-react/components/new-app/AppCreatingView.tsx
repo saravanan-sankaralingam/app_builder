@@ -941,11 +941,22 @@ interface EntityPermission {
   level: PermissionLevel
 }
 
+// Kissflow data-layer type. `DataForm` is a schema without a workflow (master
+// data, lookups, attachments). `Board` and `Process` carry a workflow —
+// `Process` is a structured approval flow, `Board` is a free-form status flow.
+// Entities marked `Process` here declare the workflow they host via `workflow`,
+// and the matching entry in MOCK_WORKFLOWS binds back with `entity`.
+type EntityLayerType = 'DataForm' | 'Board' | 'Process'
+
 interface EntitySpec {
   name: string
   description: string
+  type: EntityLayerType
   fields: EntityField[]
   permissions: EntityPermission[]
+  // Name of the workflow that sits on this entity (Process/Board only). Read
+  // by the Workflows section to render "on {entity}" back-references.
+  workflow?: string
 }
 
 interface PageSpec {
@@ -998,11 +1009,16 @@ const MOCK_ROLES: RoleSpec[] = [
   },
 ]
 
+// Kissflow rule: a workflow sits on top of an entity. Every entity below is
+// tagged with its data-layer type; the ones that host a workflow declare it
+// via `workflow`, and the matching row in MOCK_WORKFLOWS carries the same
+// name in its `entity` field so the two directions stay in sync.
 const MOCK_ENTITIES: EntitySpec[] = [
   {
     name: 'Vendor',
     description:
-      'The core record for every supplier in the system. Holds identifying information, categorization, status, and onboarding history.',
+      'Master record for every supplier in the system. Holds identifying information, categorization, status, and onboarding history — referenced by contracts, renewals, and audits.',
+    type: 'DataForm',
     fields: [
       { id: 'F001', name: 'Vendor Name', type: 'Text', required: true },
       { id: 'F002', name: 'Vendor Code', type: 'Text', required: true },
@@ -1017,15 +1033,36 @@ const MOCK_ENTITIES: EntitySpec[] = [
     ],
   },
   {
+    name: 'Vendor Onboarding Request',
+    description:
+      'Intake record raised whenever a team wants to bring on a new vendor. Captures the ask, business justification, and estimated spend, then moves through the Vendor Onboarding Approval workflow before the Vendor record is created.',
+    type: 'Process',
+    workflow: 'Vendor Onboarding Approval',
+    fields: [
+      { id: 'F101', name: 'Requested Vendor Name', type: 'Text', required: true },
+      { id: 'F102', name: 'Requester', type: 'User', required: true },
+      { id: 'F103', name: 'Category', type: 'Dropdown', required: true },
+      { id: 'F104', name: 'Business Justification', type: 'Text', required: true },
+      { id: 'F105', name: 'Estimated Annual Spend', type: 'Currency', required: true },
+    ],
+    permissions: [
+      { role: 'Vendor Manager', level: 'edit' },
+      { role: 'Procurement Lead', level: 'manage' },
+      { role: 'Compliance Officer', level: 'read' },
+    ],
+  },
+  {
     name: 'Contract',
     description:
-      'Every signed agreement between your organization and a vendor. Tracks dates, terms, and the commercial value of the relationship.',
+      'Every signed agreement between your organization and a vendor. Runs through the Contract Review Cycle before it can be marked Signed, and tracks dates, terms, and commercial value once live.',
+    type: 'Process',
+    workflow: 'Contract Review Cycle',
     fields: [
-      { id: 'F101', name: 'Contract ID', type: 'Text', required: true },
-      { id: 'F102', name: 'Vendor', type: 'Reference', required: true },
-      { id: 'F103', name: 'Start Date', type: 'Date', required: true },
-      { id: 'F104', name: 'End Date', type: 'Date', required: true },
-      { id: 'F105', name: 'Value', type: 'Currency', required: true },
+      { id: 'F201', name: 'Contract ID', type: 'Text', required: true },
+      { id: 'F202', name: 'Vendor', type: 'Reference', required: true },
+      { id: 'F203', name: 'Start Date', type: 'Date', required: true },
+      { id: 'F204', name: 'End Date', type: 'Date', required: true },
+      { id: 'F205', name: 'Value', type: 'Currency', required: true },
     ],
     permissions: [
       { role: 'Vendor Manager', level: 'edit' },
@@ -1034,14 +1071,53 @@ const MOCK_ENTITIES: EntitySpec[] = [
     ],
   },
   {
+    name: 'Renewal Request',
+    description:
+      'A pending renewal on an existing contract. Kicks off the Renewal Approval workflow so the Vendor Manager and Procurement can sign off on updated terms before the contract is extended.',
+    type: 'Process',
+    workflow: 'Renewal Approval',
+    fields: [
+      { id: 'F301', name: 'Renewal ID', type: 'Text', required: true },
+      { id: 'F302', name: 'Contract', type: 'Reference', required: true },
+      { id: 'F303', name: 'Renewal Date', type: 'Date', required: true },
+      { id: 'F304', name: 'Proposed Terms', type: 'Text', required: true },
+      { id: 'F305', name: 'Renewal Value', type: 'Currency', required: true },
+    ],
+    permissions: [
+      { role: 'Vendor Manager', level: 'manage' },
+      { role: 'Procurement Lead', level: 'manage' },
+      { role: 'Compliance Officer', level: 'read' },
+    ],
+  },
+  {
+    name: 'Compliance Audit',
+    description:
+      'A scheduled or ad-hoc audit against a vendor. Moves through the Compliance Audit workflow — from Scheduled through Findings Logged — and stores the auditor, audit type, and outcome.',
+    type: 'Process',
+    workflow: 'Compliance Audit',
+    fields: [
+      { id: 'F401', name: 'Audit ID', type: 'Text', required: true },
+      { id: 'F402', name: 'Vendor', type: 'Reference', required: true },
+      { id: 'F403', name: 'Audit Type', type: 'Dropdown', required: true },
+      { id: 'F404', name: 'Auditor', type: 'User', required: true },
+      { id: 'F405', name: 'Findings Summary', type: 'Text', required: false },
+    ],
+    permissions: [
+      { role: 'Vendor Manager', level: 'read' },
+      { role: 'Procurement Lead', level: 'read' },
+      { role: 'Compliance Officer', level: 'manage' },
+    ],
+  },
+  {
     name: 'Document',
     description:
-      'Files attached to a vendor or contract — proposals, certifications, invoices, and signed legal copies. Each document has a type and an owner.',
+      'Files attached to a vendor, contract, or audit — proposals, certifications, insurance certificates, and signed legal copies. Each document has a type and an owner.',
+    type: 'DataForm',
     fields: [
-      { id: 'F201', name: 'Document Name', type: 'Text', required: true },
-      { id: 'F202', name: 'Type', type: 'Dropdown', required: true },
-      { id: 'F203', name: 'Uploaded By', type: 'User', required: true },
-      { id: 'F204', name: 'Uploaded On', type: 'Date', required: true },
+      { id: 'F501', name: 'Document Name', type: 'Text', required: true },
+      { id: 'F502', name: 'Type', type: 'Dropdown', required: true },
+      { id: 'F503', name: 'Uploaded By', type: 'User', required: true },
+      { id: 'F504', name: 'Uploaded On', type: 'Date', required: true },
     ],
     permissions: [
       { role: 'Vendor Manager', level: 'edit' },
@@ -1051,28 +1127,35 @@ const MOCK_ENTITIES: EntitySpec[] = [
   },
 ]
 
-// Workflow names + their step sequences — displayed the same way as
-// Data entities: name on line 1, comma-separated steps on line 2.
+// Workflow names + their step sequences. Kissflow requires every workflow to
+// sit on top of an entity (a Process or Board), so each row here binds back
+// to the matching MOCK_ENTITIES entry via `entity`. Renders as
+// "{workflow name}" line 1, "on {entity} · Steps: ..." line 2.
 interface WorkflowSpec {
   name: string
+  entity: string
   steps: string[]
 }
 
 const MOCK_WORKFLOWS: WorkflowSpec[] = [
   {
     name: 'Vendor Onboarding Approval',
+    entity: 'Vendor Onboarding Request',
     steps: ['Draft', 'Manager Review', 'Legal Sign-off', 'Approved'],
   },
   {
     name: 'Contract Review Cycle',
+    entity: 'Contract',
     steps: ['Draft', 'Legal Review', 'Commercial Review', 'Signed'],
   },
   {
-    name: 'Renewal Reminder',
-    steps: ['Triggered', 'Notified', 'Action Taken', 'Closed'],
+    name: 'Renewal Approval',
+    entity: 'Renewal Request',
+    steps: ['Draft', 'Vendor Manager Review', 'Procurement Sign-off', 'Approved'],
   },
   {
     name: 'Compliance Audit',
+    entity: 'Compliance Audit',
     steps: ['Scheduled', 'In Progress', 'Findings Logged', 'Resolved'],
   },
 ]
@@ -1316,7 +1399,11 @@ function RightPane({
             {rolesResolved ? (
               <RoleList items={MOCK_ROLES} />
             ) : (
-              <RowListSkeleton count={MOCK_ROLES.length} />
+              // Fixed 2-row placeholder — the exact number of roles isn't
+              // interesting while generation is in flight, and keeping the
+              // skeleton constant stops the section from jumping in height
+              // when the roster changes.
+              <RowListSkeleton count={2} />
             )}
           </Section>
         )}
@@ -1334,7 +1421,8 @@ function RightPane({
             {entitiesResolved ? (
               <EntityList items={MOCK_ENTITIES} />
             ) : (
-              <RowListSkeleton count={MOCK_ENTITIES.length} lines={2} />
+              // Fixed 2-row placeholder — same reasoning as Roles above.
+              <RowListSkeleton count={2} lines={2} />
             )}
           </Section>
         )}
@@ -1607,7 +1695,7 @@ function WorkflowList({ items }: { items: WorkflowSpec[] }) {
             </p>
             <p className="text-[13px] text-gray-600 leading-relaxed mt-1">
               <span className="text-gray-500">Steps: </span>
-              {workflow.steps.join(', ')}
+              {workflow.steps.join(' → ')}
             </p>
           </div>
         </li>
@@ -1983,9 +2071,9 @@ function NavSitemap({ items }: { items: NavigationSpec[] }) {
 }
 
 // Fixed skeleton row count for the Pages section — the loader always shows
-// 3 shimmering rows regardless of how many pages are still pending, so the
+// 2 shimmering rows regardless of how many pages are still pending, so the
 // footprint stays stable as the section grows.
-const PAGES_SKELETON_ROW_COUNT = 3
+const PAGES_SKELETON_ROW_COUNT = 2
 
 // Partial page list — resolved page rows on top (green tick + name), then
 // a fixed set of skeleton rows underneath standing in for pages that are
@@ -2036,6 +2124,11 @@ function PartialPageList({
   )
 }
 
+// Fixed skeleton row count for the Navigation section — always a single
+// shimmering row while any nav is pending, so the section footprint stays
+// tight regardless of how many navs are still queued.
+const NAV_SKELETON_ROW_COUNT = 1
+
 // Partial navigation list — mirror of PartialPageList but for navigation
 // groups. Each nav belongs to a role; skeleton rows fill the slots for
 // navigations whose owner role is still in progress.
@@ -2046,6 +2139,7 @@ function PartialNavSitemap({
   ready: NavigationSpec[]
   pending: number
 }) {
+  const skeletonRows = pending > 0 ? NAV_SKELETON_ROW_COUNT : 0
   return (
     <ul className="space-y-3">
       {ready.map((nav, i) => (
@@ -2064,7 +2158,7 @@ function PartialNavSitemap({
           </span>
         </li>
       ))}
-      {Array.from({ length: pending }).map((_, i) => (
+      {Array.from({ length: skeletonRows }).map((_, i) => (
         <li key={`nav-skeleton-${i}`} className="flex items-center gap-2">
           <Circle
             className="w-4 h-4 flex-shrink-0 text-gray-300"

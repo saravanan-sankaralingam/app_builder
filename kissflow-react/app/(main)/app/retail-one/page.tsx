@@ -6,12 +6,15 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { ManageView } from '@/components/app-view/ManageView'
+import { useAppPreview } from '@/components/app-view/AppPreviewContext'
+import { AppNavRoleSwitcher } from '@/components/app-view/AppNavRoleSwitcher'
 
 type ViewType = 'home' | 'home-n' | 'home-p' | 'site-evaluation' | 'site-evaluation-n' | 'store-acquisition' | 'store-acquisition-n' | 'projects' | 'project-status' | 'rules-engine'
 
 export default function RetailOnePage() {
   const [currentView, setCurrentView] = useState<ViewType>('home')
   const [isManaging, setIsManaging] = useState(false)
+  const { inBuilderPlay } = useAppPreview()
   const [storeAcquisitionTab, setStoreAcquisitionTab] = useState<'my-items' | 'my-tasks'>('my-tasks')
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [projectDetailTab, setProjectDetailTab] = useState<'summary' | 'budget' | 'tasks' | 'layout' | 'procurement' | 'inventory' | 'team'>('summary')
@@ -64,44 +67,55 @@ export default function RetailOnePage() {
               <ShoppingBag className="h-5 w-5 text-blue-600" />
               <h1 className="text-lg font-semibold text-gray-900">Retail One</h1>
 
-              {/* Pin Icon */}
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                <Pin className="h-4 w-4 text-gray-500" />
-              </Button>
+              {/* Pin + collaborators + share — end-user only, hidden in Builder Play */}
+              {!inBuilderPlay && (
+                <>
+                  {/* Pin Icon */}
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
+                    <Pin className="h-4 w-4 text-gray-500" />
+                  </Button>
 
-              {/* Avatar Group */}
-              <div className="flex items-center -space-x-2">
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-medium ring-2 ring-white">
-                  SS
-                </div>
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xs font-medium ring-2 ring-white">
-                  JD
-                </div>
-                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-medium ring-2 ring-white">
-                  AK
-                </div>
-              </div>
+                  {/* Avatar Group */}
+                  <div className="flex items-center -space-x-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-medium ring-2 ring-white">
+                      SS
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xs font-medium ring-2 ring-white">
+                      JD
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-medium ring-2 ring-white">
+                      AK
+                    </div>
+                  </div>
 
-              {/* Add User Icon */}
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                <UserPlus className="h-4 w-4 text-gray-500" />
-              </Button>
+                  {/* Add User Icon */}
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
+                    <UserPlus className="h-4 w-4 text-gray-500" />
+                  </Button>
+                </>
+              )}
             </div>
 
-            {/* Right: Manage + More */}
+            {/* Right: Manage + More (end-user) / Role switcher (Builder Play) */}
             <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="gap-2 h-8 text-[13px]"
-                onClick={() => setIsManaging(true)}
-              >
-                <Settings className="h-3 w-3" />
-                Manage
-              </Button>
-              <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+              {inBuilderPlay ? (
+                <AppNavRoleSwitcher />
+              ) : (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="gap-2 h-8 text-[13px]"
+                    onClick={() => setIsManaging(true)}
+                  >
+                    <Settings className="h-3 w-3" />
+                    Manage
+                  </Button>
+                  <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 

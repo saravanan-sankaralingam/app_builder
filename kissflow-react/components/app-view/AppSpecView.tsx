@@ -1,15 +1,18 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Users, User, Database, FileText, Compass, Workflow, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
+import { useMemo } from 'react'
+import { Users, User, Database, FileText, Compass, Workflow } from 'lucide-react'
 import {
   ReactFlow,
   Handle,
   Position,
   MarkerType,
+  BaseEdge,
+  getBezierPath,
   type Node,
   type Edge,
   type NodeProps,
+  type EdgeProps,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { getStaticApp } from '@/lib/static-apps'
@@ -60,7 +63,7 @@ export function AppSpecView({ appId }: { appId: string }) {
   }
 
   return (
-    <div className="bg-white/75 backdrop-blur-2xl rounded-t-xl border border-b-0 border-white/90 shadow-[0_12px_40px_rgba(34,42,59,0.06),0_1px_3px_rgba(34,42,59,0.04)] flex flex-col min-h-0 overflow-hidden">
+    <div className="border border-b-0 border-white/90 shadow-[0_12px_40px_rgba(34,42,59,0.06),0_1px_3px_rgba(34,42,59,0.04)] flex flex-col min-h-0 overflow-hidden">
       {/* Pinned identity header */}
       <div className="p-5 flex-shrink-0">
         <div
@@ -211,23 +214,9 @@ function AppIdentity({ name, description }: { name: string; description: string 
   const displayDescription = trimmed.length > 60 ? trimmed : FALLBACK_DESCRIPTION
   return (
     <div>
-      <div className="flex items-center justify-between gap-4">
-        <h3 className="text-[16px] font-semibold text-gray-900 tracking-tight leading-snug min-w-0 truncate">
-          {name}
-        </h3>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <span className="text-[12px] text-gray-600 leading-none">
-            Last updated 5 mins ago
-          </span>
-          <button
-            type="button"
-            className="flex items-center gap-1 text-[12px] font-medium text-blue-600 hover:underline leading-none"
-          >
-            <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.75} />
-            Refresh
-          </button>
-        </div>
-      </div>
+      <h3 className="text-[16px] font-semibold text-gray-900 tracking-tight leading-snug min-w-0 truncate">
+        {name}
+      </h3>
       <p className="mt-1.5 text-[13px] text-gray-600 leading-relaxed whitespace-pre-line">
         {displayDescription}
       </p>
@@ -332,8 +321,6 @@ function RoleList({ items, entities }: { items: RoleSpec[]; entities: EntitySpec
 }
 
 function RoleCard({ role, entities }: { role: RoleSpec; entities: EntitySpec[] }) {
-  const [expanded, setExpanded] = useState(false)
-
   // Build the role's per-entity permission list. Entities where this role has
   // no explicit permission are shown as "No access" so the table is complete.
   const rolePermissions = entities.map((entity) => {
@@ -359,55 +346,40 @@ function RoleCard({ role, entities }: { role: RoleSpec; entities: EntitySpec[] }
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="mt-3 ml-[26px] flex items-center gap-1 text-[12px] font-medium text-blue-600 hover:underline leading-none"
-        aria-expanded={expanded}
-      >
-        {expanded ? 'Hide permissions' : 'View permissions'}
-        {expanded ? (
-          <ChevronUp className="w-3.5 h-3.5" strokeWidth={1.75} />
-        ) : (
-          <ChevronDown className="w-3.5 h-3.5" strokeWidth={1.75} />
-        )}
-      </button>
-
-      {expanded && (
-        <div className="mt-3 ml-[26px] border border-gray-200 rounded-lg overflow-hidden bg-white">
-          <table className="w-full text-[12px] leading-snug">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
-                  Data entity
-                </th>
-                <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
-                  Permission
-                </th>
+      <p className="mt-3.5 ml-[26px] text-[13px] font-semibold text-gray-700">Permissions</p>
+      <div className="mt-2 ml-[26px] border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <table className="w-full text-[12px] leading-snug">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
+                Data entity
+              </th>
+              <th className="text-left px-3 py-2 font-medium text-gray-700 border-b border-gray-200">
+                Permission
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rolePermissions.map((p, i) => (
+              <tr
+                key={p.entity}
+                className={i < rolePermissions.length - 1 ? 'border-b border-gray-100' : ''}
+              >
+                <td className="px-3 py-2 text-gray-900">{p.entity}</td>
+                <td className="px-3 py-2">
+                  {p.level ? (
+                    <PermissionChip level={p.level} />
+                  ) : (
+                    <span className="text-[11px] text-gray-500 font-medium leading-none">
+                      No access
+                    </span>
+                  )}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {rolePermissions.map((p, i) => (
-                <tr
-                  key={p.entity}
-                  className={i < rolePermissions.length - 1 ? 'border-b border-gray-100' : ''}
-                >
-                  <td className="px-3 py-2 text-gray-900">{p.entity}</td>
-                  <td className="px-3 py-2">
-                    {p.level ? (
-                      <PermissionChip level={p.level} />
-                    ) : (
-                      <span className="text-[11px] text-gray-500 font-medium leading-none">
-                        No access
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
     </li>
   )
 }
@@ -439,7 +411,7 @@ function EntityCard({ entity }: { entity: EntitySpec }) {
       </div>
 
       {/* Fields */}
-      <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="mt-4 ml-[26px] border border-gray-200 rounded-lg overflow-hidden bg-white">
         <table className="w-full text-[12px] leading-snug">
           <thead>
             <tr className="bg-gray-100">
@@ -482,22 +454,21 @@ function EntityCard({ entity }: { entity: EntitySpec }) {
 }
 
 // ─── Workflows ──────────────────────────────────────────────────────────────
-// The swimlane diagram is rendered with @xyflow/react (React Flow). Two custom
-// node types are registered: `stepChip` for the rectangular step and `diamond`
-// for a branching decision. Edges use React Flow's built-in `smoothstep` type
-// for orthogonal routing with rounded corners; we choose source and target
-// handles per edge so a diamond exits from the top/right/bottom based on the
-// target row's position relative to its own row.
+// The diagram is rendered with @xyflow/react (React Flow). Three node types are
+// registered: `terminal` (Start / Finish pills), `stepChip` (a step), and
+// `diamond` (a decision inserted before a branch). Edges are straight gray
+// lines connecting each node's right handle to the next node's left handle.
 
-// Layout geometry — kept in one place so the swimlane background grid and the
-// node positioning stay in lock-step.
+// Layout geometry — kept in one place so node sizing and positioning stay in
+// lock-step.
 const WF_LAYOUT = {
-  columnWidth: 224,
-  rowHeight: 108,
+  columnGap: 56,
+  rowHeight: 120,
   chipWidth: 180,
   chipHeight: 62,
-  terminalWidth: 116,
-  terminalHeight: 40,
+  finishWidth: 128,
+  finishHeight: 44,
+  diamondSize: 40,
   padding: 28,
 }
 
@@ -509,90 +480,115 @@ const HIDDEN_HANDLE_STYLE: React.CSSProperties = {
   border: 'none',
 }
 
-type StepChipData = { step: WorkflowSpec['steps'][number]; tooltip?: string }
-type TerminalData = { label: string }
+type StepChipData = { step: WorkflowSpec['steps'][number] }
+type TerminalData = { label: string; variant: 'start' | 'end'; assignee?: string }
 
 function StepChipNode(props: NodeProps) {
-  const { step, tooltip } = props.data as StepChipData
-  const isBranching = step.next.length > 1
-  const isUndefined = step.assignee === UNDEFINED_ASSIGNEE
+  const { step } = props.data as StepChipData
+  // A condition-based step has its owner decided at runtime; show an italic
+  // "Conditional" in place of a role rather than the raw condition text.
+  const isConditional = step.assignee === UNDEFINED_ASSIGNEE
   return (
     <div
-      title={isBranching ? tooltip : undefined}
-      className={
-        'rounded-md px-2.5 py-1.5 text-[12px] font-medium leading-snug ' +
-        (isBranching ? 'cursor-help ' : '') +
-        (step.optional ? 'border-dashed' : '')
-      }
+      className="rounded-md px-2.5 flex flex-col justify-center text-[12px] font-medium leading-snug"
       style={{
         width: WF_LAYOUT.chipWidth,
+        height: WF_LAYOUT.chipHeight,
         backgroundColor: 'var(--orange-100)',
-        border: `1px ${step.optional ? 'dashed' : 'solid'} var(--orange-300)`,
+        border: '1px solid var(--orange-400)',
         color: 'var(--orange-700)',
       }}
     >
-      <div className="flex items-center gap-1.5">
-        {isBranching ? (
-          // Branching step keeps the decision-diamond glyph as its badge.
-          <span
-            className="inline-flex items-center justify-center flex-shrink-0 text-[9px] font-bold"
-            style={{
-              width: 16,
-              height: 16,
-              backgroundColor: 'var(--orange-500)',
-              color: 'white',
-              clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-            }}
-          >
-            ?
-          </span>
-        ) : (
-          <span
-            className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-semibold flex-shrink-0"
-            style={{ backgroundColor: 'var(--orange-500)', color: 'white' }}
-          >
-            {step.column}
-          </span>
-        )}
-        <span className="truncate">{step.name}</span>
-      </div>
-      {/* Assignee — shown inline on every step now that swimlanes are gone */}
+      <span className="truncate">{step.name}</span>
+      {/* Assignee — the owning role (or "Conditional" when decided at runtime) */}
       <div
         className="mt-1 flex items-center gap-1 text-[10px] font-normal leading-none"
         style={{ color: 'var(--orange-600)' }}
       >
         <User className="w-3 h-3 flex-shrink-0" strokeWidth={1.75} />
-        <span className={'truncate' + (isUndefined ? ' italic' : '')}>{step.assignee}</span>
+        {isConditional ? (
+          <span className="truncate italic">Conditional</span>
+        ) : (
+          <span className="truncate">{step.assignee}</span>
+        )}
       </div>
-      {step.condition && (
-        <div
-          className="mt-1 text-[10px] font-normal italic leading-none"
-          style={{ color: 'var(--orange-600)' }}
-        >
-          {step.condition}
-        </div>
-      )}
       <Handle id="target-left" type="target" position={Position.Left} style={HIDDEN_HANDLE_STYLE} />
       <Handle id="source-right" type="source" position={Position.Right} style={HIDDEN_HANDLE_STYLE} />
     </div>
   )
 }
 
-// Start ("Initiate") / end ("Finish") markers — solid orange pills.
+// Start / Finish markers. Start is a step-like chip (white, outlined in primary
+// blue) that names its initiator role(s); Finish stays a solid orange pill.
 function TerminalNode(props: NodeProps) {
-  const { label } = props.data as TerminalData
+  const { label, variant, assignee } = props.data as TerminalData
+  if (variant === 'start') {
+    return (
+      <div
+        className="rounded-md px-2.5 flex flex-col justify-center text-[12px] font-medium leading-snug"
+        style={{
+          width: WF_LAYOUT.chipWidth,
+          height: WF_LAYOUT.chipHeight,
+          backgroundColor: 'var(--blue-100)',
+          color: 'var(--blue-700)',
+          border: '1px solid var(--blue-400)',
+        }}
+      >
+        <span className="truncate">{label}</span>
+        {assignee && (
+          <div
+            className="mt-1 flex items-center gap-1 text-[10px] font-normal leading-none"
+            style={{ color: 'var(--blue-600)' }}
+          >
+            <User className="w-3 h-3 flex-shrink-0" strokeWidth={1.75} />
+            <span className="truncate">{assignee}</span>
+          </div>
+        )}
+        <Handle id="target-left" type="target" position={Position.Left} style={HIDDEN_HANDLE_STYLE} />
+        <Handle id="source-right" type="source" position={Position.Right} style={HIDDEN_HANDLE_STYLE} />
+      </div>
+    )
+  }
+  // Completed — a step-like green card; a terminal state, so no assignee and a
+  // narrower, centred card.
   return (
     <div
-      className="rounded-full px-4 flex items-center justify-center text-[12px] font-semibold leading-none"
+      className="rounded-md px-2.5 flex items-center justify-center text-center text-[12px] font-medium leading-snug"
       style={{
-        width: WF_LAYOUT.terminalWidth,
-        height: WF_LAYOUT.terminalHeight,
-        backgroundColor: 'var(--orange-500)',
-        color: 'white',
-        border: '1px solid var(--orange-500)',
+        width: WF_LAYOUT.finishWidth,
+        height: WF_LAYOUT.finishHeight,
+        backgroundColor: 'var(--green-100)',
+        color: 'var(--green-700)',
+        border: '1px solid var(--green-400)',
       }}
     >
-      {label}
+      <span className="truncate">{label}</span>
+      <Handle id="target-left" type="target" position={Position.Left} style={HIDDEN_HANDLE_STYLE} />
+      <Handle id="source-right" type="source" position={Position.Right} style={HIDDEN_HANDLE_STYLE} />
+    </div>
+  )
+}
+
+// Decision node — a diamond inserted before a branch so parallel steps fan out
+// from it. Read-only, so it carries no label; the branch semantics live in the
+// two step chips it points to.
+function DiamondNode() {
+  // Rendered as an SVG polygon (not a clip-path div) so the dashed stroke stays
+  // visible — clip-path clips a CSS border away.
+  const s = WF_LAYOUT.diamondSize
+  const c = s / 2
+  const inset = 2 // keep the stroke inside the viewBox so it isn't clipped
+  return (
+    <div className="relative" style={{ width: s, height: s }}>
+      <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} className="absolute inset-0">
+        <polygon
+          points={`${c},${inset} ${s - inset},${c} ${c},${s - inset} ${inset},${c}`}
+          fill="var(--purple-100)"
+          stroke="var(--purple-400)"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
       <Handle id="target-left" type="target" position={Position.Left} style={HIDDEN_HANDLE_STYLE} />
       <Handle id="source-right" type="source" position={Position.Right} style={HIDDEN_HANDLE_STYLE} />
     </div>
@@ -602,21 +598,34 @@ function TerminalNode(props: NodeProps) {
 const workflowNodeTypes = {
   stepChip: StepChipNode,
   terminal: TerminalNode,
+  diamond: DiamondNode,
 }
 
-// Native tooltip text for a branching step — enumerates every next step and
-// the condition (if any) that gates the branch.
-function buildBranchTooltip(step: WorkflowSpec['steps'][number], workflow: WorkflowSpec): string {
-  if (step.next.length <= 1) return ''
-  const lines = step.next
-    .map((nextId) => {
-      const target = workflow.steps.find((s) => s.id === nextId)
-      if (!target) return null
-      const cond = target.condition ?? 'default path'
-      return `→ ${target.name}: ${cond}`
-    })
-    .filter(Boolean)
-  return `Condition\n${lines.join('\n')}`
+// Smooth curved edge for branch connections — a gentle bezier from the diamond
+// out to each parallel step and back to the spine at the convergence node.
+function CurveEdge({
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  markerEnd,
+  style,
+}: EdgeProps) {
+  const [path] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  })
+  return <BaseEdge path={path} markerEnd={markerEnd} style={style} />
+}
+
+const workflowEdgeTypes = {
+  curve: CurveEdge,
 }
 
 interface WorkflowLayout {
@@ -626,105 +635,168 @@ interface WorkflowLayout {
   height: number
 }
 
-// Free-form left-to-right graph (no swimlanes). Steps are placed by their
-// `column` (x) and stacked vertically within a column when parallel branches
-// share it. Two synthetic nodes bookend every workflow: an "Initiate" start
-// node feeding the root step(s), and a "Finish" node into which every terminal
-// branch converges.
+// Graph-based left-to-right layout. Every node sits on its own column (longest
+// path from Start), so the flow reads as one horizontal line. A branching step
+// (next.length > 1) gets a synthetic diamond inserted after it; the diamond
+// fans out to the parallel steps, which sit on rows above/below the spine and
+// converge again downstream. Start / Finish bookend the graph.
+const WF_START = '__start__'
+const WF_FINISH = '__finish__'
+
+type WfNodeKind = 'start' | 'finish' | 'step' | 'diamond'
+
 function buildWorkflowLayout(workflow: WorkflowSpec): WorkflowLayout {
-  const { columnWidth, rowHeight, chipHeight, terminalWidth, terminalHeight, padding } = WF_LAYOUT
+  const { columnGap, rowHeight, chipWidth, chipHeight, finishWidth, finishHeight, diamondSize, padding } = WF_LAYOUT
   const steps = workflow.steps
-  const maxColumn = steps.reduce((m, s) => Math.max(m, s.column), 1)
-  const INITIATE_COL = 0
-  const FINISH_COL = maxColumn + 1
 
-  // Group steps by column so parallel branches in the same column can stack.
-  const byCol = new Map<number, WorkflowSpec['steps']>()
+  // 1. Build the node set + directed edges, inserting a diamond per branch.
+  const kind = new Map<string, WfNodeKind>([
+    [WF_START, 'start'],
+    [WF_FINISH, 'finish'],
+  ])
+  steps.forEach((s) => kind.set(s.id, 'step'))
+
+  const links: Array<[string, string]> = []
+  const referenced = new Set(steps.flatMap((s) => s.next))
+  const roots = steps.filter((s) => !referenced.has(s.id))
+  roots.forEach((r) => links.push([WF_START, r.id]))
+  // Initiator role(s) = the owners of the root step(s) the process kicks off with.
+  const initiators = Array.from(
+    new Set(roots.map((r) => r.assignee).filter((a) => a !== UNDEFINED_ASSIGNEE))
+  ).join(', ')
   for (const s of steps) {
-    const arr = byCol.get(s.column) ?? []
-    arr.push(s)
-    byCol.set(s.column, arr)
+    if (s.next.length > 1) {
+      const dia = `dia:${s.id}`
+      kind.set(dia, 'diamond')
+      links.push([s.id, dia])
+      s.next.forEach((t) => links.push([dia, t]))
+    } else if (s.next.length === 1) {
+      links.push([s.id, s.next[0]])
+    } else {
+      links.push([s.id, WF_FINISH])
+    }
   }
-  const maxRows = Math.max(1, ...[...byCol.values()].map((a) => a.length))
-  const canvasHeight = maxRows * rowHeight
-  const centerY = padding + canvasHeight / 2
 
-  const nodes: Node[] = []
+  // 2. Adjacency + in-degree.
+  const ids = [...kind.keys()]
+  const out = new Map<string, string[]>(ids.map((n) => [n, []]))
+  const inDeg = new Map<string, number>(ids.map((n) => [n, 0]))
+  for (const [a, b] of links) {
+    out.get(a)!.push(b)
+    inDeg.set(b, inDeg.get(b)! + 1)
+  }
 
-  // Initiate — always the first node.
-  nodes.push({
-    id: '__initiate__',
-    type: 'terminal',
-    position: { x: padding + INITIATE_COL * columnWidth, y: centerY - terminalHeight / 2 },
-    data: { label: 'Initiate' },
-    draggable: false,
-    selectable: false,
-  })
+  // 3. Columns = longest path from Start (Kahn topological order).
+  const col = new Map<string, number>(ids.map((n) => [n, 0]))
+  const work = new Map(inDeg)
+  const queue = ids.filter((n) => work.get(n) === 0)
+  const order: string[] = []
+  while (queue.length) {
+    const n = queue.shift()!
+    order.push(n)
+    for (const m of out.get(n)!) {
+      col.set(m, Math.max(col.get(m)!, col.get(n)! + 1))
+      work.set(m, work.get(m)! - 1)
+      if (work.get(m) === 0) queue.push(m)
+    }
+  }
 
-  // Step nodes, vertically centered within each column.
-  for (const [col, arr] of byCol) {
-    const n = arr.length
-    arr.forEach((step, i) => {
-      const slotCenter = centerY + (i - (n - 1) / 2) * rowHeight
-      nodes.push({
-        id: step.id,
-        type: 'stepChip',
-        position: { x: padding + col * columnWidth, y: slotCenter - chipHeight / 2 },
-        data: step.next.length > 1 ? { step, tooltip: buildBranchTooltip(step, workflow) } : { step },
-        draggable: false,
-        selectable: false,
+  // 4. Rows — spine on 0; a diamond spreads its children symmetrically; a
+  // convergence node (in-degree > 1) returns to the spine.
+  const row = new Map<string, number>([[WF_START, 0]])
+  for (const n of order) {
+    const r = row.get(n) ?? 0
+    const children = out.get(n)!
+    if (kind.get(n) === 'diamond' && children.length > 1) {
+      const k = children.length
+      children.forEach((c, j) => {
+        if (row.has(c)) return
+        // Even spacing: children sit one row apart, centred on the spine.
+        row.set(c, r + (j - (k - 1) / 2))
       })
-    })
+    } else {
+      for (const c of children) {
+        if (inDeg.get(c)! > 1) row.set(c, 0)
+        else if (!row.has(c)) row.set(c, r)
+      }
+    }
   }
 
-  // Finish — always the last node; parallel branches converge here.
-  nodes.push({
-    id: '__finish__',
-    type: 'terminal',
-    position: { x: padding + FINISH_COL * columnWidth, y: centerY - terminalHeight / 2 },
-    data: { label: 'Finish' },
-    draggable: false,
-    selectable: false,
+  // 5. Geometry. Node centres are placed per (col, row); each node is centred
+  // within its column band so the spine stays visually straight.
+  const rows = [...row.values()]
+  const minRow = Math.min(...rows)
+  const maxRow = Math.max(...rows)
+  const maxCol = Math.max(...col.values())
+  const tallest = Math.max(chipHeight, diamondSize)
+  const sizeOf = (k: WfNodeKind): [number, number] =>
+    k === 'diamond'
+      ? [diamondSize, diamondSize]
+      : k === 'finish'
+        ? [finishWidth, finishHeight]
+        : [chipWidth, chipHeight]
+
+  // Each column is as wide as its widest node; consecutive columns are placed a
+  // fixed gap apart, so the edge-to-edge horizontal spacing is uniform even
+  // though nodes (chip / diamond / terminal) differ in width.
+  const widthByCol = new Map<number, number>()
+  for (const id of ids) {
+    const c = col.get(id)!
+    widthByCol.set(c, Math.max(widthByCol.get(c) ?? 0, sizeOf(kind.get(id)!)[0]))
+  }
+  const wOf = (c: number) => widthByCol.get(c) ?? chipWidth
+  const centerX: number[] = []
+  for (let c = 0; c <= maxCol; c++) {
+    centerX[c] = c === 0 ? padding + wOf(c) / 2 : centerX[c - 1] + wOf(c - 1) / 2 + columnGap + wOf(c) / 2
+  }
+  const colCenterX = (c: number) => centerX[c]
+  const rowCenterY = (r: number) => padding + tallest / 2 + (r - minRow) * rowHeight
+
+  const typeOf: Record<WfNodeKind, string> = {
+    start: 'terminal',
+    finish: 'terminal',
+    step: 'stepChip',
+    diamond: 'diamond',
+  }
+  const dataOf = (id: string, k: WfNodeKind) => {
+    if (k === 'start') return { label: 'Start', variant: 'start' as const, assignee: initiators }
+    if (k === 'finish') return { label: 'Completed', variant: 'end' as const }
+    if (k === 'step') return { step: steps.find((s) => s.id === id)! }
+    return {}
+  }
+
+  const nodes: Node[] = ids.map((id) => {
+    const k = kind.get(id)!
+    const [w, h] = sizeOf(k)
+    return {
+      id,
+      type: typeOf[k],
+      position: { x: colCenterX(col.get(id)!) - w / 2, y: rowCenterY(row.get(id)!) - h / 2 },
+      data: dataOf(id, k),
+      draggable: false,
+      selectable: false,
+    }
   })
 
-  // Edges — every connection flows right→left with smoothstep routing.
-  const edges: Edge[] = []
-  const addEdge = (source: string, target: string) => {
-    edges.push({
+  // 6. Edges — thin straight gray lines along the spine; smooth curves for
+  // anything that changes row (the parallel branch/merge connectors).
+  const edges: Edge[] = links.map(([source, target]) => {
+    const base = {
       id: `${source}->${target}`,
       source,
       target,
       sourceHandle: 'source-right',
       targetHandle: 'target-left',
-      type: 'smoothstep',
-      style: { stroke: 'var(--orange-500)', strokeWidth: 1.5 },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: 'var(--orange-500)',
-        width: 16,
-        height: 16,
-      },
-    })
-  }
+      markerEnd: { type: MarkerType.ArrowClosed, color: 'var(--gray-500)', width: 14, height: 14 },
+    }
+    if (row.get(source) === row.get(target)) {
+      return { ...base, type: 'straight', style: { stroke: 'var(--gray-500)', strokeWidth: 1 } }
+    }
+    return { ...base, type: 'curve', style: { stroke: 'var(--gray-500)', strokeWidth: 1.25 } }
+  })
 
-  // Initiate → root step(s) (steps no other step points to).
-  const referenced = new Set(steps.flatMap((s) => s.next))
-  for (const root of steps.filter((s) => !referenced.has(s.id))) {
-    addEdge('__initiate__', root.id)
-  }
-
-  // Declared step transitions.
-  for (const step of steps) {
-    for (const nextId of step.next) addEdge(step.id, nextId)
-  }
-
-  // Terminal step(s) → Finish.
-  for (const terminal of steps.filter((s) => s.next.length === 0)) {
-    addEdge(terminal.id, '__finish__')
-  }
-
-  const width = padding * 2 + FINISH_COL * columnWidth + terminalWidth
-  const height = padding * 2 + canvasHeight
+  const width = colCenterX(maxCol) + wOf(maxCol) / 2 + padding
+  const height = rowCenterY(maxRow) + tallest / 2 + padding
   return { nodes, edges, width, height }
 }
 
@@ -779,6 +851,7 @@ function WorkflowCard({ workflow }: { workflow: WorkflowSpec }) {
               nodes={nodes}
               edges={edges}
               nodeTypes={workflowNodeTypes}
+              edgeTypes={workflowEdgeTypes}
               nodesDraggable={false}
               nodesConnectable={false}
               nodesFocusable={false}

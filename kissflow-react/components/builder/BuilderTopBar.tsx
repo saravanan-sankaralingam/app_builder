@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Play, Rocket, HelpCircle, MessageSquareText, Pencil, Search, RotateCcw, Loader2, ChevronDown, LayoutGrid, Hammer, FileText, Download, X } from 'lucide-react'
+import { Play, Rocket, HelpCircle, MessageSquareText, Pencil, Search, RotateCcw, Loader2, ChevronDown, LayoutGrid, Hammer, FileText, RefreshCw, X } from 'lucide-react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,6 @@ import * as LucideIcons from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { iconColorFromBg } from '@/lib/icon-color'
 import { AppSpecView } from '@/components/app-view/AppSpecView'
-import { getAppSpec } from '@/lib/app-specs'
 
 interface RecentApp {
   id: string
@@ -92,21 +91,6 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
 
   // App Spec popover
   const [isSpecOpen, setIsSpecOpen] = useState(false)
-
-  // Download the app spec as a JSON file.
-  const handleDownloadSpec = () => {
-    const spec = getAppSpec(appId)
-    if (!spec) return
-    const blob = new Blob([JSON.stringify(spec, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${appName.trim().toLowerCase().replace(/\s+/g, '-') || 'app'}-spec.json`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
 
   // App name editing state
   const [isEditingName, setIsEditingName] = useState(false)
@@ -491,36 +475,39 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
                 className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
               >
                 <FileText className="h-[16px] w-[16px]" strokeWidth={1.5} />
-                <span>Spec</span>
+                <span>App Spec</span>
               </button>
             </DialogPrimitive.Trigger>
             <DialogPrimitive.Portal>
               <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-gray-900/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
               <DialogPrimitive.Content
                 aria-describedby={undefined}
-                className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[90vh] flex flex-col overflow-hidden rounded-lg bg-white shadow-xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+                className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
               >
-                {/* Header — title left, download + close right */}
-                <div className="flex items-center justify-between px-4 h-12 border-b border-gray-200 flex-shrink-0">
-                  <DialogPrimitive.Title className="text-sm font-semibold text-gray-900">
+                {/* Header — title left; last-updated + refresh + close right */}
+                <div className="flex items-center justify-between px-5 h-14 border-b border-gray-200 flex-shrink-0">
+                  <DialogPrimitive.Title className="text-base font-semibold text-gray-900">
                     App Spec
                   </DialogPrimitive.Title>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] text-gray-500 leading-none">
+                      Last updated 5 mins ago
+                    </span>
                     <button
                       type="button"
-                      onClick={handleDownloadSpec}
-                      className="flex items-center gap-1.5 h-7 px-2 rounded-md text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                      className="flex items-center gap-1 h-6 px-2.5 rounded-md border border-[var(--blue-500)] bg-white text-[12px] font-medium text-[var(--blue-600)] hover:bg-[var(--blue-100)] transition-colors cursor-pointer"
                     >
-                      <Download className="h-[15px] w-[15px]" strokeWidth={1.5} />
-                      <span>Download</span>
+                      <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.75} />
+                      Refresh
                     </button>
+                    <div className="h-4 w-px bg-gray-200" />
                     <DialogPrimitive.Close asChild>
                       <button
                         type="button"
                         aria-label="Close"
-                        className="flex items-center justify-center h-7 w-7 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                        className="flex items-center justify-center h-8 w-8 -mr-1.5 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
                       >
-                        <X className="h-[16px] w-[16px]" strokeWidth={1.5} />
+                        <X className="h-[18px] w-[18px]" strokeWidth={1.5} />
                       </button>
                     </DialogPrimitive.Close>
                   </div>
