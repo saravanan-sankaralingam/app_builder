@@ -4,6 +4,9 @@ import { useMemo } from 'react'
 import { Users, User, Database, FileText, Compass, Workflow } from 'lucide-react'
 import {
   ReactFlow,
+  Background,
+  BackgroundVariant,
+  Controls,
   Handle,
   Position,
   MarkerType,
@@ -811,11 +814,11 @@ function WorkflowList({ items }: { items: WorkflowSpec[] }) {
   )
 }
 
-// WorkflowCard — a plain left-to-right React Flow graph (no swimlane chrome).
-// The whole graph is sized to its content and scrolls inside the card.
+// WorkflowCard — a plain left-to-right React Flow graph (no swimlane chrome),
+// shown on a pan + zoom canvas with zoom controls.
 function WorkflowCard({ workflow }: { workflow: WorkflowSpec }) {
   const layout = useMemo(() => buildWorkflowLayout(workflow), [workflow])
-  const { nodes, edges, width, height } = layout
+  const { nodes, edges } = layout
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:border-gray-300 transition-all">
@@ -843,32 +846,33 @@ function WorkflowCard({ workflow }: { workflow: WorkflowSpec }) {
         </div>
       </div>
 
-      {/* Flow diagram */}
+      {/* Flow diagram — pan + zoom canvas */}
       <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden bg-white">
-        <div className="overflow-auto max-w-full" style={{ maxHeight: 520 }}>
-          <div style={{ width, height, position: 'relative' }}>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              nodeTypes={workflowNodeTypes}
-              edgeTypes={workflowEdgeTypes}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              nodesFocusable={false}
-              edgesFocusable={false}
-              elementsSelectable={false}
-              panOnDrag={false}
-              zoomOnScroll={false}
-              zoomOnDoubleClick={false}
-              zoomOnPinch={false}
-              panOnScroll={false}
-              preventScrolling={false}
-              fitView={false}
-              proOptions={{ hideAttribution: true }}
-              defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-              style={{ background: 'transparent' }}
-            />
-          </div>
+        <div className="relative" style={{ height: 360 }}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={workflowNodeTypes}
+            edgeTypes={workflowEdgeTypes}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            nodesFocusable={false}
+            edgesFocusable={false}
+            elementsSelectable={false}
+            panOnDrag
+            zoomOnScroll
+            zoomOnDoubleClick
+            zoomOnPinch
+            panOnScroll={false}
+            minZoom={0.3}
+            maxZoom={2}
+            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+            proOptions={{ hideAttribution: true }}
+            style={{ background: 'transparent' }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="var(--gray-300)" />
+            <Controls showInteractive={false} position="bottom-right" />
+          </ReactFlow>
         </div>
       </div>
     </div>
