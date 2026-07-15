@@ -310,7 +310,7 @@ App items in the Pinned and Recent sections show a pin/unpin button at the **rig
 | Button hover bg | Non-active row: `from-purple-200 to-blue-200` gradient; active row: `from-purple-500 to-blue-500` gradient. Same diagonal direction as the active-state gradient, just at intensities that work against each row's bg. |
 | Click handling | `e.preventDefault()` + `e.stopPropagation()` so the surrounding `<Link>` does **not** navigate; then `onTogglePin?.()` fires. |
 | State updates | `pinApp(item)` removes from Recent and **appends** to Pinned. `unpinApp(item)` removes from Pinned and **prepends** to Recent (most-recently-handled first). |
-| Persistence | **In-memory only.** Refreshing the page resets to `initialPinnedApps = []` + `initialRecentApps = [Retail One]`. Backend persistence is the next milestone. |
+| Persistence | **In-memory only.** Refreshing the page resets to `initialPinnedApps = []` + `initialRecentApps = [Vendor Onboarding and Management, Retail One, Inventory Management, Expense Management]`. Backend persistence is the next milestone. |
 
 ### Vertical structure (top → bottom)
 
@@ -338,7 +338,7 @@ Create new (primary variant)              ← solid blue [+] button + "Create" +
 | Rule | Detail |
 |---|---|
 | Pinned section is hidden when empty | When `pinnedApps.length === 0`, no header, no items, no separator before it. The Recent section's "Recent" pill takes the first divider's slot instead. |
-| Recent always visible | At least 3 items fit; if Recent has fewer (e.g., just Retail One today), the section still occupies its natural height inside the middle area. |
+| Recent always visible | At least 3 items fit; if Recent has fewer than that, the section still occupies its natural height inside the middle area. |
 | Pinned can grow until it would shrink Recent below 3 items | Constraint expressed as `style={{ maxHeight: 'calc(100% - 150px)' }}` on the Pinned scroll container. 150px ≈ 3 items + section divider. |
 | Beyond Pinned's max | Pinned **scrolls inside itself** (`overflow-y-auto`). Users can keep pinning. |
 | Recent overflow | Recent itself is `flex-1 overflow-y-auto` — scrolls if its content is taller than the remaining space. |
@@ -365,7 +365,7 @@ Fixed `h-5 my-1` (28px outer height) container that swaps content between collap
 
 `Sidebar.tsx` lifts pinned and recent into component state, seeded by these in-file constants:
 - `initialPinnedApps: NavItem[] = []` — starts empty.
-- `initialRecentApps: NavItem[] = [Retail One]` — single item for now.
+- `initialRecentApps: NavItem[] = [Vendor Onboarding and Management, Retail One, Inventory Management, Expense Management]` — four demo tiles, all wired to the `lib/static-apps.ts` registry so `/app/<slug>` resolves.
 
 ```tsx
 const [pinnedApps, setPinnedApps] = useState<NavItem[]>(initialPinnedApps)

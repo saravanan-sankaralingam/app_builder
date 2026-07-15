@@ -17,6 +17,7 @@ import {
   CheckCheck,
   Circle,
   ClipboardCheck,
+  Info,
   Layers,
   X,
   type LucideIcon,
@@ -116,6 +117,19 @@ export function AppCreatingView({
     startGeneration,
   } = useGeneration()
 
+  // Entrance animation — this screen is now reached directly from
+  // AgentScanningView (no confirmation popover between them), so on mount we
+  // hold the LeftPane in a centred single-column layout that visually matches
+  // AgentScanningView's final frame, then transition to the 5:7 split with
+  // the RightPane fading in from the right. Kicks off on the first
+  // requestAnimationFrame so the initial state paints before the transition.
+  const [hasSettled, setHasSettled] = useState(false)
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setHasSettled(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
   useEffect(() => {
     // AppCreatingView is the "app is being created" screen — every time it
     // mounts we start a fresh tick loop. `startGeneration` clears any
@@ -152,8 +166,19 @@ export function AppCreatingView({
         </Button>
       </div>
 
-      {/* Asymmetric split — left 5fr (narrative), right 7fr (artifact). 24px around, 24px gap. */}
-      <div className="relative z-10 flex-1 grid grid-cols-[5fr_7fr] gap-6 p-6 min-h-0">
+      {/* Asymmetric split — left 5fr (narrative), right 7fr (artifact). 24px around, 24px gap.
+          Grid columns interpolate from `1fr 0fr` (LeftPane fills the width,
+          RightPane hidden — matches AgentScanningView's centred layout) to
+          `5fr 7fr` (the standard split) on mount so the handoff between the
+          two screens reads as a single continuous animation. */}
+      <div
+        className="relative z-10 flex-1 grid gap-6 p-6 min-h-0"
+        style={{
+          gridTemplateColumns: hasSettled ? '5fr 7fr' : '1fr 0fr',
+          transition:
+            'grid-template-columns 1400ms cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
+      >
         <LeftPane
           currentIdx={currentIdx}
           phaseIdx={phaseIdx}
@@ -182,17 +207,29 @@ export function AppCreatingView({
             />
           }
         />
-        <RightPane
-          currentIdx={currentIdx}
-          phaseIdx={phaseIdx}
-          appName={appName}
-          appDescription={appDescription}
-          onPreviewApp={
-            appId
-              ? () => window.open('/builder/' + appId, '_blank')
-              : undefined
-          }
-        />
+        {/* RightPane fades in from the right as the grid finishes opening —
+            the slight delay lets the column expansion carry the eye first. */}
+        <div
+          className="min-h-0 flex flex-col [&>*]:h-full"
+          style={{
+            opacity: hasSettled ? 1 : 0,
+            transform: hasSettled ? 'translateX(0)' : 'translateX(32px)',
+            transition:
+              'opacity 1050ms ease-out 450ms, transform 1150ms cubic-bezier(0.22, 1, 0.36, 1) 450ms',
+          }}
+        >
+          <RightPane
+            currentIdx={currentIdx}
+            phaseIdx={phaseIdx}
+            appName={appName}
+            appDescription={appDescription}
+            onPreviewApp={
+              appId
+                ? () => window.open('/builder/' + appId, '_blank')
+                : undefined
+            }
+          />
+        </div>
       </div>
 
       {/* Completion popover — normally opens on top of the building screen
@@ -294,29 +331,6 @@ function AppCreatedDialog({
               />
             </span>
 
-            {/* Confetti burst — 12 particles fly outward from the badge on
-                mount. Colours pick from the AI brand palette + green so the
-                celebration reads on-brand. */}
-            {CONFETTI_PARTICLES.map((p, i) => (
-              <span
-                key={i}
-                className="confetti-particle"
-                style={
-                  {
-                    width: `${p.size}px`,
-                    height: `${p.size}px`,
-                    backgroundColor: p.color,
-                    borderRadius: p.shape === 'square' ? '2px' : '999px',
-                    boxShadow: `0 1px 3px color-mix(in srgb, ${p.color} 40%, transparent)`,
-                    animationDelay: `${p.delay}ms`,
-                    '--cx': `${p.x}px`,
-                    '--cy': `${p.y}px`,
-                    '--cr': `${p.rot}deg`,
-                  } as React.CSSProperties
-                }
-                aria-hidden="true"
-              />
-            ))}
           </div>
 
           {/* Title — solid green, echoing the success badge. */}
@@ -413,7 +427,10 @@ export function LeftPane({
     <div
       className={
         compact
-          ? 'flex flex-col items-stretch justify-start py-5 px-4 overflow-y-auto'
+          ? // Compact (Builder chat-slot) — fills the rail, centres the
+            // timeline vertically so it sits in the middle of the 320px pane,
+            // and keeps tight horizontal padding so the agent card breathes.
+            'flex-1 min-h-0 flex flex-col items-stretch justify-center py-5 px-3 overflow-y-auto'
           : 'flex flex-col items-center justify-start py-10 px-8 overflow-y-auto'
       }
     >
@@ -422,7 +439,7 @@ export function LeftPane({
         <div
           className={
             compact
-              ? 'flex flex-col items-start text-left mb-4'
+              ? 'flex flex-col items-center text-center mb-4'
               : 'flex flex-col items-center text-center mb-8'
           }
         >
@@ -457,10 +474,10 @@ export function LeftPane({
             the default composition: a custom AI sparkle from
             /Downloads/ai_icon.svg on top of a settled liquid-morph blob
             (soft AI-gradient halo). A periodic diagonal white shine sweeps
-            across the icon silhouette via SVG SMIL. Suppressed in compact
-            mode — the narrow Builder slot has no room for it. */}
-        {!compact && (
-        <div className="flex justify-center mb-8">
+            across the icon silhouette via SVG SMIL. In compact mode the
+            same slot renders (with tighter bottom margin) so the Builder
+            still gets the animated loader. */}
+        <div className={compact ? 'flex justify-center mb-4' : 'flex justify-center mb-8'}>
         {hero ?? (
           <div className="relative w-[88px] h-[88px] flex items-center justify-center">
             {/* Settled liquid blob behind the icon — 50% opacity so it
@@ -563,7 +580,6 @@ export function LeftPane({
           </div>
         )}
         </div>
-        )}
 
         {/* Agent timeline — AI-gradient border ring around a flat white-50 surface */}
         <div
@@ -578,7 +594,7 @@ export function LeftPane({
           }}
         >
           <div
-            className={compact ? 'rounded-[16.5px] p-4' : 'rounded-[22.5px] p-9'}
+            className={compact ? 'rounded-[16.5px] p-3' : 'rounded-[22.5px] p-9'}
             style={{ background: 'color-mix(in srgb, var(--white) 90%, transparent)' }}
           >
             <ol
@@ -607,6 +623,7 @@ export function LeftPane({
                     agent={agent}
                     state={state}
                     phaseIdx={i === currentIdx ? phaseIdx : 0}
+                    compact={compact}
                   />
                 )
               })}
@@ -630,10 +647,14 @@ function AgentRow({
   agent,
   state,
   phaseIdx,
+  compact = false,
 }: {
   agent: Agent
   state: AgentState
   phaseIdx: number
+  // In compact mode (Builder chat-slot) the row drops `whitespace-nowrap` so
+  // long sub-item text wraps naturally instead of overflowing the 320px pane.
+  compact?: boolean
 }) {
   const accentColor = `var(--${agent.color}-500)`
 
@@ -656,11 +677,11 @@ function AgentRow({
         ) : state === 'done' ? (
           <>
             {/* Line 1: agent name */}
-            <p className="text-[13px] font-semibold text-gray-900 leading-snug whitespace-nowrap">
+            <p className={cn('text-[13px] font-semibold text-gray-900 leading-snug', !compact && 'whitespace-nowrap')}>
               {agent.name}
             </p>
             {/* Line 2: meaningful success message + double tick */}
-            <p className="text-[13px] leading-snug text-gray-600 whitespace-nowrap mt-0.5">
+            <p className={cn('text-[13px] leading-snug text-gray-600 mt-0.5', !compact && 'whitespace-nowrap')}>
               {agent.successPhrase}
               <CheckCheck
                 className="inline-block ml-1.5 w-3.5 h-3.5 align-middle"
@@ -672,11 +693,11 @@ function AgentRow({
         ) : (
           <>
             {/* Line 1: agent name */}
-            <p className="text-[13px] font-semibold text-gray-900 leading-snug whitespace-nowrap">
+            <p className={cn('text-[13px] font-semibold text-gray-900 leading-snug', !compact && 'whitespace-nowrap')}>
               {agent.name}
             </p>
             {/* Line 2: "working on it" + animated dot trail */}
-            <p className="text-[13px] leading-snug whitespace-nowrap mt-0.5">
+            <p className={cn('text-[13px] leading-snug mt-0.5', !compact && 'whitespace-nowrap')}>
               <span className="text-gray-600">is working on it</span>
               <DotTrail color={accentColor} />
             </p>
@@ -689,9 +710,22 @@ function AgentRow({
                 border: '1px solid var(--gray-100)',
               }}
             >
-              {agent.phases.map((phrase, i) => {
-                const isPast = i < phaseIdx
-                const isCurrent = i === phaseIdx
+              {(() => {
+                // Some agents collapse several internal phases into a single
+                // sub-item (see `Agent.visiblePhases`). Scale the internal
+                // phaseIdx down so past/current logic maps onto the shorter
+                // list; whichever internal phase we're actually on, we still
+                // point at the right visible row.
+                const visible = agent.visiblePhases ?? agent.phases
+                const scaledPhaseIdx =
+                  visible === agent.phases
+                    ? phaseIdx
+                    : Math.floor(
+                        (phaseIdx * visible.length) / agent.phases.length,
+                      )
+                return visible.map((phrase, i) => {
+                const isPast = i < scaledPhaseIdx
+                const isCurrent = i === scaledPhaseIdx
                 // Hide yet-to-start sub-items — only render past (done) and
                 // current (in-flight) phases. The box grows as the agent
                 // progresses through its phases.
@@ -729,7 +763,8 @@ function AgentRow({
                     )}
                     <span
                       className={cn(
-                        'leading-snug whitespace-nowrap',
+                        'leading-snug',
+                        !compact && 'whitespace-nowrap',
                         isPast && 'text-gray-700',
                         isCurrent && 'text-shimmer font-medium',
                         !isPast && !isCurrent && 'text-gray-400',
@@ -747,7 +782,8 @@ function AgentRow({
                     </span>
                   </div>
                 )
-              })}
+                })
+              })()}
             </div>
           </>
         )}
@@ -2196,17 +2232,17 @@ function RolePreviewReadyCard({
       key={roles.join('|')}
       className="ai-fade-up rounded-xl border flex items-center gap-3 p-3 shadow-[0_2px_6px_rgba(34,42,59,0.06),0_1px_2px_rgba(34,42,59,0.04)]"
       style={{
-        borderColor: 'var(--gray-200)',
-        backgroundColor: 'var(--gray-50)',
+        borderColor: 'var(--blue-400)',
+        backgroundColor: 'var(--blue-200)',
       }}
     >
       <span
-        className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center"
-        style={{ backgroundColor: 'var(--green-500)' }}
+        className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
+        style={{ backgroundColor: 'var(--blue-500)' }}
       >
-        <Check
-          className="w-4 h-4 text-white"
-          strokeWidth={3}
+        <Info
+          className="w-3 h-3 text-white"
+          strokeWidth={2.5}
         />
       </span>
       <div className="flex-1 min-w-0">

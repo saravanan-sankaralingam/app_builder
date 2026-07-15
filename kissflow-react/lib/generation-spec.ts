@@ -20,8 +20,17 @@ export interface Agent {
   icon: LucideIcon
   // Brand colour family used for the agent's avatar gradient (-400 → -500)
   color: 'magenta' | 'purple' | 'blue' | 'cyan' | 'green'
-  // Verb phrases surfaced as sub-items in the active-agent checklist box.
+  // Internal phase list — drives the tick math and any downstream logic that
+  // needs to know "which sub-tick are we on" (e.g. RightPane per-role reveals
+  // for Interface Designer). Each entry consumes one tick from
+  // AGENT_PHASE_DURATIONS_MS.
   phases: string[]
+  // Optional visible checklist override. When set, the LeftPane renders these
+  // strings as the sub-items instead of `phases`. Useful when several internal
+  // phases share the same narrative to the user (e.g. Interface Designer runs
+  // per-role internally, but the user only sees "Composing pages and
+  // navigation" once). If unset, `phases` is used.
+  visiblePhases?: string[]
   // Success verb phrase shown alongside the green double-tick when the agent
   // transitions to Done (or during the final 3s of its active window).
   successPhrase: string
@@ -84,14 +93,17 @@ export const AGENTS: Agent[] = [
     icon: Palette,
     color: 'cyan',
     // Per-role generation — Interface Designer works through each role one at
-    // a time. Phase order matches DESIGNER_ROLE_ORDER below. Sub-item text is
-    // intentionally role-agnostic so it reads cleanly as the checklist
-    // progresses; the role being worked on is surfaced elsewhere in the UI.
+    // a time. Phase order matches DESIGNER_ROLE_ORDER below and drives the
+    // RightPane per-role page + navigation reveal. The visible checklist,
+    // however, collapses all three into a single sub-item so the LeftPane
+    // reads as one continuous piece of design work while the role progression
+    // plays out in the RightPane's success card.
     phases: [
       'Composing pages and navigation',
       'Composing pages and navigation',
       'Composing pages and navigation',
     ],
+    visiblePhases: ['Composing pages and navigation for each role'],
     successPhrase: 'has designed the interface',
   },
   {

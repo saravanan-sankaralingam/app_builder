@@ -3,6 +3,7 @@
 import { useGeneration } from '@/context/GenerationContext'
 import { AGENTS } from '@/lib/generation-spec'
 import {
+  BackgroundAtmosphere,
   InlineKeyframes,
   LeftPane,
 } from '@/components/new-app/AppCreatingView'
@@ -25,11 +26,17 @@ export function GenerationLoadingPane() {
       className="w-[320px] ml-2 mr-2 rounded-t-[8px] p-[1px] overflow-hidden flex-shrink-0"
       style={{ background: 'var(--ai-gradient-300)' }}
     >
-      <div className="flex flex-col overflow-hidden h-full bg-white rounded-t-[7px]">
+      <div className="relative flex flex-col overflow-hidden h-full bg-[#FDF8FC] rounded-t-[7px]">
+        {/* Same pink-purple wash + atmospheric orbs the /new/app screens use,
+            clipped by the pane's overflow-hidden. Orbs are far larger than
+            the pane so only a portion shows — reads as a soft gradient wash
+            behind the LeftPane content. */}
+        <BackgroundAtmosphere />
         {/* Sub-item animations (`ai-fade-up`, dot pulse, etc.) live on
             InlineKeyframes — mount it here so the timeline animates even
             though AppCreatingView isn't in the tree. */}
         <InlineKeyframes />
+        <div className="relative z-10 flex flex-col h-full min-h-0">
         <LeftPane
           compact
           agents={AGENTS}
@@ -47,7 +54,22 @@ export function GenerationLoadingPane() {
               'AI is bringing your app to life — roles, data, pages, and more.'
             )
           }
+          hero={
+            // Same animated app-mock loader the AI Create screen shows, just
+            // scaled down for the 320px chat rail. SMIL animation is inside
+            // the SVG, so no wiring needed.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/app-builder-loader.svg"
+              alt=""
+              width={124}
+              height={100}
+              className="w-[124px] h-[100px]"
+              aria-hidden="true"
+            />
+          }
         />
+        </div>
       </div>
     </div>
   )

@@ -21,14 +21,16 @@ This is **not** the Platform shell (TopBar + Sidebar). The Platform shell lives 
 
 ## Where it lives
 
-There is **no shared component yet** — each app page renders its own header inline. That's intentional for now; the two live apps (Retail One, Inventory Management) are still diverging in tab structure and per-tab content, and it's too early to abstract.
+There is **no shared component yet** — each app page renders its own header inline. That's intentional for now; the apps are still diverging in tab structure and per-tab content, and it's too early to abstract.
 
 | App | File |
 |---|---|
 | Retail One | `app/(main)/app/retail-one/page.tsx` |
 | Inventory Management | `app/(main)/app/inventory-management/page.tsx` |
+| Expense Management | `app/(main)/app/expense-management/page.tsx` |
+| Vendor Onboarding and Management | `app/(main)/app/vendor-onboarding-and-management/page.tsx` |
 
-When a third app is added that uses the same structure, lift the header into `components/app-view/AppNavHeader.tsx` and parameterise it (`icon`, `title`, `tabs`, `currentTab`, `onTabChange`). Until then, keep the structure identical across pages by following the contract below.
+Because the header is duplicated across all four pages, a header change is a **four-file edit** (see the Play-mode role-switcher block below for the pattern already applied this way). When it stabilises, lift the header into `components/app-view/AppNavHeader.tsx` and parameterise it (`icon`, `title`, `tabs`, `currentTab`, `onTabChange`). Until then, keep the structure identical across pages by following the contract below.
 
 ## Anatomy (top to bottom)
 
@@ -310,10 +312,20 @@ For **static apps** registered in `lib/static-apps.ts`, Play mode renders the ac
 
 These only apply inside the Builder — the Platform route at `/app/<slug>` is untouched.
 
+### Static-app headers adapt in Play mode (role switcher)
+
+`PlatformAppPreview` wraps the page in an `AppPreviewProvider` (`components/app-view/AppPreviewContext.tsx`) with `{ inBuilderPlay: true, appId, selectedRole, setSelectedRole }`. Each app page reads `useAppPreview()` and adapts its inline Row 1 **only in Builder Play**:
+
+- **Hidden:** the **Pin** button, the collaborator **avatar stack**, the **Add-user / share** button, and the **Manage** + **More (⋯)** buttons. These are end-user affordances that don't make sense while authoring.
+- **Added:** an **`AppNavRoleSwitcher`** (`components/app-view/AppNavRoleSwitcher.tsx`) in the Manage slot — a "Viewing as {role}" pill whose dropdown lists the app's roles (resolved via `resolveAppRoles(appId)` in `app-roles.ts`, from the spec or a fallback). Selecting a role updates `selectedRole` in context.
+- **Per-role content:** pages may branch on `selectedRole`. The Vendor Onboarding app ships **per-role dashboards** and **per-role tabs** (e.g. Requester sees "My Requests" / "Browse Vendors"; Finance sees "Spend Overview"). On the Platform route there's no provider, so `selectedRole` is undefined and the default (full) content shows — no regression.
+
+The Platform route at `/app/<slug>` (no provider) always shows the full end-user header.
+
 ## Related
 
 - [`PLATFORM_SHELL.md`](PLATFORM_SHELL.md) — Platform TopBar + Sidebar (the surrounding shell)
-- [`BUILDER_MODES.md`](BUILDER_MODES.md) — Play / Spec X / Spec Y / Build modes; Play's header is the Platform header
+- [`BUILDER_MODES.md`](BUILDER_MODES.md) — Play / Build modes + the App Spec modal; Play's header is the Platform header (adapted for role preview)
 - [`COLORS.md`](COLORS.md) — brand palette + `iconColorFromBg` helper for icon-on-white surfaces
 - [`../CLAUDE.md`](../CLAUDE.md) — frontend stack and conventions
 - [`../app/(main)/CLAUDE.md`](../app/(main)/CLAUDE.md) — Platform routes including `/app/[appId]`

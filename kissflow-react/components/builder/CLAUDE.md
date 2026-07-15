@@ -7,12 +7,12 @@ Builder is the authoring tool. App authors use it to define data layers, fields,
 ## Required reading before changes
 
 - [`../../docs/BUILDER_LAYERS.md`](../../docs/BUILDER_LAYERS.md) — the 5 Layers (Data, Interface, Logic, Roles & Permissions, Settings) that segregate the Builder UI
-- [`../../docs/BUILDER_MODES.md`](../../docs/BUILDER_MODES.md) — Play / Spec / Build modes, layout switching, what each mode shows
+- [`../../docs/BUILDER_MODES.md`](../../docs/BUILDER_MODES.md) — Play / Build modes + the App Spec modal, layout switching, what each mode shows
 - [`../../ComponentsProperties.md`](../../ComponentsProperties.md) — property panel + utility bar styling spec, which utility-bar buttons appear per tab type
 - [`../../docs/PAGE_BUILDER.md`](../../docs/PAGE_BUILDER.md) — Page editor (3-section drag-and-drop layout)
 - [`../../STYLE_BACKUPS.md`](../../STYLE_BACKUPS.md) — pre-experiment style snapshots for quick revert
 
-**Critical design rule (from BUILDER_MODES):** Spec is a *readable specification document*, not a configuration editor. Removing editor UI ≠ removing content — every editor field must map to a prose/table analogue in the spec. Per-app spec content lives in `lib/app-specs.ts` and renders through `components/app-view/AppSpecView.tsx`.
+**Critical design rule (from BUILDER_MODES):** the App Spec is a *readable specification document*, not a configuration editor. Removing editor UI ≠ removing content — every editor field must map to a prose/table analogue in the spec. Per-app spec content lives in `lib/app-specs.ts` and renders through `components/app-view/AppSpecView.tsx`. The Spec is **no longer a top-bar mode** — it opens in a **modal** from the "App Spec" button in `BuilderTopBar.tsx` (`mode` still carries a dead `'spec'` value).
 
 ## Entry routes
 
@@ -21,11 +21,11 @@ Builder is the authoring tool. App authors use it to define data layers, fields,
 
 ## Shell
 
-`BuilderLayout.tsx` is the top-level Builder shell. It owns the mode state (`'play' | 'spec' | 'build'`) and swaps the entire main area based on mode. See `docs/BUILDER_MODES.md` for what each mode shows.
+`BuilderLayout.tsx` is the top-level Builder shell. It owns the mode state (`'play' | 'spec' | 'build'`, but only Play/Build are reachable from the toggle) and swaps the entire main area based on mode. The App Spec opens in a modal from `BuilderTopBar`, independent of mode. See `docs/BUILDER_MODES.md` for what each mode shows.
 
 ```
 ┌─────────────────────────────────────────────────┐
-│ BuilderTopBar  (mode toggle: Play / Spec / Build)│
+│ BuilderTopBar  (toggle: Play / Build · App Spec) │
 ├─────────────────────────────────────────────────┤
 │ BuilderTabBar  (open tabs across the app)       │
 ├─────────────────────────────────────────────────┤
@@ -41,7 +41,7 @@ Builder is the authoring tool. App authors use it to define data layers, fields,
 | Concern | Files |
 |---|---|
 | **Shell** | `BuilderLayout.tsx`, `BuilderTopBar.tsx`, `BuilderTabBar.tsx`, `BuilderUtilityBar.tsx`, `BuilderSidebar.tsx` |
-| **Play mode (runtime preview)** | `AppRuntimePreview.tsx`, `copilot/`, `CopilotPanel.tsx` |
+| **Play mode (runtime preview)** | `AppRuntimePreview.tsx`, `copilot/`, `CopilotPanel.tsx`, `GenerationLoadingPane.tsx` |
 | **Property panels** | `PropertyPanelHeader.tsx`, `PropertySectionTitle.tsx` (styling per `ComponentsProperties.md`) |
 | **Data layer editors** | `FormBuilder.tsx` (form fields), `DataFormSettingsEditor.tsx`, `DataFormShareEditor.tsx`, `ListEditor.tsx`, `PageEditor.tsx` |
 | **Create dialogs** (one per artifact type) | `BoardCreateDialog`, `DataFormCreateDialog`, `ProcessCreateDialog`, `ListCreateDialog`, `PageCreateDialog`, `NavigationCreateDialog`, `ViewCreateDialog`, `ReportCreateDialog`, `ComponentCreateDialog` |
@@ -58,11 +58,13 @@ Implication: when fixing a view-rendering bug, the fix usually lives in `compone
 
 `CopilotPanel.tsx` is the chat-style assistant in Play mode. It can drive the preview via `addNavItemCallback` (add a page) and `switchToPageCallback` (jump to a page).
 
+**Chat-slot swap during generation.** When the app is still being generated (user reached the Builder mid-flow via the "Preview app" CTA on `/new/app`), Play mode and Spec mode both swap the 320px left rail: `GenerationLoadingPane.tsx` replaces `CopilotPanel.tsx`. `GenerationLoadingPane` reuses `LeftPane` from `components/new-app/AppCreatingView.tsx` in `compact` mode, driven by the root-level [`GenerationContext`](../../context/GenerationContext.tsx) (mounted in `app/layout.tsx`) so phase progression survives the route change from `/new/app` → `/builder/[appId]`. The swap is gated on `useGeneration().isGenerating`; once the final tick fires, `CopilotPanel` returns automatically in the same slot — no width jump, no `AppRuntimePreview` reflow.
+
 ## Conventions
 
 - All Builder UI must respect the active mode. Anything that *edits* config goes only in Build mode. Spec is a read-only spec document; Play is live runtime preview.
-- Spec-mode workflow diagrams use `@xyflow/react` (React Flow). If you touch the swimlane, also touch `BUILDER_MODES.md` § Workflows — the doc has the sticky-grid contract (corner sticky top+left, header sticky top, assignee column sticky left), the handle-selection rules (`source-right` for same row, `source-top` for above, `source-bottom` for below), and the `WF_LAYOUT` geometry constants.
-- **The right-pane flex chain needs `min-w-0` at every level** — outer split, right-pane outer, and right-pane card. Missing this makes a wide child (a swimlane, a big table) stretch the whole pane past the available width instead of triggering its own scroll. See BUILDER_MODES.md § Spec "Layout gotcha".
+- App Spec workflow diagrams use `@xyflow/react` (React Flow) as a **left-to-right pan/zoom graph** (no swimlanes). If you touch the layout, also touch `BUILDER_MODES.md` § Workflows — the doc has the graph-layout contract (longest-path columns; diamonds auto-inserted before branches; Start / step-chip / diamond / Completed node types; straight spine edges vs bezier `curve` branch edges), the `WF_LAYOUT` geometry constants, and the pan/zoom canvas settings.
+- **The right-pane flex chain needs `min-w-0` at every level** — outer split, right-pane outer, and right-pane card. Missing this makes a wide child (a wide diagram, a big table) stretch the whole pane past the available width instead of triggering its own scroll.
 - Property panel styling follows `ComponentsProperties.md` — don't freelance, the spec is precise about spacing/typography
 - Utility bar visibility follows the per-tab-type table in the root `CLAUDE.md` (and `ComponentsProperties.md`). Adding a new tab type means updating that table.
 - Don't import from `app/(main)/` here — Builder must not depend on Platform routes

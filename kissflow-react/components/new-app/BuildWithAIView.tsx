@@ -4,7 +4,6 @@ import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Paperclip, X, Sparkles, LayoutGrid, Check } from 'lucide-react'
 import { AgentScanningView } from './AgentScanningView'
-import { AppReviewDialog } from './AppReviewDialog'
 import { AppCreatingView } from './AppCreatingView'
 
 // Forked from components/create/AIPromptViewNew.tsx for the left-nav-driven
@@ -25,9 +24,9 @@ const ACCEPTED_FILE_TYPES = '.pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg'
 
 const PLACEHOLDER_TEXT = `For example, create a leave request process where an employee submits a form with their requested dates. The request goes to their manager, who can either approve or deny it. The employee should receive an email notification with the final decision.`
 
-// MOCK: the demo flow always presents the same polished Vendor Onboarding
-// values in the review dialog and downstream spec, regardless of what the
-// user actually typed or uploaded. Swap when wiring real AI.
+// MOCK: the demo flow always commits to the same polished Vendor Onboarding
+// name + description once scanning finishes, regardless of what the user
+// actually typed or uploaded. Swap when wiring real AI.
 const MOCK_APP_NAME = 'Vendor Onboarding and Management'
 const MOCK_APP_DESCRIPTION =
   'Onboard new vendors and manage existing ones end-to-end. Procurement, Legal, and Finance teams review submissions, approve partnerships, and track document renewals with clear status visibility and a complete audit trail.'
@@ -38,11 +37,8 @@ export function BuildWithAIView({ onBack }: BuildWithAIViewProps) {
   const [attachments, setAttachments] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [showScanningDialog, setShowScanningDialog] = useState(false)
-  const [showReviewDialog, setShowReviewDialog] = useState(false)
   const [showCreatingScreen, setShowCreatingScreen] = useState(false)
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
-  const [generatedAppName, setGeneratedAppName] = useState('')
-  const [generatedAppDescription, setGeneratedAppDescription] = useState('')
   const [createdAppName, setCreatedAppName] = useState('')
   const [createdAppDescription, setCreatedAppDescription] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -129,31 +125,20 @@ export function BuildWithAIView({ onBack }: BuildWithAIViewProps) {
     setShowScanningDialog(true)
   }
 
+  // No review popover: once Requirements Analyst + Solutions Architect finish,
+  // the system commits to the generated name/description itself and hands off
+  // directly to the creating screen. The `AppCreatingView` mount handles the
+  // seamless LeftPane centred → left-column animation so the transition looks
+  // continuous with the scanning screen.
   const handleScanningComplete = useCallback(() => {
-    // Keep showScanningDialog true so AgentScanningView stays as the background
-    // behind the review modal. We only close it when the user confirms or cancels.
-    setGeneratedAppName(MOCK_APP_NAME)
-    setGeneratedAppDescription(MOCK_APP_DESCRIPTION)
-    setShowReviewDialog(true)
+    setCreatedAppName(MOCK_APP_NAME)
+    setCreatedAppDescription(MOCK_APP_DESCRIPTION)
+    setShowScanningDialog(false)
+    setShowCreatingScreen(true)
   }, [])
 
   const handleScanningAbort = () => {
     setShowScanningDialog(false)
-  }
-
-  const handleReviewCancel = () => {
-    setShowReviewDialog(false)
-    setShowScanningDialog(false)
-  }
-
-  // Mock: no backend write. AppCreatingView owns its own duration and calls
-  // onComplete when its agent sequence finishes — we then surface the success screen.
-  const handleCreateApp = async (data: { name: string; description: string }) => {
-    setShowReviewDialog(false)
-    setShowScanningDialog(false)
-    setCreatedAppName(data.name)
-    setCreatedAppDescription(data.description)
-    setShowCreatingScreen(true)
   }
 
   const handleCreatingComplete = () => {
@@ -165,10 +150,9 @@ export function BuildWithAIView({ onBack }: BuildWithAIViewProps) {
   const handleOpenApp = () => {
     setShowSuccessScreen(false)
     setCreatedAppName('')
+    setCreatedAppDescription('')
     setPrompt('')
     setAttachments([])
-    setGeneratedAppName('')
-    setGeneratedAppDescription('')
     onBack()
   }
 
@@ -189,24 +173,15 @@ export function BuildWithAIView({ onBack }: BuildWithAIViewProps) {
     )
   }
 
-  // Pre-review "AI at work" screen — centred agent timeline. The review
-  // dialog opens as a modal on top of this view once scanning completes.
+  // Pre-creation "AI at work" screen — centred agent timeline. Once scanning
+  // completes we hand off directly to AppCreatingView (no confirmation
+  // popover): the system commits to the generated name/description on its own.
   if (showScanningDialog) {
     return (
-      <>
-        <AgentScanningView
-          onComplete={handleScanningComplete}
-          onAbort={handleScanningAbort}
-        />
-        <AppReviewDialog
-          open={showReviewDialog}
-          onClose={() => setShowReviewDialog(false)}
-          onCancel={handleReviewCancel}
-          onCreateApp={handleCreateApp}
-          suggestedName={generatedAppName}
-          suggestedDescription={generatedAppDescription}
-        />
-      </>
+      <AgentScanningView
+        onComplete={handleScanningComplete}
+        onAbort={handleScanningAbort}
+      />
     )
   }
 

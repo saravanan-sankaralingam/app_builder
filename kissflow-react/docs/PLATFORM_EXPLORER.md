@@ -160,7 +160,7 @@ When `sortBy === 'type'`, the flat grid is swapped for `components/explorer/Apps
 
 `AppData.type?: AppGroupType` (defined in `types/app.ts:6-9`). Values: `'Application' | 'Process' | 'Board' | 'Dataset' | 'List'`.
 
-- Static `retail-one` is pinned to `'Application'` (`ExplorerView.tsx:66`)
+- The four static demos (`vendor-onboarding-and-management`, `retail-one`, `inventory-management`, `expense-management`) are pinned to `'Application'` (`ExplorerView.tsx:66`)
 - Every backend app is bucketed deterministically by hashing its UUID → `deriveAppType()` (`ExplorerView.tsx:19-25`). Stable across renders so an app doesn't jump categories.
 - The **backend doesn't store an app type yet** — when it does, swap `deriveAppType()` for the real field. The backend's `App.type` is only `'app' | 'portal'` today, not the 5 categories used by the accordion.
 
@@ -168,7 +168,7 @@ When `sortBy === 'type'`, the flat grid is swapped for `components/explorer/Apps
 
 `components/explorer/ExplorerView.tsx`:
 - Fetches from `listApps()` (`lib/api/apps.ts:60`) on mount.
-- Prepends one static app (`retail-one`) in front of the API list so the in-tree demo always appears under **Live** (`ExplorerView.tsx:58-68`).
+- Prepends four static apps (`vendor-onboarding-and-management`, `retail-one`, `inventory-management`, `expense-management`) in front of the API list so the in-tree demos always appear under **Live** (`ExplorerView.tsx:58-68`).
 - Transforms `App` → `AppData` (`types/app.ts`), resolving the icon name string to a lucide component via `getIconByName()` (`lib/icons.ts:154`).
 - Applies **search → tab filter → sort** in that order, memoised on `[apps, searchQuery, activeFilter, sortBy]`.
 
@@ -218,7 +218,7 @@ This change is visible in the profile dropdown in `TopBar.tsx:108-156` and any o
 - Selection in the left nav: **Explorer** is marked active when this route is open (handled by `Sidebar.tsx`)
 - Card hover-only buttons (Pin / More / Edit) all use `opacity-0 group-hover:opacity-100` on the card's `group` — keep this pattern when adding new card-level actions
 - The Sort dropdown's `<SelectContent className="w-56">` is the explicit per-instance override that decouples popover width from trigger width. **Don't remove it.**
-- Static demo apps (currently just `retail-one`) live at the top of the `useMemo` in `ExplorerView.tsx` — add new ones there if you want them to appear regardless of API state
+- Static demo apps (four today: `vendor-onboarding-and-management`, `retail-one`, `inventory-management`, `expense-management`) live at the top of the `useMemo` in `ExplorerView.tsx` — add new ones there if you want them to appear regardless of API state, and mirror them into `lib/static-apps.ts` so the `/builder/<id>` route can resolve them.
 
 ## What's intentionally NOT implemented yet
 

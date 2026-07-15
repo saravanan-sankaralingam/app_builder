@@ -69,7 +69,13 @@ components/views/                # View renderers — one folder per view type
 ├── timeline/
 └── sheet/
 
-components/app-view/             # App-level runtime wrapper (currently empty — placeholder)
+components/app-view/             # App-level runtime + spec surfaces
+├── PlatformAppPreview.tsx       #   embeds a Platform page in Builder Play (PLATFORM_APP_PAGES map)
+├── AppSpecView.tsx              #   the App Spec document (roles, entities, workflows, pages, nav)
+├── AppPreviewContext.tsx        #   context: { inBuilderPlay, appId, selectedRole, setSelectedRole }
+├── AppNavRoleSwitcher.tsx       #   Play-mode "view as role" switcher (replaces Manage)
+├── app-roles.ts                 #   resolveAppRoles(appId) — spec roles → fallback
+└── ManageView.tsx               #   the app "Manage" landing (end-user route)
 components/common/               # Shared runtime UI (e.g. PlaceholderPage)
 
 lib/api/                         # Backend client per resource

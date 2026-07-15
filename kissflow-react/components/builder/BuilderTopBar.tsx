@@ -14,6 +14,7 @@ import * as LucideIcons from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { iconColorFromBg } from '@/lib/icon-color'
 import { AppSpecView } from '@/components/app-view/AppSpecView'
+import { useGeneration } from '@/context/GenerationContext'
 
 interface RecentApp {
   id: string
@@ -82,6 +83,11 @@ const iconCategories = [
 ]
 
 export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange, onColorChange, onNameChange, recentApps = [], onAppSwitch, onGoToExplorer, mode = 'build', onModeChange }: BuilderTopBarProps) {
+  // Run + Deploy are disabled while the app is still being generated (user
+  // reached the Builder mid-flow via the "Preview app" CTA on /new/app).
+  // Once the tick loop completes in GenerationContext, isGenerating flips
+  // false and the buttons re-enable.
+  const { isGenerating } = useGeneration()
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false)
   const [isAppSwitcherOpen, setIsAppSwitcherOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'icons' | 'custom'>('icons')
@@ -437,13 +443,13 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
           </Popover>
         </div>
 
-        {/* Center - Play/Build Toggle */}
+        {/* Center - Play/Studio Toggle */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
           <div className="flex items-center bg-white border border-gray-200 rounded-lg p-0.5 gap-0.5">
             <button
               onClick={() => onModeChange?.('play')}
               className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                "w-16 py-1 text-xs font-medium rounded-md transition-colors text-center",
                 mode === 'play'
                   ? "bg-blue-500 text-white"
                   : "text-gray-900 hover:bg-gray-200"
@@ -454,13 +460,13 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
             <button
               onClick={() => onModeChange?.('build')}
               className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                "w-16 py-1 text-xs font-medium rounded-md transition-colors text-center",
                 mode === 'build'
                   ? "bg-blue-500 text-white"
                   : "text-gray-900 hover:bg-gray-200"
               )}
             >
-              Build
+              Studio
             </button>
           </div>
         </div>
@@ -537,7 +543,9 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
           <Button
             variant="ghost"
             size="sm"
-            className="h-[28px] px-3 cursor-pointer bg-white text-green-600 hover:bg-green-50 hover:text-green-600 border border-green-500 gap-1.5"
+            disabled={isGenerating}
+            title={isGenerating ? 'Available once the app finishes generating' : undefined}
+            className="h-[28px] px-3 cursor-pointer bg-white text-green-600 hover:bg-green-50 hover:text-green-600 border border-green-500 gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             <Play className="size-3" fill="currentColor" />
             <span className="text-xs font-medium">Run</span>
@@ -545,7 +553,9 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
           <Button
             variant="ghost"
             size="sm"
-            className="h-[28px] px-3 cursor-pointer bg-green-500 text-white hover:bg-green-600 hover:text-white border-transparent gap-1.5"
+            disabled={isGenerating}
+            title={isGenerating ? 'Available once the app finishes generating' : undefined}
+            className="h-[28px] px-3 cursor-pointer bg-green-500 text-white hover:bg-green-600 hover:text-white border-transparent gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             <Rocket className="size-3" fill="currentColor" />
             <span className="text-xs font-medium">Deploy</span>

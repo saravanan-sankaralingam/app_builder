@@ -94,7 +94,7 @@ The view reuses `AppCreatingView`'s `LeftPane` — title + hero slot + the gradi
 
 **Title + description** (passed into `LeftPane` as props):
 - Title: `Decoding your requirements` — magenta-500 → purple-500 265° gradient.
-- Description: `Our Requirements Analyst and Solutions Architect agents are interpreting your prompt and drafting the blueprint for your app.`
+- Description: `Our Requirements Analyst and Solutions Architect are interpreting your prompt and drafting the blueprint for your app.`
 
 **Custom hero — swaps mid-run**: instead of the default Sparkles-on-blob glyph, `AgentScanningView` passes a `hero` prop that picks its `<img src>` from `currentIdx` — so the animation matches the currently-active agent:
 
@@ -103,12 +103,12 @@ The view reuses `AppCreatingView`'s `LeftPane` — title + hero slot + the gradi
 
 Both SVGs share a **286×260 viewBox** and are rendered at **176×160** in the hero slot. A React `key` (`'scan' | 'doc-gen'`) is attached to the `<img>` so the browser remounts on swap and the second SVG's SMIL animation starts from frame 0. Both assets already use the AI-brand gradient palette (magenta-500 / purple-500 / blue-500) — see "Loader assets" below.
 
-**2 pre-review agents** (`SCANNING_AGENTS` in `AgentScanningView.tsx`). All names carry the trailing "agent" word for consistency with the post-review timeline. Variable phase counts and per-agent phase durations — the tick math derives from a precomputed `TICK_SCHEDULE` so each agent runs at its own pace:
+**2 pre-review agents** (`SCANNING_AGENTS` in `AgentScanningView.tsx`). Variable phase counts and per-agent phase durations — the tick math derives from a precomputed `TICK_SCHEDULE` so each agent runs at its own pace:
 
 | # | Agent | Color | Glyph | Sub-item duration | Sub-items | Done line |
 |---|---|---|---|---|---|---|
-| 1 | Requirements Analyst agent | magenta | `ClipboardCheck` | 3s | 2 | has captured the requirements |
-| 2 | Solutions Architect agent | purple | `Layers` | 5s | 7 | has drafted the app blueprint |
+| 1 | Requirements Analyst | magenta | `ClipboardCheck` | 3s | 2 | has captured the requirements |
+| 2 | Solutions Architect | purple | `Layers` | 5s | 7 | has drafted the app blueprint |
 
 **Requirements Analyst sub-items** (2 × 3s = 6s):
 - Reading your prompt and attachments
@@ -160,12 +160,13 @@ Both SVGs share a **286×260 viewBox** and are rendered at **176×160** in the h
 
 ### Left pane — narrative
 
-`LeftPane` is **shared between `AgentScanningView` and `AppCreatingView`**. Props:
+`LeftPane` is **shared between `AgentScanningView`, `AppCreatingView`, and `GenerationLoadingPane`** (the Builder's chat-slot replacement). Props:
 - `agents: Agent[]` — the roster to render (SCANNING_AGENTS or AGENTS).
 - `title: string`, `description: React.ReactNode` — the heading block above the hero.
 - `currentIdx: number`, `phaseIdx: number` — drives which agent is active + which sub-item within.
 - `hero?: React.ReactNode` — overrides the default hero. If not passed, falls back to a custom AI sparkle SVG on a settled `flat-liquid` blob (see fallback below).
 - `completedAction?: React.ReactNode` — reserved for inline post-completion content. Currently **unused** on both screens (the post-review completion is a popover instead — see `AppCreatedDialog`).
+- `compact?: boolean` (default `false`) — shrinks outer padding to `py-5 px-4`, drops the hero, removes the inner `max-w-[540px]` so the pane fills its parent, and tightens the title/description sizing. Used by `GenerationLoadingPane` to fit the Builder's 320 px chat slot.
 
 **Container sizing**:
 - Outer wrapper column: `w-full max-w-[540px]`.
@@ -191,7 +192,7 @@ Both SVGs share a **286×260 viewBox** and are rendered at **176×160** in the h
 **Agent avatar**:
 - Shape: **rounded-corner square** — `AVATAR_PATH_D` is `'M 12 0 H 20 A 12 12 0 0 1 32 12 V 20 A 12 12 0 0 1 20 32 H 12 A 12 12 0 0 1 0 20 V 12 A 12 12 0 0 1 12 0 Z'` rendered with `viewBox="0 0 32 32"`.
 - Size: **32×32** with a white **16×16** lucide glyph centred.
-- Post-review roster is only 2 agents (App Builder = magenta / `Wand2`, Validator = green / `ShieldCheck`) — see the per-agent table in the "Mock data summary" section.
+- Post-review roster is 5 agents (2 pre-run + 3 running): Requirements Analyst / Solutions Architect (pre-run) + App Builder (blue / `Wand2`) + Interface Designer (cyan / `Palette`) + App Publisher (green / `Rocket`) — see the per-agent table in the "Mock data summary" section.
 
 **Per-state avatar treatment**:
 
@@ -233,7 +234,7 @@ Other active-state avatar variants we explored (`pulse-halo`, `orbit-border`, `p
 
 ### Right pane — spec artifact
 
-A **glassmorphic card** (`bg-white/75 backdrop-blur-2xl rounded-3xl border border-white/90 shadow-...`) split into two vertical zones.
+A **glassmorphic card** (`bg-white/75 backdrop-blur-2xl rounded-3xl border border-white/90 shadow-...`) split into three vertical zones: pinned identity header, scrollable spec sections, and a pinned success footer.
 
 **Pinned identity header** holds the `AppIdentity` card — name (16px semibold gray-900) + description (13px gray-600 with a `FALLBACK_DESCRIPTION` for short props) — sitting on a `purple-100 → magenta-100` gradient tile.
 
@@ -243,7 +244,7 @@ A **glassmorphic card** (`bg-white/75 backdrop-blur-2xl rounded-3xl border borde
 - Header row: 16×16 lucide `icon` in the section's `accentColor` + section title (**16px semibold gray-900**) + optional count badge + a status pill on the right (see below).
 - Subtitle sits below at `ml-[26px]` (16px icon + 10px `gap-2.5`), `text-[12px] gray-700`.
 - Content: `<div className="pl-[26px]">{children}</div>` — every list, resolved or skeleton, aligns under the title text.
-- **Count badge** (`CountBadge`): `text-[11px]` medium `gray-700` on a `bg-gray-100` pill, `px-1.5 py-1 rounded-full`. Every section chip shows a bare integer (Roles 3, Data entities 3, Workflows 4, Pages 4, Navigation 2) — the previous "3 entities · 15 fields" composite on Data entities was simplified to match the others.
+- **Count badge** (`CountBadge`): `text-[11px]` medium `gray-700` on a `bg-gray-100` pill, `px-1.5 py-1 rounded-full`. Every section chip shows a bare integer (Roles 3, Data entities 6, Workflows 4, Pages 12, Navigation 3) — simplified to match across sections.
 - **Status pills** are solid, no borders:
   - **Generating** — `bg-magenta-500 text-white` with a white pulsing dot (`bg-white` inner + `ai-pulse-ping` ring).
   - **Generated** — `bg-green-500 text-white` with a white inline `<Check>`.
@@ -255,15 +256,28 @@ A **glassmorphic card** (`bg-white/75 backdrop-blur-2xl rounded-3xl border borde
 | 1 | Roles | `Users` (magenta-500) | always | `builderPhase >= 1` | phase 0 |
 | 2 | Data entities | `Database` (green-500) | `builderPhase >= 1` | `builderPhase >= 5` | phases 1–4 |
 | 3 | Workflows | `Workflow` (orange-500) | `builderPhase >= 5` | `builderPhase >= 6` | phase 5 |
-| 4 | Pages | `FileText` (blue-500) | `builderPhase >= 6` (i.e. App Builder done, Designer active) | `designerPhase >= 1` | Designer phase 0 |
-| 5 | Navigation | `Compass` (purple-500) | `designerPhase >= 1` | `designerPhase >= 2` | Designer phase 1 |
+| 4 | Pages | `FileText` (blue-500) | `builderPhase >= 6` (i.e. App Builder done, Designer active) | `designerPhase >= 3` (all three roles complete) | Designer phases 0–2 |
+| 5 | Navigation | `Compass` (purple-500) | `designerPhase >= 1` | `designerPhase >= 3` (all three roles complete) | Designer phases 1–2 |
+
+**Per-role reveal inside Pages + Navigation.** Interface Designer runs one phase per role (`DESIGNER_ROLE_ORDER = ['Vendor Manager', 'Procurement Lead', 'Compliance Officer']`). As each phase completes, that role's exclusive pages (4 per role, tagged with `roles: string[]`) and unique navigation (one per role, keyed on `sharedWith[0]`) drop in — the rest of both sections stay as skeleton rows until the following phase resolves.
+
+**Pinned success footer** (outside the scroll area). Below the scrollable content sits a `border-t border-gray-200 bg-white/70 backdrop-blur-sm p-5` footer holding `<RolePreviewReadyCard>` — a single gray-50 card with a solid `var(--green-500)` tick chip, one-line copy that pivots from `{first} interface is ready …` (1 role done) to `{first} and N other interface[s] ready …` (2+ done), and a primary blue **Preview app** CTA that `window.open('/builder/' + appId, '_blank')` — opens the Builder in a new tab. `appId` is `'vendor-onboarding-and-management'` (registered in `lib/static-apps.ts` so `/builder/{id}` resolves via `getStaticApp()`).
 
 Each `*Shown` gate corresponds to the previous section resolving, so the pane grows one section at a time — the user always sees the most recently completed sections above the currently generating one, with the divider separating them.
 
-**Skeleton loaders — no card chrome**. All five sections use the same flat `<RowListSkeleton count={N} lines={M} />`:
-- `count` = the number of items about to be generated (`MOCK_ROLES.length`, etc.) — so the row count matches what will appear on resolution.
-- Each row: 16×16 `<Circle>` in `gray-300` (placeholder for the tick) + a shimmering `<SkeletonBar>` for the text. Widths vary slightly per row (`60 + (i*7)%25 %`) so the skeleton doesn't look mechanically repeated.
-- `lines > 1`: adds N−1 finer 8px bars for multi-line rows (used for Data entities + Workflows: `lines={2}` for name + fields/steps).
+**Skeleton loaders — no card chrome**. Sections use two flavours:
+- **`<RowListSkeleton count={N} lines={M} />`** for Roles / Data entities / Workflows. Each row is a 16×16 `<Circle>` in `gray-300` + a shimmering `<SkeletonBar>` for the text (widths vary per row so the skeleton doesn't look mechanically repeated). `lines > 1` adds N−1 finer 8px bars for multi-line rows.
+- **`<PartialPageList>` / `<PartialNavSitemap>`** for Pages / Navigation, which render completed items as green ticks and pad the remainder with a fixed-count skeleton tail (see below).
+
+**Fixed skeleton caps** — the row counts no longer track `MOCK_*.length`; they're pinned to visually consistent numbers so the section footprint stays stable regardless of how many items will eventually be generated:
+
+| Section | Skeleton row count | Constant |
+|---|---|---|
+| Roles | 2 | inline `count={2}` at the RightPane call site |
+| Data entities | 2 (with `lines={2}`) | inline `count={2}` |
+| Workflows | 4 (still tied to `MOCK_WORKFLOWS.length`) | — |
+| Pages | 2 while any page is pending, 0 once all resolved | `PAGES_SKELETON_ROW_COUNT = 2` |
+| Navigation | 1 while any nav is pending, 0 once all resolved | `NAV_SKELETON_ROW_COUNT = 1` |
 
 **Resolved content — checklist style**. All five resolved lists use the same tick + name pattern (**13px** gray-900 on both lines, `<ul className="space-y-3">` = **12px** vertical gap between rows, staggered `ai-fade-up` 80ms/row). Loading skeletons (`RowListSkeleton`) also use `space-y-3` so there's no vertical shift when a section flips from Generating → Generated.
 
@@ -281,12 +295,21 @@ Each `*Shown` gate corresponds to the previous section resolving, so the pane gr
 
 Post-review roster is **5 agents** total: **2 pre-run** (Requirements Analyst + Solutions Architect, both shown as `done` from mount thanks to `INITIAL_TICK_COUNT`) + **3 running** (App Builder + Interface Designer + App Publisher).
 
-- `AGENT_PHASE_DURATIONS_MS = [3_000, 5_000, 5_000, 5_000, 5_000]` — first two entries are shape-completeness placeholders (their agents never fire); App Builder = 5s/sub-item, Interface Designer = 5s/sub-item, App Publisher = 5s/sub-item.
-- `CUMULATIVE_TICKS = [2, 9, 15, 17, 18]` — Reqs Analyst owns ticks 0–1, Sol Architect 2–8, App Builder 9–14, Interface Designer 15–16, App Publisher tick 17.
-- `INITIAL_TICK_COUNT = CUMULATIVE_TICKS[APP_BUILDER_AGENT_IDX - 1] = 9` — `useState` starts here so the two scanning agents read as `done` on mount.
-- `TICK_SCHEDULE = [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000]` — 9 ticks × 5s covering App Builder's 6 phases + Interface Designer's 2 + App Publisher's 1. `useEffect` maps this into individual `setTimeout` calls that bump `tickCount` by `INITIAL_TICK_COUNT + idx + 1`, so ticks advance from 9 → 18.
-- **Total build sequence: ~45 seconds** — App Builder 30s + Interface Designer 10s + App Publisher 5s.
-- The right-pane sequence has finished by the time Interface Designer wraps (all five sections resolved); the App Publisher phase (5s) is purely a left-pane narrative beat before the `AppCreatedDialog` opens.
+- `AGENT_PHASE_DURATIONS_MS` is now a **`number[][]`** in `lib/generation-spec.ts` — one duration per phase, per agent:
+  ```ts
+  [
+    [3_000, 3_000],                                      // Requirements Analyst — pre-run, never fires
+    [5_000, 5_000, 5_000, 5_000, 5_000, 5_000, 5_000],   // Solutions Architect — pre-run, never fires
+    [5_000, 5_000, 5_000, 5_000, 5_000, 5_000],          // App Builder — 6 × 5s = 30s
+    [15_000, 45_000, 45_000],                            // Interface Designer — per-role: 15s + 45s + 45s = 105s
+    [5_000],                                             // App Publisher — 5s
+  ]
+  ```
+- `CUMULATIVE_TICKS = [2, 9, 15, 18, 19]` — Reqs Analyst owns ticks 0–1, Sol Architect 2–8, App Builder 9–14, Interface Designer 15–17, App Publisher tick 18.
+- `INITIAL_TICK_COUNT = CUMULATIVE_TICKS[APP_BUILDER_AGENT_IDX - 1] = 9` — the two scanning agents read as `done` on mount.
+- `TICK_SCHEDULE` sums per-phase durations across App Builder + Designer + Publisher so each phase fires at its own delay (App Builder rows are 5s each, Designer rows are 15s / 45s / 45s, Publisher is 5s). The provider maps this into individual `setTimeout` calls.
+- **Total build sequence: ~140 seconds** — App Builder 30s + Interface Designer 105s (per role: Vendor Manager 15s, then Procurement Lead + Compliance Officer 45s each) + App Publisher 5s.
+- **The tick loop now lives in a root-level provider** — `context/GenerationContext.tsx`. AppCreatingView calls `startGeneration({ appId, appName, appDescription })` on mount and reads `currentIdx` / `phaseIdx` / `allDone` / `appId` from `useGeneration()`. This means the phase progression survives the route change from `/new/app` → `/builder/[appId]` when the user clicks the **Preview app** CTA mid-generation.
 - `AppCreatedDialog` opens automatically the moment `allAgentsDone` becomes true (i.e., all 5 agents `done`). `onComplete` still fires only when the user clicks **Open app** — not on auto-open.
 
 ## Mock data summary
@@ -296,15 +319,16 @@ Post-review roster is **5 agents** total: **2 pre-run** (Requirements Analyst + 
 | `MOCK_APP_NAME = 'Vendor Onboarding and Management'` | `BuildWithAIView.tsx` | Review dialog → AppCreatingView's AppIdentity |
 | `MOCK_APP_DESCRIPTION` (250-char polished 2-line summary) | `BuildWithAIView.tsx` | Same path |
 | `FALLBACK_DESCRIPTION` (safety net if appDescription < 60 chars) | `AppCreatingView.tsx` | AppIdentity description slot |
-| `SCANNING_AGENTS` array (2 entries: **Requirements Analyst agent** — 2 sub-items × 3s; **Solutions Architect agent** — 7 sub-items × 5s). Each carries `id`, `name`, `sectionTitle`, `icon`, `color`, `phases: string[]` (variable length), `successPhrase`. | `AgentScanningView.tsx` | Pre-review LeftPane timeline (no right pane on this screen) |
-| `AGENTS` array (5 entries: **Requirements Analyst agent** (magenta / `ClipboardCheck`, 2 phases — pre-run, done from mount), **Solutions Architect agent** (purple / `Layers`, 7 phases — pre-run, done from mount), **App Builder agent** (blue / `Wand2`, 6 phases × 5s = 30s), **Interface Designer agent** (cyan / `Palette`, 2 phases × 5s = 10s), **App Publisher agent** (green / `Rocket`, 1 phase × 5s)). | `AppCreatingView.tsx` | Post-review LeftPane timeline. First two carried over from the scanning screen so the user sees the full narrative. RightPane sections key off `builderPhase` (App Builder) + `designerPhase` (Interface Designer). |
-| `APP_BUILDER_AGENT_IDX = 2`, `DESIGNER_AGENT_IDX = 3` | `AppCreatingView.tsx` | Ticker constants — the two agents that actually drive the right-pane sequential reveal. |
+| `SCANNING_AGENTS` array (2 entries: **Requirements Analyst** — 2 sub-items × 3s; **Solutions Architect** — 7 sub-items × 5s). Each carries `id`, `name`, `sectionTitle`, `icon`, `color`, `phases: string[]` (variable length), `successPhrase`. | `AgentScanningView.tsx` | Pre-review LeftPane timeline (no right pane on this screen) |
+| `AGENTS` array (5 entries: **Requirements Analyst** (magenta / `ClipboardCheck`, 2 phases — pre-run, done from mount), **Solutions Architect** (purple / `Layers`, 7 phases — pre-run, done from mount), **App Builder** (blue / `Wand2`, 6 phases × 5s = 30s), **Interface Designer** (cyan / `Palette`, 3 phases with per-role durations 15s / 45s / 45s — sub-item text is intentionally role-agnostic: `Composing pages and navigation` × 3), **App Publisher** (green / `Rocket`, 1 phase × 5s)). | `lib/generation-spec.ts` | Post-review LeftPane timeline. First two carry over from the scanning screen so the user sees the full narrative. RightPane sections key off `builderPhase` (App Builder) + `designerPhase` (Interface Designer). |
+| `APP_BUILDER_AGENT_IDX = 2`, `DESIGNER_AGENT_IDX = 3`, `DESIGNER_ROLE_ORDER = ['Vendor Manager', 'Procurement Lead', 'Compliance Officer']` | `lib/generation-spec.ts` | Ticker constants and role sequence — `DESIGNER_ROLE_ORDER` drives the per-role page + navigation reveal, and picks which role's name goes on the "Ready to preview" success card. |
 | `AVATAR_PATH_D` — rounded square path (`'M 12 0 H 20 A 12 12 0 0 1 32 12 V 20 A 12 12 0 0 1 20 32 H 12 A 12 12 0 0 1 0 20 V 12 A 12 12 0 0 1 12 0 Z'`), 32×32 coords. Replaced the earlier octagon-squircle path. | `AppCreatingView.tsx` | Every agent avatar (active + done) |
 | `MOCK_ROLES` (3 roles: Vendor Manager, Procurement Lead, Compliance Officer) | `AppCreatingView.tsx` | RightPane Roles section |
-| `MOCK_ENTITIES` (3 entities: Vendor, Contract, Document) | `AppCreatingView.tsx` | RightPane Data entities section — each row renders name + `Fields: …` comma-separated |
-| `MOCK_WORKFLOWS` — `WorkflowSpec[]` with 4 entries (Vendor Onboarding Approval, Contract Review Cycle, Renewal Reminder, Compliance Audit). Each carries `name: string` + `steps: string[]` (4 steps per workflow). | `AppCreatingView.tsx` | RightPane Workflows section — each row renders name + `Steps: …` comma-separated |
-| `MOCK_PAGES` (4 pages: Vendor Dashboard, Vendor Profile, Renewal Tracker, Reports) | `AppCreatingView.tsx` | RightPane Pages section — currently only `name` is rendered in the checklist |
-| `MOCK_NAV` — `NavigationSpec[]` with 2 entries (Buyer Navigation, Compliance Navigation), each containing `title`, `sharedWith: string[]`, `menu: NavMenuItem[]` | `AppCreatingView.tsx` | RightPane Navigation section — currently only `title` is rendered in the checklist |
+| `MOCK_ENTITIES` (6 entities: Vendor, Vendor Onboarding Request, Contract, Renewal Request, Compliance Audit, Document). Each carries `type: 'DataForm' \| 'Board' \| 'Process'` and an optional `workflow?: string` binding it to the workflow it hosts. | `AppCreatingView.tsx` | RightPane Data entities section — each row renders name + `Fields: …` comma-separated. Type/workflow fields are captured in the data but not surfaced in the current row rendering. |
+| `MOCK_WORKFLOWS` — `WorkflowSpec[]` with 4 entries (Vendor Onboarding Approval, Contract Review Cycle, Renewal Approval, Compliance Audit — Renewal was renamed from Renewal Reminder since a scheduled reminder is an Automation, not a Process). Each carries `name: string`, `entity: string` (the entity it sits on, matching the entry in `MOCK_ENTITIES`), and `steps: string[]` (4 steps per workflow). | `AppCreatingView.tsx` | RightPane Workflows section — each row renders name + `Steps: …` (joined with `→`). Entity binding is captured in the data but not surfaced in the current row rendering. |
+| `MOCK_PAGES` (12 pages: 4 per role, all exclusive assignments — Vendor Manager gets Vendor Dashboard / Vendor Directory / Vendor Profile / Performance Reviews; Procurement Lead gets Procurement Requests / RFP Comparison / Contract Terms / Vendor Escalations; Compliance Officer gets Compliance Dashboard / Risk Register / Document Vault / Audit Reports). Each carries `name`, `description`, `roles: string[]`. | `AppCreatingView.tsx` | RightPane Pages section — reveals role-by-role as Designer completes each phase. `PartialPageList` shows completed pages as green ticks and pads with a fixed **2** skeleton rows (`PAGES_SKELETON_ROW_COUNT`). |
+| `MOCK_NAV` — `NavigationSpec[]` with 3 entries — one per role: **Vendor Manager Navigation**, **Procurement Navigation**, **Compliance Navigation**. Each contains `title`, `sharedWith: string[]`, `menu: NavMenuItem[]`. | `AppCreatingView.tsx` | RightPane Navigation section — reveals as its owner role (`sharedWith[0]`) completes. `PartialNavSitemap` pads pending navs with a fixed **1** skeleton row (`NAV_SKELETON_ROW_COUNT`). |
+| `RolePreviewReadyCard` — pinned success card at the bottom of the right pane. Single card whose copy pivots with `completedRoles.length` and CTA opens `/builder/{appId}` in a new tab. | `AppCreatingView.tsx` | RightPane pinned footer — see "Right pane" §5 |
 | `CONFETTI_PARTICLES` — 12 particles for the `AppCreatedDialog` celebration burst. Each carries `{x, y, rot, color, size, shape, delay}`. Colors pulled from the AI palette + green. | `AppCreatingView.tsx` | Completion popover — see "Completion dialog" in §5 |
 
 ## Loader assets
@@ -370,7 +394,10 @@ All keyframes are inlined inside the `<InlineKeyframes>` component in `AppCreati
 | `AgentScanningView.tsx` | new | Pre-review screen reusing `AppCreatingView`'s `LeftPane`. Replaces the hex-centric scanning popover. **2-agent roster** (Requirements Analyst 2×3s → Solutions Architect 7×5s), ~41s total, per-agent phase durations via `TICK_SCHEDULE`. Two-stage hero SVG (scan → doc-gen) keyed on `currentIdx`. |
 | `AIScanningDialog.tsx` | `components/create/AIScanningDialog.tsx` | **No longer rendered in this flow** (replaced by `AgentScanningView`). File kept for reference. |
 | `AppReviewDialog.tsx` | `components/create/AppReviewDialog.tsx` | Icon picker removed, gradient title at 24px, callback signature trimmed to `{name, description}`, sized to `w-[550px] h-[460px] p-8` |
-| `AppCreatingView.tsx` | new | Two-pane (5:7) layout with agent timeline + spec artifact. **5-agent roster** (2 pre-run + App Builder 6×5s + Interface Designer 2×5s + App Publisher 1×5s = ~45s of runtime). Sequential right-pane reveal driven by `builderPhase` (Roles / Data entities / Workflows) + `designerPhase` (Pages / Navigation). Custom `/app-builder-loader.svg` hero. Completion `AppCreatedDialog` popover (aesthetic — gradient ring, pulsing badge, confetti loop) opens on `allAgentsDone`, gated by `HOLD_COMPLETION_DIALOG` (currently `false` — popover is live) and `dialogClosed` local state. Exports `LeftPane`, `BackgroundAtmosphere`, `InlineKeyframes`, and the `Agent` interface so `AgentScanningView` can compose the same shell. |
+| `AppCreatingView.tsx` | new | Two-pane (5:7) layout with agent timeline + spec artifact. **5-agent roster** (2 pre-run + App Builder 6×5s + Interface Designer 15 s / 45 s / 45 s per role + App Publisher 1×5s ≈ 140 s of runtime). Sequential right-pane reveal driven by `builderPhase` (Roles / Data entities / Workflows) + `designerPhase` (Pages / Navigation — one role per phase). Custom `/app-builder-loader.svg` hero. Completion `AppCreatedDialog` popover (aesthetic — gradient ring, pulsing badge, confetti loop) opens on `allAgentsDone`, gated by `HOLD_COMPLETION_DIALOG` (currently `false` — popover is live) and `dialogClosed` local state. Pinned success footer at the bottom of the right pane (`RolePreviewReadyCard`) whose CTA opens `/builder/{appId}` in a new tab. Consumes root-level `GenerationContext` (no local tick loop) so state survives the transition into the Builder. Exports `LeftPane`, `BackgroundAtmosphere`, `InlineKeyframes` so `AgentScanningView` can compose the same shell; the `Agent` type now lives in `lib/generation-spec.ts`. |
+| `lib/generation-spec.ts` | new | Shared source of truth for the post-review tick loop: `AGENTS` roster, `AGENT_PHASE_DURATIONS_MS`, `DESIGNER_ROLE_ORDER`, `CUMULATIVE_TICKS`, `INITIAL_TICK_COUNT`, `TICK_SCHEDULE`, plus derivation helpers `currentIdxFor(tick)` / `phaseIdxFor(tick)`. Consumed by `context/GenerationContext.tsx` and `AppCreatingView.tsx`. |
+| `context/GenerationContext.tsx` | new | Root-level provider (mounted in `app/layout.tsx`) that owns the tick loop. Exposes `{ isGenerating, appId, appName, appDescription, tickCount, currentIdx, phaseIdx, allDone, startGeneration, stopGeneration }`. The final scheduled tick flips `isGenerating` off so `GenerationLoadingPane` in the Builder unmounts on its own. |
+| `components/builder/GenerationLoadingPane.tsx` | new | Thin Builder-side wrapper that reads `useGeneration()` and renders `LeftPane` in `compact` mode inside a `w-[320px]` container matching CopilotPanel's gradient framing. `BuilderLayout` swaps CopilotPanel for this component when `isGenerating` is true (both Play and Spec modes). See [`../components/builder/CLAUDE.md`](../components/builder/CLAUDE.md). |
 
 The Explorer's `components/create/*` flow is **untouched** while this flow iterates. When the design here is signed off, the plan is to retire `/create` and `/create/app` and route the left-nav AND the Explorer's Create button through `/new/app`.
 
