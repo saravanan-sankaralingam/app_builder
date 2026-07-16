@@ -10,7 +10,8 @@ import {
 // Shared spec that drives the post-review "app being generated" tick loop.
 // Extracted from AppCreatingView so the same schedule can drive both:
 //   1. AppCreatingView (right pane on /new/app)
-//   2. GenerationLoadingPane (chat-slot replacement in the Builder)
+//   2. GenerationAgentsMessage (chat-style working card inside the Builder's
+//      CopilotPanel)
 // via the root-level GenerationContext.
 
 export interface Agent {

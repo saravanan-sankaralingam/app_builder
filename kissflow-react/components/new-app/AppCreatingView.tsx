@@ -87,7 +87,7 @@ const CONFETTI_PARTICLES: Array<{
 // Now `false` — the popover is the primary CTA at the end of the flow.
 const HOLD_COMPLETION_DIALOG = false
 
-type AgentState = 'queued' | 'active' | 'done'
+export type AgentState = 'queued' | 'active' | 'done'
 
 function stateFor(idx: number, currentIdx: number): AgentState {
   if (idx < currentIdx) return 'done'
@@ -429,8 +429,8 @@ export function LeftPane({
         compact
           ? // Compact (Builder chat-slot) — fills the rail, centres the
             // timeline vertically so it sits in the middle of the 320px pane,
-            // and keeps tight horizontal padding so the agent card breathes.
-            'flex-1 min-h-0 flex flex-col items-stretch justify-center py-5 px-3 overflow-y-auto'
+            // 36px of padding around so the section breathes inside the rail.
+            'flex-1 min-h-0 flex flex-col items-stretch justify-center p-9 overflow-y-auto'
           : 'flex flex-col items-center justify-start py-10 px-8 overflow-y-auto'
       }
     >
@@ -643,7 +643,7 @@ export function LeftPane({
   )
 }
 
-function AgentRow({
+export function AgentRow({
   agent,
   state,
   phaseIdx,
@@ -677,11 +677,11 @@ function AgentRow({
         ) : state === 'done' ? (
           <>
             {/* Line 1: agent name */}
-            <p className={cn('text-[13px] font-semibold text-gray-900 leading-snug', !compact && 'whitespace-nowrap')}>
+            <p className={cn('text-[12px] font-semibold text-gray-900 leading-snug', !compact && 'whitespace-nowrap')}>
               {agent.name}
             </p>
             {/* Line 2: meaningful success message + double tick */}
-            <p className={cn('text-[13px] leading-snug text-gray-600 mt-0.5', !compact && 'whitespace-nowrap')}>
+            <p className={cn('text-[12px] leading-snug text-gray-600 mt-0.5', !compact && 'whitespace-nowrap')}>
               {agent.successPhrase}
               <CheckCheck
                 className="inline-block ml-1.5 w-3.5 h-3.5 align-middle"
@@ -693,18 +693,18 @@ function AgentRow({
         ) : (
           <>
             {/* Line 1: agent name */}
-            <p className={cn('text-[13px] font-semibold text-gray-900 leading-snug', !compact && 'whitespace-nowrap')}>
+            <p className={cn('text-[12px] font-semibold text-gray-900 leading-snug', !compact && 'whitespace-nowrap')}>
               {agent.name}
             </p>
             {/* Line 2: "working on it" + animated dot trail */}
-            <p className={cn('text-[13px] leading-snug mt-0.5', !compact && 'whitespace-nowrap')}>
+            <p className={cn('text-[12px] leading-snug mt-0.5', !compact && 'whitespace-nowrap')}>
               <span className="text-gray-600">is working on it</span>
               <DotTrail color={accentColor} />
             </p>
 
             {/* Phase checklist box — opens below the title */}
             <div
-              className="mt-2 rounded-md p-2.5 space-y-1.5 ai-fade-up"
+              className="mt-2 rounded-md p-1 space-y-1.5 ai-fade-up"
               style={{
                 background: 'var(--gray-50)',
                 border: '1px solid var(--gray-100)',
@@ -763,8 +763,7 @@ function AgentRow({
                     )}
                     <span
                       className={cn(
-                        'leading-snug',
-                        !compact && 'whitespace-nowrap',
+                        'leading-snug flex-1 min-w-0 truncate',
                         isPast && 'text-gray-700',
                         isCurrent && 'text-shimmer font-medium',
                         !isPast && !isCurrent && 'text-gray-400',
@@ -794,7 +793,7 @@ function AgentRow({
 
 // Three pulsing dots after "working on it" — same staggered pulse pattern as
 // before, just abstracted into a tiny component.
-function DotTrail({ color }: { color: string }) {
+export function DotTrail({ color }: { color: string }) {
   return (
     <span
       style={{
@@ -857,7 +856,7 @@ const IOS_DOT_POSITIONS = Array.from({ length: 12 }, (_, i) => {
 //   • done   — bold static `-400 → -500` gradient avatar (full opacity)
 // Other explored active-state variants are archived in
 // `kissflow-react/docs/AGENT_ACTIVE_VARIANTS.md`.
-function AgentStatus({
+export function AgentStatus({
   state,
   color,
   icon: Icon,
@@ -881,7 +880,7 @@ function ActiveGradientShiftAvatar({
 }) {
   const gradId = `agent-grad-${color}`
   return (
-    <div className="relative w-[32px] h-[32px]">
+    <div className="relative w-[24px] h-[24px]">
       <svg
         viewBox={AVATAR_VIEW_BOX}
         className="absolute inset-0 w-full h-full"
@@ -912,7 +911,7 @@ function ActiveGradientShiftAvatar({
         <path d={AVATAR_PATH_D} fill={`url(#${gradId})`} />
       </svg>
       <Icon
-        className="absolute inset-0 m-auto w-4 h-4"
+        className="absolute inset-0 m-auto w-3 h-3"
         strokeWidth={2.25}
         style={{ color: 'var(--white)' }}
       />
@@ -929,7 +928,7 @@ function StaticBoldAvatar({
 }) {
   const gradId = `agent-grad-${color}`
   return (
-    <div className="relative w-[32px] h-[32px]">
+    <div className="relative w-[24px] h-[24px]">
       <svg
         viewBox={AVATAR_VIEW_BOX}
         className="absolute inset-0 w-full h-full"
@@ -944,7 +943,7 @@ function StaticBoldAvatar({
         <path d={AVATAR_PATH_D} fill={`url(#${gradId})`} />
       </svg>
       <Icon
-        className="absolute inset-0 m-auto w-4 h-4"
+        className="absolute inset-0 m-auto w-3 h-3"
         strokeWidth={2.25}
         style={{ color: 'var(--white)' }}
       />

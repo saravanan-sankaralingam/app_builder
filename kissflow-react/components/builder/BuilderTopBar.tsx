@@ -83,11 +83,12 @@ const iconCategories = [
 ]
 
 export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange, onColorChange, onNameChange, recentApps = [], onAppSwitch, onGoToExplorer, mode = 'build', onModeChange }: BuilderTopBarProps) {
-  // Run + Deploy are disabled while the app is still being generated (user
-  // reached the Builder mid-flow via the "Preview app" CTA on /new/app).
-  // Once the tick loop completes in GenerationContext, isGenerating flips
-  // false and the buttons re-enable.
-  const { isGenerating } = useGeneration()
+  // Run + Deploy are disabled while THIS app is still being generated.
+  // Only the app whose id matches `useGeneration().appId` is affected —
+  // other Builders (Retail One / Inventory / Expense) stay interactive
+  // even if a vendor-onboarding generation is in flight elsewhere.
+  const { isGenerating, appId: generatingAppId } = useGeneration()
+  const isThisAppGenerating = isGenerating && generatingAppId === appId
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false)
   const [isAppSwitcherOpen, setIsAppSwitcherOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'icons' | 'custom'>('icons')
@@ -543,8 +544,8 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
           <Button
             variant="ghost"
             size="sm"
-            disabled={isGenerating}
-            title={isGenerating ? 'Available once the app finishes generating' : undefined}
+            disabled={isThisAppGenerating}
+            title={isThisAppGenerating ? 'Available once the app finishes generating' : undefined}
             className="h-[28px] px-3 cursor-pointer bg-white text-green-600 hover:bg-green-50 hover:text-green-600 border border-green-500 gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             <Play className="size-3" fill="currentColor" />
@@ -553,8 +554,8 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
           <Button
             variant="ghost"
             size="sm"
-            disabled={isGenerating}
-            title={isGenerating ? 'Available once the app finishes generating' : undefined}
+            disabled={isThisAppGenerating}
+            title={isThisAppGenerating ? 'Available once the app finishes generating' : undefined}
             className="h-[28px] px-3 cursor-pointer bg-green-500 text-white hover:bg-green-600 hover:text-white border-transparent gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
           >
             <Rocket className="size-3" fill="currentColor" />

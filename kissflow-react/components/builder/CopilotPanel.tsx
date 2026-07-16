@@ -7,11 +7,14 @@ import { IconCircleCheckFilled } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CopilotLoadingMessage, getLoadingConfig } from './copilot'
+import { GenerationAgentsMessage } from './copilot/GenerationAgentsMessage'
+import { useGeneration } from '@/context/GenerationContext'
 import { SlashCommandMenu } from './copilot/SlashCommandMenu'
 import type { Artifact } from './copilot/artifactTypes'
 import { ARTIFACT_TYPE_STYLES } from './copilot/artifactTypes'
 
 interface CopilotPanelProps {
+  appId: string
   appName: string
   appDescription?: string
   appIcon: string
@@ -773,7 +776,7 @@ function AppIcon({ name, className }: { name: string; className?: string }) {
   return <IconComponent className={className} />
 }
 
-export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAddPageToPreview, onSwitchToPage }: CopilotPanelProps) {
+export function CopilotPanel({ appId, appName, appDescription, appIcon, appIconBg, onAddPageToPreview, onSwitchToPage }: CopilotPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -836,6 +839,14 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAd
   const [deleteRolesSubmitted, setDeleteRolesSubmitted] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Generation state — the loading card / input gating only applies when
+  // the app being generated (context.appId) matches the app this Copilot
+  // instance is rendering. Retail One / Inventory / Expense builders see
+  // normal Copilot behaviour even if a vendor-onboarding generation is
+  // in flight in another context.
+  const { isGenerating, appId: generatingAppId } = useGeneration()
+  const isThisAppGenerating = isGenerating && generatingAppId === appId
 
   // Get the current drill-through category details
   const currentDrillThrough = drillThroughCategory
@@ -2280,7 +2291,13 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAd
       {/* Messages Area */}
       {isExpanded && (
       <div className="flex-1 overflow-y-auto space-y-4 px-2 pt-2 scrollbar-sleek">
-        {messages.map((message) => (
+        {/* Chat-style "AI is working" card — pinned to the top while the
+            root-level GenerationContext reports an in-flight generation
+            (i.e. the user reached the Builder mid-flow via /new/app). Reads
+            currentIdx / phaseIdx directly from the context and self-hides
+            once every agent is done. */}
+        {isThisAppGenerating && <GenerationAgentsMessage />}
+        {(isThisAppGenerating ? messages.filter((m) => m.id !== '1') : messages).map((message) => (
           <div key={message.id}>
             {message.role === 'user' ? (
               // User message - with optional disabled sub-actions card
@@ -3746,16 +3763,20 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAd
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder=""
-              className="relative w-full resize-none text-[12px] placeholder:text-gray-400 focus:outline-none min-h-[40px] max-h-[100px] bg-transparent"
+              placeholder={
+                isThisAppGenerating
+                  ? 'Waiting for your app to finish generating…'
+                  : ''
+              }
+              className="relative w-full resize-none text-[12px] placeholder:text-gray-400 focus:outline-none min-h-[40px] max-h-[100px] bg-transparent disabled:cursor-not-allowed"
               style={{
-                color: 'transparent',
+                color: isThisAppGenerating ? 'var(--gray-400)' : 'transparent',
                 caretColor: '#111827',
                 lineHeight: '1.5',
                 padding: '0'
               }}
               rows={1}
-              disabled={isLoading}
+              disabled={isLoading || isThisAppGenerating}
             />
             {/* Text overlay showing what user types with artifact highlighting */}
             <div
@@ -3813,7 +3834,7 @@ export function CopilotPanel({ appName, appDescription, appIcon, appIconBg, onAd
             <span className="text-xs text-gray-700">Type '/' for referring datamodels</span>
             <Button
               onClick={() => handleSend()}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || isThisAppGenerating}
               size="sm"
               className="h-7 w-7 p-0 rounded-full disabled:opacity-30"
               style={{ background: 'var(--ai-gradient-500)' }}

@@ -11,6 +11,9 @@ import {
 } from 'react'
 import {
   AGENTS,
+  AGENT_PHASE_DURATIONS_MS,
+  APP_BUILDER_AGENT_IDX,
+  DESIGNER_AGENT_IDX,
   INITIAL_TICK_COUNT,
   TICK_SCHEDULE,
   currentIdxFor,
@@ -105,6 +108,39 @@ export function GenerationProvider({
   // Track live timeouts so a re-start (or unmount, or storage event pointing
   // at a different `startedAt`) cleanly cancels the previous schedule.
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  // Active generation record, kept in a ref so the setTimeout callbacks can
+  // read the current appId when deciding whether to loop the tick schedule
+  // (demo-only, gated on the Vendor Onboarding mock — see below).
+  const activeRef = useRef<StoredGeneration | null>(null)
+
+  // Loop flag — previously kept the Vendor Onboarding mock cycling so the
+  // chat card design could be iterated on. Now that the visual is settled,
+  // no app loops: the animation runs through once, isGenerating flips off,
+  // and the seed success message (`CopilotPanel.tsx:777`) re-enters the
+  // chat list to confirm completion.
+  const shouldLoop = (_id: string) => false
+
+  // Skip-App-Builder flag — the mock assumes Requirements Analyst /
+  // Solutions Architect / App Builder are already done by the time the
+  // user reaches the Builder. Applying `LOOP_OFFSET_MS` at start makes
+  // the scheduler treat App Builder's ticks as already elapsed so
+  // Interface Designer is the first visible active agent.
+  const shouldSkipAppBuilder = (id: string) =>
+    id === 'vendor-onboarding-and-management'
+
+  // Cumulative ms consumed through App Builder — used by the offset flag
+  // above to shift `startedAt` so App Builder's ticks fire immediately.
+  const LOOP_OFFSET_MS = (() => {
+    let total = 0
+    for (
+      let agentIdx = APP_BUILDER_AGENT_IDX;
+      agentIdx < DESIGNER_AGENT_IDX;
+      agentIdx++
+    ) {
+      for (const d of AGENT_PHASE_DURATIONS_MS[agentIdx]) total += d
+    }
+    return total
+  })()
 
   const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach(clearTimeout)
@@ -113,7 +149,9 @@ export function GenerationProvider({
 
   // Schedule the setTimeouts that remain given a known `startedAt`. Any tick
   // whose delay has already elapsed is skipped — the state is already updated
-  // via `setTickCount(tickCountFromElapsed(elapsed))` before this fires.
+  // via `setTickCount(tickCountFromElapsed(elapsed))` before this fires. On
+  // the final tick, either restart the cycle (Vendor Onboarding demo loop)
+  // or flip `isGenerating` off and clear storage.
   const scheduleRemainingTicks = useCallback(
     (startedAt: number) => {
       clearAllTimeouts()
@@ -125,8 +163,24 @@ export function GenerationProvider({
         const t = setTimeout(() => {
           setTickCount(INITIAL_TICK_COUNT + idx + 1)
           if (isFinalTick) {
-            setIsGenerating(false)
-            clearStored()
+            const active = activeRef.current
+            if (active && shouldLoop(active.appId)) {
+              // Restart the tick loop, but shift the startedAt so App Builder
+              // reads as already-done — loop cycles through Designer +
+              // Publisher only (matches the "Builder is reached after App
+              // Builder finished" mental model).
+              const newStartedAt = Date.now() - LOOP_OFFSET_MS
+              const next: StoredGeneration = { ...active, startedAt: newStartedAt }
+              activeRef.current = next
+              writeStored(next)
+              setTickCount(INITIAL_TICK_COUNT + AGENTS[APP_BUILDER_AGENT_IDX].phases.length)
+              // Recurse into the same scheduler with the new start time.
+              scheduleRemainingTicks(newStartedAt)
+            } else {
+              setIsGenerating(false)
+              clearStored()
+              activeRef.current = null
+            }
           }
         }, remaining)
         timeoutsRef.current.push(t)
@@ -137,13 +191,24 @@ export function GenerationProvider({
 
   const startGeneration = useCallback(
     (input: { appId: string; appName: string; appDescription: string }) => {
-      const startedAt = Date.now()
+      const skipAppBuilder = shouldSkipAppBuilder(input.appId)
+      // Vendor Onboarding demo: pre-seed the schedule past App Builder so
+      // Interface Designer is the first visible active agent.
+      const startedAt = skipAppBuilder
+        ? Date.now() - LOOP_OFFSET_MS
+        : Date.now()
+      const next: StoredGeneration = { startedAt, ...input }
+      activeRef.current = next
       setAppId(input.appId)
       setAppName(input.appName)
       setAppDescription(input.appDescription)
-      setTickCount(INITIAL_TICK_COUNT)
+      setTickCount(
+        skipAppBuilder
+          ? INITIAL_TICK_COUNT + AGENTS[APP_BUILDER_AGENT_IDX].phases.length
+          : INITIAL_TICK_COUNT,
+      )
       setIsGenerating(true)
-      writeStored({ startedAt, ...input })
+      writeStored(next)
       scheduleRemainingTicks(startedAt)
     },
     [scheduleRemainingTicks],
@@ -153,6 +218,7 @@ export function GenerationProvider({
     clearAllTimeouts()
     setIsGenerating(false)
     clearStored()
+    activeRef.current = null
   }, [clearAllTimeouts])
 
   // On mount, pick up any in-flight generation from `localStorage` — this is
@@ -160,17 +226,27 @@ export function GenerationProvider({
   useEffect(() => {
     const stored = readStored()
     if (!stored) return
-    const elapsed = Date.now() - stored.startedAt
+    let startedAt = stored.startedAt
+    let elapsed = Date.now() - startedAt
     if (elapsed >= TOTAL_DURATION_MS) {
-      clearStored()
-      return
+      if (!shouldLoop(stored.appId)) {
+        clearStored()
+        return
+      }
+      // Demo loop app whose stored startedAt is stale (schedule would have
+      // ended by now). Restart the cycle with the loop offset applied so
+      // Designer is active immediately (App Builder reads as already done).
+      startedAt = Date.now() - LOOP_OFFSET_MS
+      elapsed = LOOP_OFFSET_MS
+      writeStored({ ...stored, startedAt })
     }
+    activeRef.current = { ...stored, startedAt }
     setAppId(stored.appId)
     setAppName(stored.appName)
     setAppDescription(stored.appDescription)
     setTickCount(tickCountFromElapsed(elapsed))
     setIsGenerating(true)
-    scheduleRemainingTicks(stored.startedAt)
+    scheduleRemainingTicks(startedAt)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -184,21 +260,30 @@ export function GenerationProvider({
       clearAllTimeouts()
       if (!e.newValue) {
         setIsGenerating(false)
+        activeRef.current = null
         return
       }
       try {
         const stored = JSON.parse(e.newValue) as StoredGeneration
-        const elapsed = Date.now() - stored.startedAt
+        let startedAt = stored.startedAt
+        let elapsed = Date.now() - startedAt
         if (elapsed >= TOTAL_DURATION_MS) {
-          setIsGenerating(false)
-          return
+          if (!shouldLoop(stored.appId)) {
+            setIsGenerating(false)
+            activeRef.current = null
+            return
+          }
+          startedAt = Date.now() - LOOP_OFFSET_MS
+          elapsed = LOOP_OFFSET_MS
+          writeStored({ ...stored, startedAt })
         }
+        activeRef.current = { ...stored, startedAt }
         setAppId(stored.appId)
         setAppName(stored.appName)
         setAppDescription(stored.appDescription)
         setTickCount(tickCountFromElapsed(elapsed))
         setIsGenerating(true)
-        scheduleRemainingTicks(stored.startedAt)
+        scheduleRemainingTicks(startedAt)
       } catch {}
     }
     window.addEventListener('storage', handler)

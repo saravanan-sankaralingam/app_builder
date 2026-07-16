@@ -35,7 +35,6 @@ import { ReportCard } from './ReportCard'
 import { DataFormShareEditor } from './DataFormShareEditor'
 import { DataFormSettingsEditor } from './DataFormSettingsEditor'
 import { CopilotPanel } from './CopilotPanel'
-import { GenerationLoadingPane } from './GenerationLoadingPane'
 import { AppRuntimePreview } from './AppRuntimePreview'
 import { useGeneration } from '@/context/GenerationContext'
 import { PlatformAppPreview, hasPlatformAppPage } from '@/components/app-view/PlatformAppPreview'
@@ -655,11 +654,28 @@ export function BuilderLayout({
   // Mode state: 'play' | 'spec' | 'build'
   const [mode, setMode] = useState<'play' | 'spec' | 'build'>('play')
 
-  // While the app is still being generated (user clicked "Preview app" from
-  // /new/app before all agents finished), swap the CopilotPanel for the
-  // GenerationLoadingPane so the timeline stays visible. Same 320px slot —
-  // no reflow of AppRuntimePreview/AppSpecView on the right.
-  const { isGenerating } = useGeneration()
+  // Auto-start the Vendor Onboarding generation animation on Builder mount
+  // so a browser refresh replays it. Only fires for the vendor mock; other
+  // apps (retail-one, inventory-management, expense-management) keep the
+  // regular Copilot behaviour with no loading card.
+  const {
+    isGenerating: ctxIsGenerating,
+    appId: ctxAppId,
+    startGeneration,
+  } = useGeneration()
+  useEffect(() => {
+    if (appId !== 'vendor-onboarding-and-management') return
+    // Already generating this app (e.g. handed off from /new/app or restored
+    // from localStorage on mount) — skip to avoid restarting mid-flight.
+    if (ctxIsGenerating && ctxAppId === appId) return
+    startGeneration({
+      appId,
+      appName,
+      appDescription: appDescription ?? '',
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
 
   const handleTabClick = (tabId: string) => {
     setActiveTabId(tabId)
@@ -1633,20 +1649,19 @@ export function BuilderLayout({
         {mode === 'play' ? (
           // Play Mode Layout
           <>
-            {/* Left rail — 320px. Copilot chat by default, or the agent
-                timeline while the app is still being generated. */}
-            {isGenerating ? (
-              <GenerationLoadingPane />
-            ) : (
-              <CopilotPanel
-                appName={appName}
-                appDescription={appDescription}
-                appIcon={appIcon}
-                appIconBg={appIconBg}
-                onAddPageToPreview={addNavItemCallback}
-                onSwitchToPage={switchToPageCallback}
-              />
-            )}
+            {/* Left rail — 320px CopilotPanel. When a generation is in
+                flight, the panel renders a chat-style "AI is working" card
+                inside its message list (see `GenerationAgentsMessage`);
+                the rail itself does not swap. */}
+            <CopilotPanel
+              appId={appId}
+              appName={appName}
+              appDescription={appDescription}
+              appIcon={appIcon}
+              appIconBg={appIconBg}
+              onAddPageToPreview={addNavItemCallback}
+              onSwitchToPage={switchToPageCallback}
+            />
 
             {/* Runtime Preview - remaining space */}
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -1669,18 +1684,15 @@ export function BuilderLayout({
           // Spec Mode — read-only per-app spec panel, sourced from lib/app-specs.ts.
           // Layout mirrors Play: left rail (chat or generation timeline) + AppSpecView.
           <>
-            {isGenerating ? (
-              <GenerationLoadingPane />
-            ) : (
-              <CopilotPanel
-                appName={appName}
-                appDescription={appDescription}
-                appIcon={appIcon}
-                appIconBg={appIconBg}
-                onAddPageToPreview={addNavItemCallback}
-                onSwitchToPage={switchToPageCallback}
-              />
-            )}
+            <CopilotPanel
+              appId={appId}
+              appName={appName}
+              appDescription={appDescription}
+              appIcon={appIcon}
+              appIconBg={appIconBg}
+              onAddPageToPreview={addNavItemCallback}
+              onSwitchToPage={switchToPageCallback}
+            />
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 flex flex-col overflow-hidden rounded-tl-lg bg-transparent pr-3">
                 <AppSpecView appId={appId} />
