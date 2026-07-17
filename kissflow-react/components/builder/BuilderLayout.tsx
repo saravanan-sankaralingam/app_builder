@@ -654,17 +654,22 @@ export function BuilderLayout({
   // Mode state: 'play' | 'spec' | 'build'
   const [mode, setMode] = useState<'play' | 'spec' | 'build'>('play')
 
-  // Auto-start the Vendor Onboarding generation animation on Builder mount
-  // so a browser refresh replays it. Only fires for the vendor mock; other
-  // apps (retail-one, inventory-management, expense-management) keep the
-  // regular Copilot behaviour with no loading card.
+  // Auto-start the demo generation animation on Builder mount so a browser
+  // refresh replays it. Vendor Onboarding runs once and hands off to the
+  // success message; Expense Management loops forever (see `shouldLoop`
+  // inside GenerationContext). Every other app keeps the regular Copilot
+  // behaviour with no loading card.
+  const LOOPING_MOCK_APPS = new Set([
+    'vendor-onboarding-and-management',
+    'expense-management',
+  ])
   const {
     isGenerating: ctxIsGenerating,
     appId: ctxAppId,
     startGeneration,
   } = useGeneration()
   useEffect(() => {
-    if (appId !== 'vendor-onboarding-and-management') return
+    if (!LOOPING_MOCK_APPS.has(appId)) return
     // Already generating this app (e.g. handed off from /new/app or restored
     // from localStorage on mount) — skip to avoid restarting mid-flight.
     if (ctxIsGenerating && ctxAppId === appId) return

@@ -459,12 +459,18 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
               Play
             </button>
             <button
-              onClick={() => onModeChange?.('build')}
+              onClick={() => {
+                if (isThisAppGenerating) return
+                onModeChange?.('build')
+              }}
+              disabled={isThisAppGenerating}
+              title={isThisAppGenerating ? 'Available once the app finishes generating' : undefined}
               className={cn(
                 "w-16 py-1 text-xs font-medium rounded-md transition-colors text-center",
                 mode === 'build'
                   ? "bg-blue-500 text-white"
-                  : "text-gray-900 hover:bg-gray-200"
+                  : "text-gray-900 hover:bg-gray-200",
+                isThisAppGenerating && "opacity-50 cursor-not-allowed hover:bg-transparent"
               )}
             >
               Studio
@@ -475,11 +481,24 @@ export function BuilderTopBar({ appId, appName, appIcon, appIconBg, onIconChange
         {/* Right Side - Actions */}
         <div className="flex items-center gap-4 pr-4">
           {/* App Spec — opens a read-only spec modal (sourced from lib/app-specs.ts) */}
-          <DialogPrimitive.Root open={isSpecOpen} onOpenChange={setIsSpecOpen}>
+          <DialogPrimitive.Root
+            open={isSpecOpen}
+            onOpenChange={(next) => {
+              // Block opening while this app is still being generated —
+              // the spec is meaningless until every layer is in place.
+              if (next && isThisAppGenerating) return
+              setIsSpecOpen(next)
+            }}
+          >
             <DialogPrimitive.Trigger asChild>
               <button
                 type="button"
-                className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+                disabled={isThisAppGenerating}
+                title={isThisAppGenerating ? 'Available once the app finishes generating' : undefined}
+                className={cn(
+                  "flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer",
+                  isThisAppGenerating && "opacity-50 cursor-not-allowed hover:text-gray-600"
+                )}
               >
                 <FileText className="h-[16px] w-[16px]" strokeWidth={1.5} />
                 <span>App Spec</span>

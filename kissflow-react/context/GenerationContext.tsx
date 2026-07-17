@@ -113,20 +113,20 @@ export function GenerationProvider({
   // (demo-only, gated on the Vendor Onboarding mock — see below).
   const activeRef = useRef<StoredGeneration | null>(null)
 
-  // Loop flag — previously kept the Vendor Onboarding mock cycling so the
-  // chat card design could be iterated on. Now that the visual is settled,
-  // no app loops: the animation runs through once, isGenerating flips off,
-  // and the seed success message (`CopilotPanel.tsx:777`) re-enters the
-  // chat list to confirm completion.
-  const shouldLoop = (_id: string) => false
+  // Loop flag — only Expense Management cycles forever (demo behaviour for
+  // design iteration). The Vendor Onboarding mock still runs once and hands
+  // off to the seed success message; every other app completes normally and
+  // clears storage on the final tick.
+  const shouldLoop = (id: string) => id === 'expense-management'
 
   // Skip-App-Builder flag — the mock assumes Requirements Analyst /
   // Solutions Architect / App Builder are already done by the time the
   // user reaches the Builder. Applying `LOOP_OFFSET_MS` at start makes
   // the scheduler treat App Builder's ticks as already elapsed so
-  // Interface Designer is the first visible active agent.
+  // Interface Designer is the first visible active agent. Both the Vendor
+  // and Expense demo apps share this offset.
   const shouldSkipAppBuilder = (id: string) =>
-    id === 'vendor-onboarding-and-management'
+    id === 'vendor-onboarding-and-management' || id === 'expense-management'
 
   // Cumulative ms consumed through App Builder — used by the offset flag
   // above to shift `startedAt` so App Builder's ticks fire immediately.
